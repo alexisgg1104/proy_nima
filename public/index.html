@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAII - Sistema Administrativo del Instituto de Informática</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="saii-logo">SAII</div>
+                <h1>Sistema Administrativo del Instituto de Informática</h1>
+                <p class="institution-subtitle">Universidad Nacional de Piura</p>
+            </div>
+            
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="username">Usuario o Correo</label>
+                    <input type="text" id="username" placeholder="ingrese su usuario" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" placeholder="ingrese su contraseña" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="role">Seleccione su rol</label>
+                    <select id="role" required>
+                        <option value="">-- Seleccione un rol --</option>
+                        <option value="admin">Administrador</option>
+                        <option value="secretary">Secretaria Académica</option>
+                        <option value="teacher">Docente / Instructor</option>
+                        <option value="coordinator">Coordinador Académico</option>
+                    </select>
+                </div>
+                
+                <p class="access-note">Acceso solo para personal autorizado del instituto</p>
+                
+                <button type="submit" class="btn btn-primary btn-block">Ingresar al Sistema</button>
+            </form>
+            
+            <div class="login-footer">
+                <p>© 2024 Instituto de Informática - UNP. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="appContainer" class="app-container" style="display: none;">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">SAII</div>
+                <p class="logo-subtitle">Instituto de Informática</p>
+                <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <h3 class="nav-section-title">Principal</h3>
+                    <a href="#" class="nav-item active" data-view="dashboard">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-label">Dashboard</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <h3 class="nav-section-title">Gestión Académica</h3>
+                    <a href="#" class="nav-item" data-view="students">
+                        <span class="nav-icon">👥</span>
+                        <span class="nav-label">Alumnos</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="courses">
+                        <span class="nav-icon">📚</span>
+                        <span class="nav-label">Cursos y Módulos</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="teachers">
+                        <span class="nav-icon">🎓</span>
+                        <span class="nav-label">Docentes</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="groups">
+                        <span class="nav-icon">🏫</span>
+                        <span class="nav-label">Grupos Académicos</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <h3 class="nav-section-title">Registro Académico</h3>
+                    <a href="#" class="nav-item" data-view="enrollments">
+                        <span class="nav-icon">✍️</span>
+                        <span class="nav-label">Matrículas</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="attendance">
+                        <span class="nav-icon">✓</span>
+                        <span class="nav-label">Asistencia</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="grades">
+                        <span class="nav-icon">📝</span>
+                        <span class="nav-label">Registro de Notas</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="certificates">
+                        <span class="nav-icon">📜</span>
+                        <span class="nav-label">Certificados</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <h3 class="nav-section-title">Información</h3>
+                    <a href="#" class="nav-item" data-view="reports">
+                        <span class="nav-icon">📈</span>
+                        <span class="nav-label">Reportes</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <h3 class="nav-section-title">Administración</h3>
+                    <a href="#" class="nav-item" data-view="users">
+                        <span class="nav-icon">🔐</span>
+                        <span class="nav-label">Usuarios y Roles</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="settings">
+                        <span class="nav-icon">⚙️</span>
+                        <span class="nav-label">Configuración</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <input type="text" class="search-input" id="globalSearch" placeholder="Buscar alumnos, cursos, docentes...">
+                </div>
+                
+                <div class="header-right">
+                    <button class="header-btn notifications-btn" id="notificationsBtn">
+                        🔔
+                        <span class="badge">3</span>
+                    </button>
+                    
+                    <button class="header-btn theme-btn" id="themeToggle">
+                        🌙
+                    </button>
+                    
+                    <div class="user-menu">
+                        <button class="header-btn user-btn" id="userMenuBtn">
+                            👤
+                            <span id="currentUser">Admin</span>
+                        </button>
+                        <div class="dropdown-menu" id="userDropdown" style="display: none;">
+                            <a href="#" class="dropdown-item">Mi Perfil</a>
+                            <a href="#" class="dropdown-item">Cambiar Contraseña</a>
+                            <hr>
+                            <a href="#" class="dropdown-item" id="logoutBtn">Cerrar Sesión</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-header">
+                <div class="page-title-section">
+                    <h2 id="pageTitle">Dashboard</h2>
+                    <p id="pageDescription">Resumen general del sistema académico</p>
+                </div>
+                <div class="breadcrumbs" id="breadcrumbs">
+                    <a href="#" class="breadcrumb-item" data-view="dashboard">Inicio</a>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area" id="contentArea">
+                <!-- Dashboard View -->
+                <div id="dashboard" class="view" style="display: block;">
+                    <div class="dashboard-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-icon">👥</div>
+                            <div class="kpi-content">
+                                <p class="kpi-label">Alumnos Registrados</p>
+                                <p class="kpi-value" id="kpiStudents">487</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-icon">📚</div>
+                            <div class="kpi-content">
+                                <p class="kpi-label">Cursos Activos</p>
+                                <p class="kpi-value">12</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-icon">🏫</div>
+                            <div class="kpi-content">
+                                <p class="kpi-label">Grupos Abiertos</p>
+                                <p class="kpi-value">18</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-icon">🎓</div>
+                            <div class="kpi-content">
+                                <p class="kpi-label">Docentes Asignados</p>
+                                <p class="kpi-value">24</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-icon">✍️</div>
+                            <div class="kpi-content">
+                                <p class="kpi-label">Matrículas Período</p>
+                                <p class="kpi-value">342</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-icon">⏳</div>
+                            <div class="kpi-content">
+                                <p class="kpi-label">Notas Pendientes</p>
+                                <p class="kpi-value" style="color: #d32f2f;">45</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-icon">📜</div>
+                            <div class="kpi-content">
+                                <p class="kpi-label">Certificados Generados</p>
+                                <p class="kpi-value">156</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-icon">✓</div>
+                            <div class="kpi-content">
+                                <p class="kpi-label">Asistencias por Revisar</p>
+                                <p class="kpi-value">12</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-content">
+                        <div class="dashboard-left">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Aprobados vs Desaprobados</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-simple">
+                                        <div class="chart-bar">
+                                            <div class="bar-item">
+                                                <div class="bar-fill" style="width: 75%; background-color: #4caf50;"></div>
+                                            </div>
+                                            <span class="bar-label">Aprobados: 75%</span>
+                                        </div>
+                                        <div class="chart-bar">
+                                            <div class="bar-item">
+                                                <div class="bar-fill" style="width: 25%; background-color: #f44336;"></div>
+                                            </div>
+                                            <span class="bar-label">Desaprobados: 25%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Avance de Notas Registradas</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="progress-item">
+                                        <label>Computación Básica</label>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 100%;"></div>
+                                        </div>
+                                        <span class="progress-text">100%</span>
+                                    </div>
+                                    <div class="progress-item">
+                                        <label>Microsoft Office</label>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 85%;"></div>
+                                        </div>
+                                        <span class="progress-text">85%</span>
+                                    </div>
+                                    <div class="progress-item">
+                                        <label>Computación para Ingenieros</label>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 60%;"></div>
+                                        </div>
+                                        <span class="progress-text">60%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-right">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Accesos Rápidos</h3>
+                                </div>
+                                <div class="card-body quick-actions">
+                                    <button class="quick-action-btn" data-view="students" data-action="new">
+                                        <span class="icon">➕</span>
+                                        <span>Registrar Alumno</span>
+                                    </button>
+                                    <button class="quick-action-btn" data-view="groups" data-action="new">
+                                        <span class="icon">➕</span>
+                                        <span>Abrir Grupo</span>
+                                    </button>
+                                    <button class="quick-action-btn" data-view="grades" data-action="new">
+                                        <span class="icon">➕</span>
+                                        <span>Registrar Notas</span>
+                                    </button>
+                                    <button class="quick-action-btn" data-view="attendance" data-action="new">
+                                        <span class="icon">➕</span>
+                                        <span>Registrar Asistencia</span>
+                                    </button>
+                                    <button class="quick-action-btn" data-view="certificates" data-action="new">
+                                        <span class="icon">➕</span>
+                                        <span>Generar Constancia</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Actividad Reciente</h3>
+                                </div>
+                                <div class="card-body activity-list">
+                                    <div class="activity-item">
+                                        <span class="activity-time">Hace 2 horas</span>
+                                        <p>Alumno Juan Pérez matriculado en Computación Básica</p>
+                                    </div>
+                                    <div class="activity-item">
+                                        <span class="activity-time">Hace 4 horas</span>
+                                        <p>Notas registradas en grupo CB-2024-01</p>
+                                    </div>
+                                    <div class="activity-item">
+                                        <span class="activity-time">Ayer</span>
+                                        <p>Certificado generado para María García</p>
+                                    </div>
+                                    <div class="activity-item">
+                                        <span class="activity-time">Ayer</span>
+                                        <p>Asistencia registrada en grupo MO-2024-03</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students View -->
+                <div id="students" class="view">
+                    <div class="module-header">
+                        <div class="module-controls">
+                            <input type="text" class="search-field" id="studentSearch" placeholder="Buscar por código, DNI, nombre...">
+                            <button class="btn btn-primary" data-action="new-student">Nuevo Alumno</button>
+                        </div>
+                    </div>
+
+                    <div class="filters-bar">
+                        <select id="studentStatusFilter" class="filter-select">
+                            <option value="">Todos los estados</option>
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
+                        </select>
+                        <select id="studentCycleFilter" class="filter-select">
+                            <option value="">Todos los ciclos</option>
+                            <option value="I">Ciclo I</option>
+                            <option value="II">Ciclo II</option>
+                            <option value="III">Ciclo III</option>
+                            <option value="IV">Ciclo IV</option>
+                        </select>
+                        <select id="studentYearFilter" class="filter-select">
+                            <option value="">Todas las promociones</option>
+                            <option value="2024">Promoción 2024</option>
+                            <option value="2023">Promoción 2023</option>
+                            <option value="2022">Promoción 2022</option>
+                        </select>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table" id="studentsTable">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>DNI</th>
+                                    <th>Nombres</th>
+                                    <th>Apellidos</th>
+                                    <th>Correo</th>
+                                    <th>Ciclo</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Courses View -->
+                <div id="courses" class="view">
+                    <div class="module-header">
+                        <div class="module-controls">
+                            <button class="btn btn-primary" data-action="new-course">Nuevo Curso</button>
+                        </div>
+                    </div>
+
+                    <div class="courses-grid" id="coursesGrid">
+                    </div>
+                </div>
+
+                <!-- Teachers View -->
+                <div id="teachers" class="view">
+                    <div class="module-header">
+                        <div class="module-controls">
+                            <input type="text" class="search-field" id="teacherSearch" placeholder="Buscar por código, DNI, nombre...">
+                            <button class="btn btn-primary" data-action="new-teacher">Nuevo Docente</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table" id="teachersTable">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>DNI</th>
+                                    <th>Nombres</th>
+                                    <th>Apellidos</th>
+                                    <th>Especialidad</th>
+                                    <th>Correo</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teachersTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Groups View -->
+                <div id="groups" class="view">
+                    <div class="module-header">
+                        <div class="module-controls">
+                            <input type="text" class="search-field" id="groupSearch" placeholder="Buscar por código o curso...">
+                            <button class="btn btn-primary" data-action="new-group">Abrir Nuevo Grupo</button>
+                        </div>
+                    </div>
+
+                    <div class="filters-bar">
+                        <select id="groupStatusFilter" class="filter-select">
+                            <option value="">Todos los estados</option>
+                            <option value="open">Abierto</option>
+                            <option value="inprogress">En curso</option>
+                            <option value="finished">Terminado</option>
+                            <option value="closed">Cerrado</option>
+                        </select>
+                        <select id="groupModalityFilter" class="filter-select">
+                            <option value="">Todas las modalidades</option>
+                            <option value="regular">Curso regular</option>
+                            <option value="exam">Examen de suficiencia</option>
+                        </select>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table" id="groupsTable">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Curso</th>
+                                    <th>Docente</th>
+                                    <th>Modalidad</th>
+                                    <th>Inicio</th>
+                                    <th>Fin</th>
+                                    <th>Horas</th>
+                                    <th>Matriculados</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="groupsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Enrollments View -->
+                <div id="enrollments" class="view">
+                    <div class="module-header">
+                        <label>Seleccione un grupo:</label>
+                        <select id="enrollmentGroupSelect" class="filter-select">
+                            <option value="">-- Seleccione un grupo --</option>
+                        </select>
+                    </div>
+
+                    <div id="enrollmentContent" style="display: none;">
+                        <div class="enrollment-info card" id="enrollmentGroupInfo">
+                        </div>
+
+                        <div class="enrollment-sections">
+                            <div class="enrollment-section">
+                                <h3>Buscar Alumnos</h3>
+                                <input type="text" class="search-field" id="enrollmentStudentSearch" placeholder="Código, DNI o nombre...">
+                                <div class="table-responsive">
+                                    <table class="data-table" id="availableStudentsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Código</th>
+                                                <th>Alumno</th>
+                                                <th>DNI</th>
+                                                <th>Ciclo</th>
+                                                <th>Acción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="availableStudentsBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="enrollment-section">
+                                <h3>Alumnos Matriculados (<span id="enrolledCount">0</span>/<span id="enrolledQuota">30</span>)</h3>
+                                <div class="table-responsive">
+                                    <table class="data-table" id="enrolledStudentsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Código</th>
+                                                <th>Alumno</th>
+                                                <th>DNI</th>
+                                                <th>Fecha Matrícula</th>
+                                                <th>Acción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="enrolledStudentsBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance View -->
+                <div id="attendance" class="view">
+                    <div class="module-header">
+                        <div class="attendance-controls">
+                            <div class="control-group">
+                                <label>Grupo:</label>
+                                <select id="attendanceGroupSelect" class="filter-select">
+                                    <option value="">-- Seleccione un grupo --</option>
+                                </select>
+                            </div>
+                            <div class="control-group">
+                                <label>Fecha:</label>
+                                <input type="date" id="attendanceDateSelect" class="filter-select">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="attendanceContent" style="display: none;">
+                        <div class="attendance-header">
+                            <p id="attendanceInfo"></p>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="data-table" id="attendanceTable">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Alumno</th>
+                                        <th>Presente</th>
+                                        <th>Tarde</th>
+                                        <th>Falta</th>
+                                        <th>Justificado</th>
+                                        <th>Observación</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attendanceTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="attendance-summary">
+                            <div class="summary-item">
+                                <span>Presentes:</span>
+                                <strong id="summaryPresent">0</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span>Tardanzas:</span>
+                                <strong id="summaryLate">0</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span>Faltas:</span>
+                                <strong id="summaryAbsent">0</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span>Justificados:</span>
+                                <strong id="summaryJustified">0</strong>
+                            </div>
+                            <button class="btn btn-primary" id="saveAttendanceBtn">Guardar Asistencia</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grades View -->
+                <div id="grades" class="view">
+                    <div class="module-header">
+                        <div class="grades-controls">
+                            <div class="control-group">
+                                <label>Grupo:</label>
+                                <select id="gradesGroupSelect" class="filter-select">
+                                    <option value="">-- Seleccione un grupo --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="gradesContent" style="display: none;">
+                        <div class="grades-header">
+                            <p id="gradesInfo"></p>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="data-table grades-table" id="gradesTable">
+                                <thead id="gradesTableHead">
+                                </thead>
+                                <tbody id="gradesTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="grades-actions">
+                            <button class="btn btn-primary" id="saveGradesBtn">Guardar Notas</button>
+                            <button class="btn btn-secondary" id="closeGradesBtn">Cerrar Acta</button>
+                            <button class="btn btn-secondary" id="exportGradesBtn">Exportar Acta</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certificates View -->
+                <div id="certificates" class="view">
+                    <div class="module-header">
+                        <div class="module-controls">
+                            <button class="btn btn-primary" data-action="new-certificate">Generar Nueva Constancia</button>
+                        </div>
+                    </div>
+
+                    <div class="filters-bar">
+                        <select id="certCourseFilter" class="filter-select">
+                            <option value="">Todos los cursos</option>
+                        </select>
+                        <select id="certGroupFilter" class="filter-select">
+                            <option value="">Todos los grupos</option>
+                        </select>
+                        <select id="certModalityFilter" class="filter-select">
+                            <option value="">Todas las modalidades</option>
+                            <option value="regular">Curso regular</option>
+                            <option value="exam">Examen de suficiencia</option>
+                        </select>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table" id="certificatesTable">
+                            <thead>
+                                <tr>
+                                    <th>Código Alumno</th>
+                                    <th>Alumno</th>
+                                    <th>Curso</th>
+                                    <th>Modalidad</th>
+                                    <th>Promedio</th>
+                                    <th>Asistencia</th>
+                                    <th>Estado</th>
+                                    <th>Fecha Aprobación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="certificatesTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Reports View -->
+                <div id="reports" class="view">
+                    <div class="reports-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Total Alumnos por Curso</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="stat-value" id="reportTotalStudents">487</div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Aprobados</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="stat-value" style="color: #4caf50;" id="reportApproved">365</div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Desaprobados</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="stat-value" style="color: #f44336;" id="reportDisapproved">122</div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Promedio General</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="stat-value" id="reportGeneralAverage">14.5</div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Certificados Emitidos</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="stat-value" id="reportCertificates">156</div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Asistencia Promedio</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="stat-value" id="reportAvgAttendance">87%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Reporte Detallado</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="data-table" id="reportTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Curso</th>
+                                            <th>Grupo</th>
+                                            <th>Docente</th>
+                                            <th>Matriculados</th>
+                                            <th>Aprobados</th>
+                                            <th>Desaprobados</th>
+                                            <th>Promedio</th>
+                                            <th>Certificados</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reportTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users View -->
+                <div id="users" class="view">
+                    <div class="module-header">
+                        <div class="module-controls">
+                            <button class="btn btn-primary" data-action="new-user">Nuevo Usuario</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Nombre Completo</th>
+                                    <th>Rol</th>
+                                    <th>Correo</th>
+                                    <th>Estado</th>
+                                    <th>Último Acceso</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Settings View -->
+                <div id="settings" class="view">
+                    <div class="settings-container">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Datos del Instituto</h3>
+                            </div>
+                            <div class="card-body settings-form">
+                                <div class="form-group">
+                                    <label>Nombre del Instituto</label>
+                                    <input type="text" value="Instituto de Informática" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Universidad</label>
+                                    <input type="text" value="Universidad Nacional de Piura" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Correo Institucional</label>
+                                    <input type="email" value="info@institutoinformatica.edu.pe">
+                                </div>
+                                <div class="form-group">
+                                    <label>Teléfono</label>
+                                    <input type="text" value="+51 (73) 123-4567">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Configuración Académica</h3>
+                            </div>
+                            <div class="card-body settings-form">
+                                <div class="form-group">
+                                    <label>Período Académico Actual</label>
+                                    <input type="text" value="2024-I">
+                                </div>
+                                <div class="form-group">
+                                    <label>Nota Mínima Aprobatoria</label>
+                                    <input type="number" value="11" min="0" max="20">
+                                </div>
+                                <div class="form-group">
+                                    <label>Asistencia Mínima Requerida (%)</label>
+                                    <input type="number" value="70" min="0" max="100">
+                                </div>
+                                <button class="btn btn-primary">Guardar Cambios</button>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Preferencias del Sistema</h3>
+                            </div>
+                            <div class="card-body settings-form">
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="enableNotifications" checked>
+                                        Habilitar notificaciones
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="enableAutoSave" checked>
+                                        Guardado automático
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>Idioma</label>
+                                    <select>
+                                        <option value="es">Español</option>
+                                        <option value="en">English</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modalOverlay" class="modal-overlay" style="display: none;" onclick="closeModal()"></div>
+    
+    <div id="studentModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="studentModalTitle">Nuevo Alumno</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="studentForm" class="form-modal">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Código de Alumno *</label>
+                            <input type="text" id="studentCode" maxlength="10" placeholder="10 dígitos" required>
+                            <small class="form-help">Formato: 10 dígitos</small>
+                        </div>
+                        <div class="form-group">
+                            <label>DNI *</label>
+                            <input type="text" id="studentDNI" maxlength="8" placeholder="8 dígitos" required>
+                            <small class="form-help">Formato: 8 dígitos</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombres *</label>
+                            <input type="text" id="studentFirstNames" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Apellidos *</label>
+                            <input type="text" id="studentLastNames" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Correo</label>
+                            <input type="email" id="studentEmail">
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="text" id="studentPhone">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ciclo *</label>
+                            <select id="studentCycle" required>
+                                <option value="">-- Seleccione --</option>
+                                <option value="I">Ciclo I</option>
+                                <option value="II">Ciclo II</option>
+                                <option value="III">Ciclo III</option>
+                                <option value="IV">Ciclo IV</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Promoción *</label>
+                            <select id="studentPromotion" required>
+                                <option value="">-- Seleccione --</option>
+                                <option value="2024">Promoción 2024</option>
+                                <option value="2023">Promoción 2023</option>
+                                <option value="2022">Promoción 2022</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Estado *</label>
+                        <select id="studentStatus" required>
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Observaciones</label>
+                        <textarea id="studentObservations" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="certificateModal" class="modal" style="display: none;">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2>Certificado / Constancia</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="certificate-preview" id="certificatePreview">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" onclick="printCertificate()">Imprimir</button>
+                    <button class="btn btn-secondary" onclick="downloadCertificatePDF()">Descargar PDF</button>
+                    <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notificationToast" class="toast" style="display: none;">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
