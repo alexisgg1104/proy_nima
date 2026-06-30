@@ -325,20 +325,26 @@ class SAIIApp {
         const tbody = document.getElementById('studentsTableBody');
         tbody.innerHTML = '';
 
+        if (students.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem; color: var(--color-text-secondary);">No se encontraron alumnos</td></tr>';
+            return;
+        }
+
         students.forEach(student => {
             const row = document.createElement('tr');
             const statusLabel = student.status === 'active' ? 'Activo' : 'Inactivo';
             const statusClass = student.status === 'active' ? 'badge-active' : 'badge-inactive';
+            const fullName = `${student.firstName} ${student.lastName}`;
             row.innerHTML = `
                 <td>${student.code}</td>
                 <td>${student.dni}</td>
-                <td>${student.firstName}</td>
-                <td>${student.lastName}</td>
+                <td><strong>${fullName}</strong></td>
                 <td>${student.email}</td>
-                <td>Ciclo ${student.cycle}</td>
+                <td>Promoción ${student.promotion}</td>
                 <td><span class="badge-status ${statusClass}">${statusLabel}</span></td>
                 <td>
                     <div class="action-icons">
+                        <button class="icon-btn icon-view" onclick="app.viewStudentDetail('${student.id}')" title="Ver detalle">&#128269;</button>
                         <button class="icon-btn icon-edit" onclick="app.editStudent('${student.id}')" title="Editar">&#9998;</button>
                         <button class="icon-btn icon-delete" onclick="app.deleteStudent('${student.id}')" title="Desactivar">&#128683;</button>
                     </div>
@@ -346,6 +352,34 @@ class SAIIApp {
             `;
             tbody.appendChild(row);
         });
+    }
+
+    viewStudentDetail(studentId) {
+        const student = DataManager.getStudentById(studentId);
+        if (!student) return;
+        const statusLabel = student.status === 'active' ? 'Activo' : 'Inactivo';
+        const statusClass = student.status === 'active' ? 'badge-active' : 'badge-inactive';
+        const body = document.getElementById('studentDetailBody');
+        body.innerHTML = `
+            <div class="detail-grid">
+                <div class="detail-item"><span class="detail-label">Código</span><span class="detail-value">${student.code}</span></div>
+                <div class="detail-item"><span class="detail-label">DNI</span><span class="detail-value">${student.dni}</span></div>
+                <div class="detail-item"><span class="detail-label">Nombres</span><span class="detail-value">${student.firstName}</span></div>
+                <div class="detail-item"><span class="detail-label">Apellidos</span><span class="detail-value">${student.lastName}</span></div>
+                <div class="detail-item"><span class="detail-label">Correo</span><span class="detail-value">${student.email || '-'}</span></div>
+                <div class="detail-item"><span class="detail-label">Teléfono</span><span class="detail-value">${student.phone || '-'}</span></div>
+                <div class="detail-item"><span class="detail-label">Ciclo</span><span class="detail-value">Ciclo ${student.cycle}</span></div>
+                <div class="detail-item"><span class="detail-label">Promoción</span><span class="detail-value">Promoción ${student.promotion}</span></div>
+                <div class="detail-item"><span class="detail-label">Estado</span><span class="detail-value"><span class="badge-status ${statusClass}">${statusLabel}</span></span></div>
+                ${student.observations ? `<div class="detail-item detail-full"><span class="detail-label">Observaciones</span><span class="detail-value">${student.observations}</span></div>` : ''}
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="app.editStudent('${student.id}'); closeModal();">Editar</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+            </div>
+        `;
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('studentDetailModal').style.display = 'block';
     }
 
     setupStudentFilters() {
@@ -488,14 +522,20 @@ class SAIIApp {
         }
     }
 
-    // ========== COURSES MODULE ==========
     loadCourses() {
         const courses = DataManager.getCourses();
         const grid = document.getElementById('coursesGrid');
         grid.innerHTML = '';
 
+        if (courses.length === 0) {
+            grid.innerHTML = '<p style="color: var(--color-text-secondary); text-align:center; padding:2rem;">No hay cursos registrados.</p>';
+            return;
+        }
+
         courses.forEach(course => {
             const moduleTotal = course.modules.reduce((sum, m) => sum + m.percentage, 0);
+            const statusLabel = course.status === 'active' ? 'Activo' : 'Inactivo';
+            const statusClass = course.status === 'active' ? 'badge-active' : 'badge-inactive';
             const card = document.createElement('div');
             card.className = 'course-card';
             card.innerHTML = `
@@ -503,7 +543,7 @@ class SAIIApp {
                     <h3 class="course-title">${course.name}</h3>
                     <div class="course-meta">
                         <span>${course.totalHours}h</span>
-                        <span class="badge-status badge-active">${course.status === 'active' ? 'Activo' : 'Inactivo'}</span>
+                        <span class="badge-status ${statusClass}">${statusLabel}</span>
                     </div>
                 </div>
                 <div class="course-body">
@@ -518,17 +558,18 @@ class SAIIApp {
                         </div>
                         <div class="course-info-item">
                             <span class="course-info-label">Cobertura</span>
-                            <span class="course-info-value">${moduleTotal}%</span>
+                            <span class="course-info-value ${moduleTotal === 100 ? '' : 'pct-warn-text'}">${moduleTotal}%</span>
                         </div>
                     </div>
-                    <div style="margin-bottom: 1rem;">
-                        <strong style="font-size: 0.9rem;">Módulos:</strong>
-                        ${course.modules.map(m => `<div style="font-size: 0.85rem; margin-top: 0.3rem; color: var(--color-text-secondary);">${m.name}: ${m.percentage}%</div>`).join('')}
+                    <div style="margin-bottom: 0.75rem;">
+                        <strong style="font-size: 0.85rem;">Módulos:</strong>
+                        ${course.modules.map(m => `<div style="font-size: 0.82rem; margin-top: 0.2rem; color: var(--color-text-secondary);">• ${m.name}: ${m.percentage}%</div>`).join('')}
                     </div>
-                    ${moduleTotal !== 100 ? '<div style="padding: 0.5rem; background: rgba(211, 47, 47, 0.1); color: #d32f2f; border-radius: 4px; font-size: 0.85rem;">⚠️ Los porcentajes no suman 100%</div>' : ''}
+                    ${moduleTotal !== 100 ? '<div class="pct-warning-banner">&#9888;&#65039; Los porcentajes no suman 100%</div>' : ''}
                     <div class="course-actions">
                         <button class="icon-btn icon-view" onclick="app.viewCourseDetails('${course.id}')" title="Ver detalles">&#128269;</button>
                         <button class="icon-btn icon-edit" onclick="app.editCourse('${course.id}')" title="Editar">&#9998;</button>
+                        <button class="icon-btn icon-delete" onclick="app.deleteCourse('${course.id}')" title="Desactivar">&#128683;</button>
                     </div>
                 </div>
             `;
@@ -536,19 +577,161 @@ class SAIIApp {
         });
     }
 
-    viewCourseDetails(courseId) {
-        const course = DataManager.getCourseById(courseId);
-        if (course) {
-            alert(`Curso: ${course.name}\nHoras: ${course.totalHours}\nMódulos: ${course.modules.length}\n\nMódulos:\n${course.modules.map(m => `${m.name}: ${m.percentage}%`).join('\n')}`);
+    deleteCourse(courseId) {
+        if (confirm('¿Desactivar este curso?')) {
+            const course = DataManager.getCourseById(courseId);
+            if (course) {
+                course.status = 'inactive';
+                this.showToast('Curso desactivado', 'success');
+                this.loadCourses();
+            }
         }
     }
 
-    editCourse(courseId) {
-        alert('Funcionalidad de editar curso. Course ID: ' + courseId);
+    viewCourseDetails(courseId) {
+        const course = DataManager.getCourseById(courseId);
+        if (!course) return;
+        const statusLabel = course.status === 'active' ? 'Activo' : 'Inactivo';
+        const statusClass = course.status === 'active' ? 'badge-active' : 'badge-inactive';
+        const moduleTotal = course.modules.reduce((sum, m) => sum + m.percentage, 0);
+        const body = document.getElementById('studentDetailBody');
+
+        // Reutilizamos studentDetailModal para cursos
+        body.innerHTML = `
+            <div class="detail-grid">
+                <div class="detail-item"><span class="detail-label">Código</span><span class="detail-value">${course.code || '-'}</span></div>
+                <div class="detail-item"><span class="detail-label">Total horas</span><span class="detail-value">${course.totalHours}h</span></div>
+                <div class="detail-item detail-full"><span class="detail-label">Nombre del Curso</span><span class="detail-value">${course.name}</span></div>
+                <div class="detail-item"><span class="detail-label">Estado</span><span class="detail-value"><span class="badge-status ${statusClass}">${statusLabel}</span></span></div>
+                <div class="detail-item"><span class="detail-label">Módulos</span><span class="detail-value">${course.modules.length} módulos (${moduleTotal}% cubierto)</span></div>
+            </div>
+            <div style="margin-top:1rem;">
+                <strong>Módulos:</strong>
+                <table class="data-table" style="margin-top:0.5rem;">
+                    <thead><tr><th>Módulo</th><th>%</th></tr></thead>
+                    <tbody>
+                        ${course.modules.map(m => `<tr><td>${m.name}</td><td>${m.percentage}%</td></tr>`).join('')}
+                    </tbody>
+                </table>
+                ${moduleTotal !== 100 ? '<p style="color:#d32f2f; margin-top:0.5rem; font-size:0.85rem;">&#9888;&#65039; Los porcentajes no suman 100%</p>' : ''}
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="app.editCourse('${course.id}'); closeModal();">Editar</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+            </div>
+        `;
+        const title = document.getElementById('studentDetailModal').querySelector('h2');
+        if (title) title.textContent = 'Detalle del Curso';
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('studentDetailModal').style.display = 'block';
     }
 
-    openCourseModal() {
-        alert('Agregar nuevo curso - Modal no implementado en esta versión demo');
+    editCourse(courseId) {
+        this.openCourseModal(courseId);
+    }
+
+    openCourseModal(courseId = null) {
+        const modal = document.getElementById('courseModal');
+        const form = document.getElementById('courseForm');
+        const title = document.getElementById('courseModalTitle');
+        form.reset();
+
+        // Clear modules editor
+        const rowsContainer = document.getElementById('modulesEditorRows');
+        rowsContainer.innerHTML = '';
+        this._editingCourseId = courseId;
+
+        if (courseId) {
+            title.textContent = 'Editar Curso';
+            const course = DataManager.getCourseById(courseId);
+            if (course) {
+                document.getElementById('courseCode').value = course.code || '';
+                document.getElementById('courseName').value = course.name;
+                document.getElementById('courseTotalHours').value = course.totalHours;
+                document.getElementById('courseDescription').value = course.description || '';
+                document.getElementById('courseStatus').value = course.status;
+                // Load existing modules
+                course.modules.forEach(m => this.addModuleRow(m.name, m.percentage));
+            }
+        } else {
+            title.textContent = 'Nuevo Curso';
+            // Start with one empty module row
+            this.addModuleRow();
+        }
+
+        this.updateModulesTotal();
+        document.getElementById('modalOverlay').style.display = 'block';
+        modal.style.display = 'block';
+        form.onsubmit = (e) => this.handleCourseSubmit(e);
+    }
+
+    addModuleRow(name = '', percentage = 0) {
+        const container = document.getElementById('modulesEditorRows');
+        const idx = container.children.length;
+        const row = document.createElement('div');
+        row.className = 'module-editor-row';
+        row.innerHTML = `
+            <input type="text" class="module-name-input" placeholder="Nombre del módulo" value="${name}" required>
+            <input type="number" class="module-pct-input" placeholder="%" min="0" max="100" value="${percentage}" required>
+            <button type="button" class="icon-btn icon-delete" onclick="this.parentElement.remove(); app.updateModulesTotal();" title="Eliminar módulo">&#128683;</button>
+        `;
+        row.querySelector('.module-pct-input').addEventListener('input', () => this.updateModulesTotal());
+        container.appendChild(row);
+        this.updateModulesTotal();
+    }
+
+    updateModulesTotal() {
+        const inputs = document.querySelectorAll('.module-pct-input');
+        const total = Array.from(inputs).reduce((sum, inp) => sum + (parseInt(inp.value) || 0), 0);
+        const badge = document.getElementById('modulesPercentageTotal');
+        const warning = document.getElementById('modulesWarning');
+        if (badge) {
+            badge.textContent = `Total: ${total}%`;
+            badge.className = 'modules-percentage-badge ' + (total === 100 ? 'pct-ok' : 'pct-warn');
+        }
+        if (warning) warning.style.display = total !== 100 ? 'block' : 'none';
+    }
+
+    handleCourseSubmit(e) {
+        e.preventDefault();
+        const nameInputs = document.querySelectorAll('.module-name-input');
+        const pctInputs = document.querySelectorAll('.module-pct-input');
+        const modules = Array.from(nameInputs).map((inp, i) => ({
+            name: inp.value.trim(),
+            percentage: parseInt(pctInputs[i].value) || 0
+        })).filter(m => m.name);
+        const total = modules.reduce((s, m) => s + m.percentage, 0);
+
+        if (total !== 100) {
+            this.showToast('Los porcentajes de módulos deben sumar exactamente 100%', 'error');
+            return;
+        }
+
+        const data = {
+            code: document.getElementById('courseCode').value.trim(),
+            name: document.getElementById('courseName').value.trim(),
+            totalHours: parseInt(document.getElementById('courseTotalHours').value),
+            description: document.getElementById('courseDescription').value.trim(),
+            status: document.getElementById('courseStatus').value,
+            modules: modules
+        };
+
+        if (!data.name) { this.showToast('El nombre del curso es obligatorio', 'error'); return; }
+        if (!data.totalHours || data.totalHours < 1) { this.showToast('Las horas totales deben ser mayor a 0', 'error'); return; }
+
+        const courseId = this._editingCourseId;
+        if (courseId) {
+            const course = DataManager.getCourseById(courseId);
+            if (course) {
+                Object.assign(course, data);
+                this.showToast('Curso actualizado correctamente', 'success');
+            }
+        } else {
+            DataManager.addCourse(data);
+            this.showToast('Curso creado correctamente', 'success');
+        }
+        this.closeModal();
+        this.loadCourses();
     }
 
     // ========== TEACHERS MODULE ==========
@@ -562,20 +745,27 @@ class SAIIApp {
         const tbody = document.getElementById('teachersTableBody');
         tbody.innerHTML = '';
 
+        if (teachers.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2rem; color: var(--color-text-secondary);">No se encontraron docentes</td></tr>';
+            return;
+        }
+
         teachers.forEach(teacher => {
             const row = document.createElement('tr');
             const statusLabel = teacher.status === 'active' ? 'Activo' : 'Inactivo';
             const statusClass = teacher.status === 'active' ? 'badge-active' : 'badge-inactive';
+            const fullName = `${teacher.firstName} ${teacher.lastName}`;
             row.innerHTML = `
                 <td>${teacher.code}</td>
                 <td>${teacher.dni}</td>
-                <td>${teacher.firstName}</td>
-                <td>${teacher.lastName}</td>
-                <td>${teacher.specialty}</td>
+                <td><strong>${fullName}</strong></td>
                 <td>${teacher.email}</td>
+                <td>${teacher.phone}</td>
+                <td>${teacher.specialty}</td>
                 <td><span class="badge-status ${statusClass}">${statusLabel}</span></td>
                 <td>
                     <div class="action-icons">
+                        <button class="icon-btn icon-view" onclick="app.viewTeacherDetail('${teacher.id}')" title="Ver detalle">&#128269;</button>
                         <button class="icon-btn icon-edit" onclick="app.editTeacher('${teacher.id}')" title="Editar">&#9998;</button>
                         <button class="icon-btn icon-delete" onclick="app.deleteTeacher('${teacher.id}')" title="Desactivar">&#128683;</button>
                     </div>
@@ -603,7 +793,115 @@ class SAIIApp {
     }
 
     editTeacher(teacherId) {
-        alert('Editar docente - ID: ' + teacherId);
+        this.openTeacherModal(teacherId);
+    }
+
+    viewTeacherDetail(teacherId) {
+        const teacher = DataManager.getTeacherById(teacherId);
+        if (!teacher) return;
+        const statusLabel = teacher.status === 'active' ? 'Activo' : 'Inactivo';
+        const statusClass = teacher.status === 'active' ? 'badge-active' : 'badge-inactive';
+        const body = document.getElementById('teacherDetailBody');
+        body.innerHTML = `
+            <div class="detail-grid">
+                <div class="detail-item"><span class="detail-label">Código</span><span class="detail-value">${teacher.code}</span></div>
+                <div class="detail-item"><span class="detail-label">DNI</span><span class="detail-value">${teacher.dni}</span></div>
+                <div class="detail-item"><span class="detail-label">Nombres</span><span class="detail-value">${teacher.firstName}</span></div>
+                <div class="detail-item"><span class="detail-label">Apellidos</span><span class="detail-value">${teacher.lastName}</span></div>
+                <div class="detail-item"><span class="detail-label">Correo</span><span class="detail-value">${teacher.email || '-'}</span></div>
+                <div class="detail-item"><span class="detail-label">Teléfono</span><span class="detail-value">${teacher.phone || '-'}</span></div>
+                <div class="detail-item detail-full"><span class="detail-label">Especialidad</span><span class="detail-value">${teacher.specialty}</span></div>
+                <div class="detail-item"><span class="detail-label">Estado</span><span class="detail-value"><span class="badge-status ${statusClass}">${statusLabel}</span></span></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="app.editTeacher('${teacher.id}'); closeModal();">Editar</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+            </div>
+        `;
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('teacherDetailModal').style.display = 'block';
+    }
+
+    openTeacherModal(teacherId = null) {
+        const modal = document.getElementById('teacherModal');
+        const form = document.getElementById('teacherForm');
+        const title = document.getElementById('teacherModalTitle');
+
+        form.reset();
+
+        if (teacherId) {
+            title.textContent = 'Editar Docente';
+            const teacher = DataManager.getTeacherById(teacherId);
+            if (teacher) {
+                document.getElementById('teacherCode').value = teacher.code;
+                document.getElementById('teacherDNI').value = teacher.dni;
+                document.getElementById('teacherFirstNames').value = teacher.firstName;
+                document.getElementById('teacherLastNames').value = teacher.lastName;
+                document.getElementById('teacherEmail').value = teacher.email;
+                document.getElementById('teacherPhone').value = teacher.phone;
+                document.getElementById('teacherSpecialty').value = teacher.specialty;
+                document.getElementById('teacherStatus').value = teacher.status;
+            }
+        } else {
+            title.textContent = 'Nuevo Docente';
+        }
+
+        document.getElementById('modalOverlay').style.display = 'block';
+        modal.style.display = 'block';
+        form.onsubmit = (e) => this.handleTeacherSubmit(e, teacherId);
+    }
+
+    handleTeacherSubmit(e, teacherId) {
+        e.preventDefault();
+        const data = {
+            code: document.getElementById('teacherCode').value.trim(),
+            dni: document.getElementById('teacherDNI').value.trim(),
+            firstName: document.getElementById('teacherFirstNames').value.trim(),
+            lastName: document.getElementById('teacherLastNames').value.trim(),
+            email: document.getElementById('teacherEmail').value.trim(),
+            phone: document.getElementById('teacherPhone').value.trim(),
+            specialty: document.getElementById('teacherSpecialty').value.trim(),
+            status: document.getElementById('teacherStatus').value
+        };
+
+        if (!this.validateTeacherData(data)) return;
+
+        if (teacherId) {
+            const teacher = DataManager.getTeacherById(teacherId);
+            if (teacher) {
+                Object.assign(teacher, data);
+                this.showToast('Docente actualizado correctamente', 'success');
+            }
+        } else {
+            DataManager.addTeacher(data);
+            this.showToast('Docente registrado correctamente', 'success');
+        }
+        this.closeModal();
+        this.loadTeachers();
+    }
+
+    validateTeacherData(data) {
+        if (!data.code) {
+            this.showToast('El código del docente es obligatorio', 'error');
+            return false;
+        }
+        if (!data.dni || data.dni.length !== 8 || isNaN(data.dni)) {
+            this.showToast('El DNI debe tener 8 dígitos numéricos', 'error');
+            return false;
+        }
+        if (!data.firstName || !data.lastName) {
+            this.showToast('Nombres y apellidos son obligatorios', 'error');
+            return false;
+        }
+        if (!data.specialty) {
+            this.showToast('La especialidad es obligatoria', 'error');
+            return false;
+        }
+        if (data.email && !this.validateEmail(data.email)) {
+            this.showToast('Correo electrónico no válido', 'error');
+            return false;
+        }
+        return true;
     }
 
     deleteTeacher(teacherId) {
@@ -615,10 +913,6 @@ class SAIIApp {
                 this.loadTeachers();
             }
         }
-    }
-
-    openTeacherModal() {
-        alert('Agregar nuevo docente - Modal no implementado en esta versión demo');
     }
 
     // ========== GROUPS MODULE ==========

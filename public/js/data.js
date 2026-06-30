@@ -271,6 +271,24 @@ const DataManager = {
         return mockData.courses.find(c => c.id === id);
     },
 
+    addCourse: function(courseData) {
+        const newCourse = {
+            id: 'CRS' + String(mockData.courses.length + 1).padStart(3, '0'),
+            ...courseData
+        };
+        mockData.courses.push(newCourse);
+        return newCourse;
+    },
+
+    updateTeacher: function(id, updates) {
+        const teacher = mockData.teachers.find(t => t.id === id);
+        if (teacher) {
+            Object.assign(teacher, updates);
+            return teacher;
+        }
+        return null;
+    },
+
     // Teacher operations
     getTeachers: function() {
         return mockData.teachers;

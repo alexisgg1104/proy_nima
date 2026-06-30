@@ -393,10 +393,9 @@
                                 <tr>
                                     <th>Código</th>
                                     <th>DNI</th>
-                                    <th>Nombres</th>
-                                    <th>Apellidos</th>
+                                    <th>Alumno</th>
                                     <th>Correo</th>
-                                    <th>Ciclo</th>
+                                    <th>Promoción</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -434,10 +433,10 @@
                                 <tr>
                                     <th>Código</th>
                                     <th>DNI</th>
-                                    <th>Nombres</th>
-                                    <th>Apellidos</th>
-                                    <th>Especialidad</th>
+                                    <th>Docente</th>
                                     <th>Correo</th>
+                                    <th>Teléfono</th>
+                                    <th>Especialidad</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -986,6 +985,146 @@
                     <button class="btn btn-secondary" onclick="downloadCertificatePDF()">Descargar PDF</button>
                     <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Detalle de Alumno -->
+    <div id="studentDetailModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Detalle del Alumno</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="studentDetailBody">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Nuevo / Editar Docente -->
+    <div id="teacherModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="teacherModalTitle">Nuevo Docente</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="teacherForm" class="form-modal">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Código Docente *</label>
+                            <input type="text" id="teacherCode" maxlength="10" placeholder="Ej: DOC006" required>
+                        </div>
+                        <div class="form-group">
+                            <label>DNI *</label>
+                            <input type="text" id="teacherDNI" maxlength="8" placeholder="8 dígitos" required>
+                            <small class="form-help">Formato: 8 dígitos</small>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombres *</label>
+                            <input type="text" id="teacherFirstNames" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Apellidos *</label>
+                            <input type="text" id="teacherLastNames" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Correo</label>
+                            <input type="email" id="teacherEmail">
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="text" id="teacherPhone">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Especialidad *</label>
+                            <input type="text" id="teacherSpecialty" required placeholder="Ej: Ofimática, Programación...">
+                        </div>
+                        <div class="form-group">
+                            <label>Estado *</label>
+                            <select id="teacherStatus" required>
+                                <option value="active">Activo</option>
+                                <option value="inactive">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Detalle de Docente -->
+    <div id="teacherDetailModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Detalle del Docente</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="teacherDetailBody">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Nuevo / Editar Curso -->
+    <div id="courseModal" class="modal modal-lg" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="courseModalTitle">Nuevo Curso</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="courseForm" class="form-modal">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Código del Curso *</label>
+                            <input type="text" id="courseCode" placeholder="Ej: CB001" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Total de Horas *</label>
+                            <input type="number" id="courseTotalHours" min="1" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre del Curso *</label>
+                        <input type="text" id="courseName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Descripción</label>
+                        <textarea id="courseDescription" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select id="courseStatus">
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
+                        </select>
+                    </div>
+
+                    <div class="modules-section">
+                        <div class="modules-section-header">
+                            <strong>Módulos del Curso</strong>
+                            <span id="modulesPercentageTotal" class="modules-percentage-badge">Total: 0%</span>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="app.addModuleRow()">+ Agregar Módulo</button>
+                        </div>
+                        <div id="modulesEditorRows"></div>
+                        <p id="modulesWarning" class="modules-warning" style="display:none;">&#9888;&#65039; Los porcentajes no suman 100%. Ajusta los valores antes de guardar.</p>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar Curso</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
