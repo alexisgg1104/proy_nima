@@ -567,67 +567,120 @@
                     </div>
                 </div>
 
-                <!-- Attendance View -->
+                <!-- Attendance View — Control de Asistencia Docente (Fase 5) -->
                 <div id="attendance" class="view">
-                    <div class="module-header">
-                        <div class="attendance-controls">
-                            <div class="control-group">
-                                <label>Grupo:</label>
-                                <select id="attendanceGroupSelect" class="filter-select">
-                                    <option value="">-- Seleccione un grupo --</option>
-                                </select>
-                            </div>
-                            <div class="control-group">
-                                <label>Fecha:</label>
-                                <input type="date" id="attendanceDateSelect" class="filter-select">
-                            </div>
-                        </div>
-                    </div>
 
-                    <div id="attendanceContent" style="display: none;">
-                        <div class="attendance-header">
-                            <p id="attendanceInfo"></p>
+                    <!-- VISTA ADMINISTRADOR -->
+                    <div id="attendanceAdminView">
+                        <div class="module-header">
+                            <h2 class="module-title">Asistencias Docentes Registradas</h2>
+                        </div>
+
+                        <!-- Filtros -->
+                        <div class="filters-bar">
+                            <select id="attFilterTeacher" class="filter-select">
+                                <option value="">Todos los docentes</option>
+                            </select>
+                            <select id="attFilterModality" class="filter-select">
+                                <option value="">Todas las modalidades</option>
+                                <option value="regular">Curso regular</option>
+                                <option value="exam">Examen de suficiencia</option>
+                            </select>
+                            <select id="attFilterStatus" class="filter-select">
+                                <option value="">Todos los estados</option>
+                                <option value="borrador">Borrador</option>
+                                <option value="enviado">Enviado</option>
+                                <option value="validado">Validado</option>
+                                <option value="observado">Observado</option>
+                                <option value="cerrado">Cerrado</option>
+                            </select>
                         </div>
 
                         <div class="table-responsive">
-                            <table class="data-table" id="attendanceTable">
+                            <table class="data-table" id="attendanceAdminTable">
                                 <thead>
                                     <tr>
-                                        <th>Código</th>
-                                        <th>Alumno</th>
-                                        <th>Presente</th>
-                                        <th>Tarde</th>
-                                        <th>Falta</th>
-                                        <th>Justificado</th>
-                                        <th>Observación</th>
+                                        <th>Docente</th>
+                                        <th>Curso / Grupo</th>
+                                        <th>Modalidad</th>
+                                        <th>Período / Fecha</th>
+                                        <th>Horas dictadas</th>
+                                        <th>Horas prog.</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody id="attendanceTableBody">
+                                <tbody id="attendanceAdminBody">
                                 </tbody>
                             </table>
                         </div>
+                    </div>
 
-                        <div class="attendance-summary">
-                            <div class="summary-item">
-                                <span>Presentes:</span>
-                                <strong id="summaryPresent">0</strong>
+                    <!-- VISTA DOCENTE -->
+                    <div id="attendanceTeacherView" style="display:none;">
+                        <div class="module-header">
+                            <h2 class="module-title">Control de Asistencia Docente</h2>
+                        </div>
+
+                        <div class="att-selector-bar">
+                            <label class="enrollment-selector-label">Seleccione su grupo o examen asignado:</label>
+                            <select id="attendanceGroupSelect" class="filter-select enrollment-group-select">
+                                <option value="">-- Seleccione --</option>
+                            </select>
+                        </div>
+
+                        <div id="attendanceContent" style="display:none;">
+
+                            <!-- Encabezado institucional -->
+                            <div class="att-planilla-header" id="attPlanillaHeader">
                             </div>
-                            <div class="summary-item">
-                                <span>Tardanzas:</span>
-                                <strong id="summaryLate">0</strong>
+
+                            <!-- Barra de estado y horas -->
+                            <div class="att-status-bar" id="attStatusBar">
                             </div>
-                            <div class="summary-item">
-                                <span>Faltas:</span>
-                                <strong id="summaryAbsent">0</strong>
+
+                            <!-- Tabla de sesiones -->
+                            <div class="att-sessions-card">
+                                <div class="att-sessions-top">
+                                    <span class="enrollment-table-title">&#128197; Registro de Sesiones</span>
+                                    <button class="btn btn-primary btn-sm" id="attAddSessionBtn" onclick="app.openSessionModal()">&#43; Agregar sesión</button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="data-table" id="attendanceSessionsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Fecha</th>
+                                                <th>Hora entrada</th>
+                                                <th>Hora salida</th>
+                                                <th>Total horas</th>
+                                                <th>Enlace Meet</th>
+                                                <th>Observación</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="attendanceSessionsBody">
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="att-total-row">
+                                                <td colspan="4"><strong>TOTAL HORAS DICTADAS</strong></td>
+                                                <td id="attTotalHours"><strong>0.0 h</strong></td>
+                                                <td colspan="3"></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
                             </div>
-                            <div class="summary-item">
-                                <span>Justificados:</span>
-                                <strong id="summaryJustified">0</strong>
+
+                            <!-- Botones de acción de planilla -->
+                            <div class="att-planilla-actions" id="attPlanillaActions">
                             </div>
-                            <button class="btn btn-primary" id="saveAttendanceBtn">Guardar Asistencia</button>
+
                         </div>
                     </div>
                 </div>
+
+
 
                 <!-- Grades View -->
                 <div id="grades" class="view">
@@ -1275,6 +1328,85 @@
                         <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal: Agregar / Editar Sesión de Asistencia Docente -->
+    <div id="sessionModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="sessionModalTitle">Agregar Sesión</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="sessionForm" class="form-modal">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Fecha *</label>
+                            <input type="date" id="sessionDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Hora entrada *</label>
+                            <input type="time" id="sessionEntryTime" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Hora salida *</label>
+                            <input type="time" id="sessionExitTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Total horas</label>
+                            <input type="text" id="sessionTotalHours" readonly placeholder="Calculado automáticamente" style="background:var(--color-bg-tertiary); cursor:not-allowed;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Enlace Meet (opcional)</label>
+                        <input type="url" id="sessionMeetLink" placeholder="https://meet.google.com/...">
+                    </div>
+                    <div class="form-group">
+                        <label>Observación (opcional)</label>
+                        <textarea id="sessionObservation" rows="2" maxlength="255" placeholder="Máx. 255 caracteres..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar sesión</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Detalle de Planilla (Vista Admin) -->
+    <div id="planillaDetailModal" class="modal modal-lg" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Planilla de Asistencia Docente</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="planillaDetailBody">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Observación administrativa -->
+    <div id="adminObsModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Agregar Observación</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Observación para el docente *</label>
+                    <textarea id="adminObsText" rows="4" maxlength="500" placeholder="Describa el motivo de la observación..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-primary" id="adminObsConfirmBtn">Enviar observación</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                </div>
             </div>
         </div>
     </div>

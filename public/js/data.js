@@ -93,6 +93,7 @@ const mockData = {
             teacherId: 'TCH001', 
             teacherName: 'Roberto Silva',
             modality: 'regular',
+            schedule: 'Lun-Mié 08:00–10:00',
             startDate: '2024-01-15',
             endDate: '2024-03-15',
             hours: 120,
@@ -108,6 +109,7 @@ const mockData = {
             teacherId: 'TCH004', 
             teacherName: 'Lucia Espinoza',
             modality: 'regular',
+            schedule: 'Mar-Jue 10:00–12:00',
             startDate: '2024-02-01',
             endDate: '2024-04-01',
             hours: 120,
@@ -123,6 +125,7 @@ const mockData = {
             teacherId: 'TCH001', 
             teacherName: 'Roberto Silva',
             modality: 'regular',
+            schedule: 'Sáb 08:00–12:00',
             startDate: '2024-01-20',
             endDate: '2024-04-20',
             hours: 150,
@@ -138,6 +141,7 @@ const mockData = {
             teacherId: 'TCH005', 
             teacherName: 'Víctor Campos',
             modality: 'regular',
+            schedule: 'Lun-Vié 16:00–18:00',
             startDate: '2024-02-10',
             endDate: '2024-05-10',
             hours: 160,
@@ -153,9 +157,10 @@ const mockData = {
             teacherId: 'TCH004', 
             teacherName: 'Lucia Espinoza',
             modality: 'exam',
+            schedule: '10:00',
             startDate: '2024-03-20',
             endDate: '2024-03-20',
-            hours: 0,
+            hours: 2,
             maxQuota: 50,
             status: 'open',
             observations: 'Examen de suficiencia'
@@ -207,6 +212,53 @@ const mockData = {
         { id: 'USR002', username: 'secretaria', fullName: 'Juan María Secretaria', role: 'secretary', email: 'secretaria@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-14 09:15' },
         { id: 'USR003', username: 'roberto.silva', fullName: 'Roberto Silva Acosta', role: 'teacher', email: 'roberto.silva@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-15 08:00' },
         { id: 'USR004', username: 'coordinador', fullName: 'Carlos Coordinador Académico', role: 'coordinator', email: 'coordinador@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-13 14:45' },
+    ],
+
+    // Teacher Attendance (Control de Asistencia Docente - Fase 5)
+    teacherAttendance: [
+        {
+            id: 'TAT001',
+            groupId: 'GRP001',
+            teacherId: 'TCH001',
+            status: 'enviado',
+            adminObservation: '',
+            sessions: [
+                { id: 'SES001', date: '2024-01-22', entryTime: '08:00', exitTime: '10:00', totalHours: 2.0, meetLink: 'https://meet.google.com/abc-xyz-123', observation: '' },
+                { id: 'SES002', date: '2024-01-24', entryTime: '08:00', exitTime: '10:00', totalHours: 2.0, meetLink: 'https://meet.google.com/abc-xyz-456', observation: 'Sesión de repaso' },
+                { id: 'SES003', date: '2024-01-29', entryTime: '08:00', exitTime: '10:00', totalHours: 2.0, meetLink: '', observation: '' },
+                { id: 'SES004', date: '2024-01-31', entryTime: '08:00', exitTime: '10:00', totalHours: 2.0, meetLink: '', observation: 'Se revisó práctica calificada' },
+            ],
+            totalHoursDictated: 8.0,
+            createdAt: '2024-01-22',
+            updatedAt: '2024-02-01'
+        },
+        {
+            id: 'TAT002',
+            groupId: 'GRP005',
+            teacherId: 'TCH004',
+            status: 'validado',
+            adminObservation: '',
+            sessions: [
+                { id: 'SES005', date: '2024-03-20', entryTime: '10:00', exitTime: '12:00', totalHours: 2.0, meetLink: '', observation: 'Examen de suficiencia realizado' }
+            ],
+            totalHoursDictated: 2.0,
+            createdAt: '2024-03-20',
+            updatedAt: '2024-03-20'
+        },
+        {
+            id: 'TAT003',
+            groupId: 'GRP003',
+            teacherId: 'TCH001',
+            status: 'borrador',
+            adminObservation: '',
+            sessions: [
+                { id: 'SES006', date: '2024-01-20', entryTime: '08:00', exitTime: '12:00', totalHours: 4.0, meetLink: '', observation: 'Primera sesión' },
+                { id: 'SES007', date: '2024-01-27', entryTime: '08:00', exitTime: '12:00', totalHours: 4.0, meetLink: 'https://meet.google.com/office-001', observation: '' },
+            ],
+            totalHoursDictated: 8.0,
+            createdAt: '2024-01-20',
+            updatedAt: '2024-01-27'
+        }
     ]
 };
 
@@ -444,5 +496,81 @@ const DataManager = {
 
     getCertificatesByGroup: function(groupId) {
         return mockData.certificates.filter(c => c.groupId === groupId);
+    },
+
+    // ===== TEACHER ATTENDANCE (Fase 5) =====
+    getTeacherAttendanceByGroup: function(groupId) {
+        return mockData.teacherAttendance.find(ta => ta.groupId === groupId) || null;
+    },
+
+    getTeacherAttendanceByTeacher: function(teacherId) {
+        return mockData.teacherAttendance.filter(ta => ta.teacherId === teacherId);
+    },
+
+    getAllTeacherAttendance: function() {
+        return mockData.teacherAttendance;
+    },
+
+    createTeacherAttendance: function(groupId, teacherId) {
+        const newPlanilla = {
+            id: 'TAT' + String(mockData.teacherAttendance.length + 1).padStart(3, '0'),
+            groupId: groupId,
+            teacherId: teacherId,
+            status: 'borrador',
+            adminObservation: '',
+            sessions: [],
+            totalHoursDictated: 0,
+            createdAt: new Date().toISOString().split('T')[0],
+            updatedAt: new Date().toISOString().split('T')[0]
+        };
+        mockData.teacherAttendance.push(newPlanilla);
+        return newPlanilla;
+    },
+
+    addSessionToAttendance: function(planillaId, sessionData) {
+        const planilla = mockData.teacherAttendance.find(ta => ta.id === planillaId);
+        if (!planilla || planilla.status === 'validado' || planilla.status === 'cerrado') return null;
+        const totalSessions = mockData.teacherAttendance.reduce((acc, ta) => acc + ta.sessions.length, 0);
+        const newSession = {
+            id: 'SES' + String(totalSessions + 1).padStart(3, '0'),
+            ...sessionData
+        };
+        planilla.sessions.push(newSession);
+        planilla.totalHoursDictated = Math.round(planilla.sessions.reduce((sum, s) => sum + (s.totalHours || 0), 0) * 10) / 10;
+        planilla.updatedAt = new Date().toISOString().split('T')[0];
+        return newSession;
+    },
+
+    updateSessionInAttendance: function(planillaId, sessionId, sessionData) {
+        const planilla = mockData.teacherAttendance.find(ta => ta.id === planillaId);
+        if (!planilla || planilla.status === 'validado' || planilla.status === 'cerrado') return null;
+        const session = planilla.sessions.find(s => s.id === sessionId);
+        if (!session) return null;
+        Object.assign(session, sessionData);
+        planilla.totalHoursDictated = Math.round(planilla.sessions.reduce((sum, s) => sum + (s.totalHours || 0), 0) * 10) / 10;
+        planilla.updatedAt = new Date().toISOString().split('T')[0];
+        return session;
+    },
+
+    deleteSessionFromAttendance: function(planillaId, sessionId) {
+        const planilla = mockData.teacherAttendance.find(ta => ta.id === planillaId);
+        if (!planilla || planilla.status === 'validado' || planilla.status === 'cerrado') return false;
+        const idx = planilla.sessions.findIndex(s => s.id === sessionId);
+        if (idx > -1) {
+            planilla.sessions.splice(idx, 1);
+            planilla.totalHoursDictated = Math.round(planilla.sessions.reduce((sum, s) => sum + (s.totalHours || 0), 0) * 10) / 10;
+            planilla.updatedAt = new Date().toISOString().split('T')[0];
+            return true;
+        }
+        return false;
+    },
+
+    updateTeacherAttendanceStatus: function(planillaId, newStatus, adminObservation = '') {
+        const planilla = mockData.teacherAttendance.find(ta => ta.id === planillaId);
+        if (!planilla) return null;
+        planilla.status = newStatus;
+        if (adminObservation) planilla.adminObservation = adminObservation;
+        planilla.updatedAt = new Date().toISOString().split('T')[0];
+        return planilla;
     }
 };

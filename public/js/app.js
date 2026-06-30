@@ -1485,95 +1485,459 @@ class SAIIApp {
         }
     }
 
-    // ========== ATTENDANCE MODULE ==========
+    // ========== ATTENDANCE MODULE — Control de Asistencia Docente (Fase 5) ==========
     setupAttendance() {
-        const groupSelect = document.getElementById('attendanceGroupSelect');
-        const dateSelect = document.getElementById('attendanceDateSelect');
-        const groups = DataManager.getGroups();
+        const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
+        const isTeacher = role === 'teacher';
 
-        groupSelect.innerHTML = '<option value="">-- Seleccione un grupo --</option>';
-        groups.forEach(group => {
-            if (group.modality === 'regular') {
-                const option = document.createElement('option');
-                option.value = group.id;
-                option.textContent = `${group.code} - ${group.courseName}`;
-                groupSelect.appendChild(option);
-            }
-        });
+        const adminView = document.getElementById('attendanceAdminView');
+        const teacherView = document.getElementById('attendanceTeacherView');
 
-        // Set today's date as default
-        const today = new Date().toISOString().split('T')[0];
-        dateSelect.value = today;
-
-        const loadAttendance = () => {
-            const groupId = groupSelect.value;
-            const date = dateSelect.value;
-            
-            if (!groupId || !date) {
-                document.getElementById('attendanceContent').style.display = 'none';
-                return;
-            }
-
-            this.loadAttendanceTable(groupId, date);
-        };
-
-        groupSelect.addEventListener('change', loadAttendance);
-        dateSelect.addEventListener('change', loadAttendance);
+        if (isTeacher) {
+            adminView.style.display = 'none';
+            teacherView.style.display = 'block';
+            this.setupTeacherAttendanceView();
+        } else {
+            adminView.style.display = 'block';
+            teacherView.style.display = 'none';
+            this.setupAdminAttendanceView();
+        }
     }
 
-    loadAttendanceTable(groupId, date) {
-        document.getElementById('attendanceContent').style.display = 'block';
+    // --- VISTA ADMINISTRADOR ---
+    setupAdminAttendanceView() {
+        // Populate teacher filter
+        const teacherFilter = document.getElementById('attFilterTeacher');
+        teacherFilter.innerHTML = '<option value="">Todos los docentes</option>';
+        DataManager.getTeachers().forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.textContent = `${t.firstName} ${t.lastName}`;
+            teacherFilter.appendChild(opt);
+        });
 
-        const group = DataManager.getGroupById(groupId);
-        const students = DataManager.getStudentsByGroup(groupId);
+        this.renderAdminAttendanceTable();
 
-        document.getElementById('attendanceInfo').textContent = `Grupo: ${group.code} - ${group.courseName} | Fecha: ${date}`;
+        const apply = () => this.renderAdminAttendanceTable();
+        teacherFilter.onchange = apply;
+        document.getElementById('attFilterModality').onchange = apply;
+        document.getElementById('attFilterStatus').onchange = apply;
+    }
 
-        const tbody = document.getElementById('attendanceTableBody');
+    renderAdminAttendanceTable() {
+        const tbody = document.getElementById('attendanceAdminBody');
         tbody.innerHTML = '';
 
-        let presentes = 0, tardanzas = 0, faltas = 0, justificados = 0;
+        const teacherFilter = document.getElementById('attFilterTeacher').value;
+        const modalityFilter = document.getElementById('attFilterModality').value;
+        const statusFilter = document.getElementById('attFilterStatus').value;
 
-        students.forEach(student => {
-            const attendance = mockData.attendance.find(a => a.groupId === groupId && a.studentId === student.id && a.date === date);
-            const status = attendance ? attendance.status : 'pending';
-            const observation = attendance ? attendance.observation : '';
+        const statusMap = {
+            borrador:  { label: 'Borrador',  css: 'badge-pending' },
+            enviado:   { label: 'Enviado',   css: 'badge-inprogress' },
+            validado:  { label: 'Validado',  css: 'badge-active' },
+            observado: { label: 'Observado', css: 'badge-open' },
+            cerrado:   { label: 'Cerrado',   css: 'badge-closed' }
+        };
 
-            if (status === 'present') presentes++;
-            else if (status === 'late') tardanzas++;
-            else if (status === 'absent') faltas++;
-            else if (status === 'justified') justificados++;
+        let planillas = DataManager.getAllTeacherAttendance();
+
+        if (teacherFilter) planillas = planillas.filter(p => p.teacherId === teacherFilter);
+        if (statusFilter)  planillas = planillas.filter(p => p.status === statusFilter);
+        if (modalityFilter) {
+            planillas = planillas.filter(p => {
+                const g = DataManager.getGroupById(p.groupId);
+                return g && g.modality === modalityFilter;
+            });
+        }
+
+        if (planillas.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">No se encontraron planillas</td></tr>';
+            return;
+        }
+
+        planillas.forEach(planilla => {
+            const group = DataManager.getGroupById(planilla.groupId);
+            if (!group) return;
+            const statusInfo = statusMap[planilla.status] || { label: planilla.status, css: 'badge-pending' };
+            const modalityLabel = group.modality === 'regular' ? 'Curso regular' : 'Examen suficiencia';
+            const periodo = group.modality === 'exam' ? group.startDate : `${group.startDate} – ${group.endDate}`;
 
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${student.code}</td>
-                <td>${student.firstName} ${student.lastName}</td>
-                <td><input type="radio" name="attendance_${student.id}" value="present" ${status === 'present' ? 'checked' : ''}></td>
-                <td><input type="radio" name="attendance_${student.id}" value="late" ${status === 'late' ? 'checked' : ''}></td>
-                <td><input type="radio" name="attendance_${student.id}" value="absent" ${status === 'absent' ? 'checked' : ''}></td>
-                <td><input type="radio" name="attendance_${student.id}" value="justified" ${status === 'justified' ? 'checked' : ''}></td>
-                <td><input type="text" value="${observation}" data-student="${student.id}" class="attendance-observation" style="width: 100%; padding: 0.5rem;"></td>
+                <td>${group.teacherName}</td>
+                <td><strong>${group.code}</strong><br><small>${group.courseName}</small></td>
+                <td>${modalityLabel}</td>
+                <td>${periodo}</td>
+                <td><strong>${planilla.totalHoursDictated} h</strong></td>
+                <td>${group.hours} h</td>
+                <td><span class="badge-status ${statusInfo.css}">${statusInfo.label}</span></td>
+                <td>
+                    <div class="action-icons">
+                        <button class="icon-btn icon-view" onclick="app.viewPlanillaDetail('${planilla.id}')" title="Ver detalle">&#128269;</button>
+                        ${planilla.status === 'enviado' ? `<button class="icon-btn icon-save" onclick="app.validatePlanilla('${planilla.id}')" title="Validar">&#10003;</button>` : ''}
+                        ${(planilla.status === 'enviado' || planilla.status === 'validado') ? `<button class="icon-btn icon-edit" onclick="app.observePlanilla('${planilla.id}')" title="Observar">&#128172;</button>` : ''}
+                        ${planilla.status !== 'cerrado' ? `<button class="icon-btn icon-close" onclick="app.closePlanilla('${planilla.id}')" title="Cerrar planilla">&#128274;</button>` : ''}
+                    </div>
+                </td>
             `;
             tbody.appendChild(row);
         });
-
-        document.getElementById('summaryPresent').textContent = presentes;
-        document.getElementById('summaryLate').textContent = tardanzas;
-        document.getElementById('summaryAbsent').textContent = faltas;
-        document.getElementById('summaryJustified').textContent = justificados;
-
-        // Save button handler
-        document.getElementById('saveAttendanceBtn').onclick = () => this.saveAttendance(groupId, date, students);
     }
 
-    saveAttendance(groupId, date, students) {
-        students.forEach(student => {
-            const status = document.querySelector(`input[name="attendance_${student.id}"]:checked`)?.value || 'pending';
-            const observation = document.querySelector(`.attendance-observation[data-student="${student.id}"]`)?.value || '';
-            DataManager.addAttendance(groupId, student.id, date, status, observation);
+    viewPlanillaDetail(planillaId) {
+        const planilla = DataManager.getAllTeacherAttendance().find(p => p.id === planillaId);
+        if (!planilla) return;
+        const group = DataManager.getGroupById(planilla.groupId);
+        if (!group) return;
+
+        const statusMap = { borrador: 'Borrador', enviado: 'Enviado', validado: 'Validado', observado: 'Observado', cerrado: 'Cerrado' };
+        const isExam = group.modality === 'exam';
+        const modalityLabel = isExam ? 'Examen de suficiencia' : 'Curso regular';
+
+        let sessionsRows = '';
+        planilla.sessions.forEach((s, i) => {
+            const meet = s.meetLink ? `<a href="${s.meetLink}" target="_blank" style="color:var(--color-primary);">Enlace</a>` : '-';
+            sessionsRows += `<tr>
+                <td>${i+1}</td><td>${s.date}</td><td>${s.entryTime}</td><td>${s.exitTime}</td>
+                <td><strong>${s.totalHours} h</strong></td><td>${meet}</td><td>${s.observation || '-'}</td>
+            </tr>`;
         });
 
-        this.showToast('Asistencia guardada correctamente', 'success');
+        const body = document.getElementById('planillaDetailBody');
+        body.innerHTML = `
+            <div class="att-planilla-header" style="margin-bottom:var(--spacing-lg);">
+                <div class="att-institution-header">
+                    <p class="att-inst-line">Universidad Nacional de Piura</p>
+                    <p class="att-inst-line">Facultad de Ingeniería Industrial</p>
+                    <p class="att-inst-line att-inst-bold">Instituto de Informática</p>
+                    <p class="att-format-title">CONTROL DE ASISTENCIA DOCENTE</p>
+                </div>
+                <div class="att-planilla-meta-grid">
+                    <div class="att-meta-item"><span class="att-meta-label">Modalidad</span><span>${modalityLabel}</span></div>
+                    <div class="att-meta-item"><span class="att-meta-label">${isExam ? 'Curso evaluado' : 'Curso'}</span><span>${group.courseName}</span></div>
+                    <div class="att-meta-item"><span class="att-meta-label">${isExam ? 'Docente / Evaluador' : 'Docente'}</span><span>${group.teacherName}</span></div>
+                    <div class="att-meta-item"><span class="att-meta-label">Horario</span><span>${group.schedule || '-'}</span></div>
+                    <div class="att-meta-item"><span class="att-meta-label">${isExam ? 'Fecha del examen' : 'Fecha inicio'}</span><span>${group.startDate}</span></div>
+                    ${!isExam ? `<div class="att-meta-item"><span class="att-meta-label">Fecha final</span><span>${group.endDate}</span></div>` : ''}
+                    <div class="att-meta-item"><span class="att-meta-label">Duración total</span><span>${group.hours} horas</span></div>
+                    <div class="att-meta-item"><span class="att-meta-label">Estado planilla</span><span><strong>${statusMap[planilla.status] || planilla.status}</strong></span></div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead><tr><th>#</th><th>Fecha</th><th>Hora entrada</th><th>Hora salida</th><th>Total horas</th><th>Meet</th><th>Observación</th></tr></thead>
+                    <tbody>${sessionsRows}</tbody>
+                    <tfoot><tr class="att-total-row"><td colspan="4"><strong>TOTAL HORAS DICTADAS</strong></td><td><strong>${planilla.totalHoursDictated} h</strong></td><td colspan="2"></td></tr></tfoot>
+                </table>
+            </div>
+            ${planilla.adminObservation ? `<div class="att-obs-note"><strong>Observación del administrador:</strong> ${planilla.adminObservation}</div>` : ''}
+            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cerrar</button></div>
+        `;
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('planillaDetailModal').style.display = 'block';
+    }
+
+    validatePlanilla(planillaId) {
+        if (confirm('¿Validar esta planilla de asistencia docente?')) {
+            DataManager.updateTeacherAttendanceStatus(planillaId, 'validado');
+            this.showToast('Planilla validada correctamente', 'success');
+            this.renderAdminAttendanceTable();
+        }
+    }
+
+    observePlanilla(planillaId) {
+        document.getElementById('adminObsText').value = '';
+        document.getElementById('adminObsConfirmBtn').onclick = () => {
+            const obs = document.getElementById('adminObsText').value.trim();
+            if (!obs) { this.showToast('Ingrese una observación', 'error'); return; }
+            DataManager.updateTeacherAttendanceStatus(planillaId, 'observado', obs);
+            this.showToast('Observación enviada al docente', 'success');
+            this.closeModal();
+            this.renderAdminAttendanceTable();
+        };
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('adminObsModal').style.display = 'block';
+    }
+
+    closePlanilla(planillaId) {
+        if (confirm('¿Cerrar esta planilla? Ya no podrá ser editada.')) {
+            DataManager.updateTeacherAttendanceStatus(planillaId, 'cerrado');
+            this.showToast('Planilla cerrada', 'success');
+            this.renderAdminAttendanceTable();
+        }
+    }
+
+    // --- VISTA DOCENTE ---
+    setupTeacherAttendanceView() {
+        const teacherId = DataManager.currentUser ? DataManager.currentUser.id : null;
+        const groupSelect = document.getElementById('attendanceGroupSelect');
+        groupSelect.innerHTML = '<option value="">-- Seleccione --</option>';
+
+        // Solo muestra grupos del docente
+        DataManager.getGroups().forEach(g => {
+            if (!teacherId || g.teacherId === teacherId || teacherId === 'USR999') {
+                const opt = document.createElement('option');
+                opt.value = g.id;
+                opt.textContent = `${g.code} – ${g.courseName} (${g.modality === 'regular' ? 'Regular' : 'Suficiencia'})`;
+                groupSelect.appendChild(opt);
+            }
+        });
+
+        groupSelect.onchange = () => this.loadTeacherPlanilla(groupSelect.value);
+    }
+
+    loadTeacherPlanilla(groupId) {
+        const content = document.getElementById('attendanceContent');
+        if (!groupId) { content.style.display = 'none'; return; }
+
+        const group = DataManager.getGroupById(groupId);
+        if (!group) return;
+        content.style.display = 'block';
+
+        // Get or create planilla
+        let planilla = DataManager.getTeacherAttendanceByGroup(groupId);
+        if (!planilla) {
+            if (!group.teacherId) { this.showToast('Este grupo no tiene docente asignado', 'error'); return; }
+            planilla = DataManager.createTeacherAttendance(groupId, group.teacherId);
+        }
+        this._currentPlanillaId = planilla.id;
+        this._currentGroupId = groupId;
+
+        // Render institutional header
+        this.renderPlanillaHeader(group, planilla);
+        // Render status bar
+        this.renderAttStatusBar(planilla, group);
+        // Render sessions table
+        this.renderSessionsTable(planilla);
+        // Render action buttons
+        this.renderPlanillaActions(planilla);
+    }
+
+    renderPlanillaHeader(group, planilla) {
+        const isExam = group.modality === 'exam';
+        document.getElementById('attPlanillaHeader').innerHTML = `
+            <div class="att-institution-header">
+                <p class="att-inst-line">Universidad Nacional de Piura</p>
+                <p class="att-inst-line">Facultad de Ingeniería Industrial</p>
+                <p class="att-inst-line att-inst-bold">Instituto de Informática</p>
+                <p class="att-format-title">CONTROL DE ASISTENCIA DOCENTE</p>
+            </div>
+            <div class="att-planilla-meta-grid">
+                <div class="att-meta-item"><span class="att-meta-label">Modalidad</span><span>${isExam ? 'Examen de suficiencia' : 'Curso regular'}</span></div>
+                <div class="att-meta-item"><span class="att-meta-label">${isExam ? 'Curso evaluado' : 'Curso'}</span><span>${group.courseName}</span></div>
+                <div class="att-meta-item"><span class="att-meta-label">${isExam ? 'Docente / Evaluador' : 'Docente'}</span><span>${group.teacherName}</span></div>
+                <div class="att-meta-item"><span class="att-meta-label">Horario</span><span>${group.schedule || 'No especificado'}</span></div>
+                ${isExam
+                    ? `<div class="att-meta-item"><span class="att-meta-label">Fecha del examen</span><span>${group.startDate}</span></div>`
+                    : `<div class="att-meta-item"><span class="att-meta-label">Fecha inicio</span><span>${group.startDate}</span></div>
+                       <div class="att-meta-item"><span class="att-meta-label">Fecha final</span><span>${group.endDate}</span></div>`
+                }
+                <div class="att-meta-item"><span class="att-meta-label">Duración total prog.</span><span>${group.hours} horas</span></div>
+            </div>
+        `;
+    }
+
+    renderAttStatusBar(planilla, group) {
+        const statusMap = {
+            borrador:  { label: 'Borrador',  css: 'badge-pending' },
+            enviado:   { label: 'Enviado',   css: 'badge-inprogress' },
+            validado:  { label: 'Validado',  css: 'badge-active' },
+            observado: { label: 'Observado', css: 'badge-open' },
+            cerrado:   { label: 'Cerrado',   css: 'badge-closed' }
+        };
+        const statusInfo = statusMap[planilla.status] || { label: planilla.status, css: 'badge-pending' };
+        const progPct = group.hours > 0 ? Math.min(100, Math.round(planilla.totalHoursDictated / group.hours * 100)) : 0;
+
+        document.getElementById('attStatusBar').innerHTML = `
+            <div class="att-status-item">
+                <span class="att-status-label">Estado de planilla</span>
+                <span class="badge-status ${statusInfo.css}">${statusInfo.label}</span>
+            </div>
+            <div class="att-status-item">
+                <span class="att-status-label">Horas dictadas</span>
+                <strong style="color:var(--color-primary);">${planilla.totalHoursDictated} h</strong>
+            </div>
+            <div class="att-status-item">
+                <span class="att-status-label">Horas programadas</span>
+                <strong>${group.hours} h</strong>
+            </div>
+            <div class="att-status-item">
+                <span class="att-status-label">Avance</span>
+                <strong style="color:${progPct >= 100 ? '#388e3c' : 'var(--color-primary)'};">${progPct}%</strong>
+            </div>
+            ${planilla.adminObservation ? `<div class="att-obs-note att-obs-inline"><strong>Obs. admin:</strong> ${planilla.adminObservation}</div>` : ''}
+        `;
+    }
+
+    renderSessionsTable(planilla) {
+        const tbody = document.getElementById('attendanceSessionsBody');
+        tbody.innerHTML = '';
+        const canEdit = planilla.status === 'borrador' || planilla.status === 'observado';
+
+        if (planilla.sessions.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">No hay sesiones registradas. Use el botón + Agregar sesión.</td></tr>';
+        } else {
+            planilla.sessions.forEach((s, i) => {
+                const meet = s.meetLink
+                    ? `<a href="${s.meetLink}" target="_blank" title="${s.meetLink}" style="color:var(--color-primary); font-size:0.8rem;">&#128279; Meet</a>`
+                    : '<span style="color:var(--color-text-secondary);">—</span>';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${i+1}</td>
+                    <td>${s.date}</td>
+                    <td>${s.entryTime}</td>
+                    <td>${s.exitTime}</td>
+                    <td><strong>${s.totalHours} h</strong></td>
+                    <td>${meet}</td>
+                    <td style="max-width:160px; font-size:0.8rem;">${s.observation || '—'}</td>
+                    <td>
+                        <div class="action-icons">
+                            ${canEdit ? `<button class="icon-btn icon-edit" onclick="app.editSession('${s.id}')" title="Editar">&#9998;</button>
+                            <button class="icon-btn icon-delete" onclick="app.deleteSession('${s.id}')" title="Eliminar">&#128683;</button>` : '<span style="font-size:0.75rem; color:var(--color-text-secondary);">Bloqueado</span>'}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        document.getElementById('attTotalHours').innerHTML = `<strong>${planilla.totalHoursDictated} h</strong>`;
+
+        // Show/hide add button
+        const addBtn = document.getElementById('attAddSessionBtn');
+        addBtn.style.display = canEdit ? 'inline-flex' : 'none';
+    }
+
+    renderPlanillaActions(planilla) {
+        const div = document.getElementById('attPlanillaActions');
+        const canEdit = planilla.status === 'borrador' || planilla.status === 'observado';
+        const canSend = planilla.status === 'borrador' || planilla.status === 'observado';
+
+        div.innerHTML = `
+            ${canEdit ? `<button class="btn btn-secondary" onclick="app.savePlanillaDraft()">&#128190; Guardar borrador</button>` : ''}
+            ${canSend ? `<button class="btn btn-primary" onclick="app.sendPlanilla()">&#9993; Enviar planilla</button>` : ''}
+            <button class="btn btn-secondary" onclick="app.printPlanilla()">&#128424; Imprimir</button>
+        `;
+    }
+
+    openSessionModal(sessionId = null) {
+        const planilla = DataManager.getAllTeacherAttendance().find(p => p.id === this._currentPlanillaId);
+        if (!planilla) return;
+        if (planilla.status !== 'borrador' && planilla.status !== 'observado') {
+            this.showToast('No puedes agregar sesiones a una planilla en estado ' + planilla.status, 'error');
+            return;
+        }
+
+        const form = document.getElementById('sessionForm');
+        form.reset();
+        document.getElementById('sessionTotalHours').value = '';
+        document.getElementById('sessionModalTitle').textContent = sessionId ? 'Editar Sesión' : 'Agregar Sesión';
+        this._editingSessionId = sessionId;
+
+        if (sessionId) {
+            const session = planilla.sessions.find(s => s.id === sessionId);
+            if (session) {
+                document.getElementById('sessionDate').value = session.date;
+                document.getElementById('sessionEntryTime').value = session.entryTime;
+                document.getElementById('sessionExitTime').value = session.exitTime;
+                document.getElementById('sessionTotalHours').value = session.totalHours + ' h';
+                document.getElementById('sessionMeetLink').value = session.meetLink || '';
+                document.getElementById('sessionObservation').value = session.observation || '';
+            }
+        }
+
+        // Auto-calculate hours
+        const calcHours = () => {
+            const entry = document.getElementById('sessionEntryTime').value;
+            const exit = document.getElementById('sessionExitTime').value;
+            if (entry && exit && exit > entry) {
+                const [eh, em] = entry.split(':').map(Number);
+                const [xh, xm] = exit.split(':').map(Number);
+                const total = ((xh * 60 + xm) - (eh * 60 + em)) / 60;
+                document.getElementById('sessionTotalHours').value = Math.round(total * 10) / 10 + ' h';
+            } else {
+                document.getElementById('sessionTotalHours').value = '';
+            }
+        };
+        document.getElementById('sessionEntryTime').oninput = calcHours;
+        document.getElementById('sessionExitTime').oninput = calcHours;
+
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('sessionModal').style.display = 'block';
+        form.onsubmit = (e) => this.handleSessionSubmit(e);
+    }
+
+    editSession(sessionId) {
+        this.openSessionModal(sessionId);
+    }
+
+    deleteSession(sessionId) {
+        if (confirm('¿Eliminar esta sesión?')) {
+            DataManager.deleteSessionFromAttendance(this._currentPlanillaId, sessionId);
+            const planilla = DataManager.getAllTeacherAttendance().find(p => p.id === this._currentPlanillaId);
+            const group = DataManager.getGroupById(this._currentGroupId);
+            this.renderAttStatusBar(planilla, group);
+            this.renderSessionsTable(planilla);
+            this.renderPlanillaActions(planilla);
+            this.showToast('Sesión eliminada', 'success');
+        }
+    }
+
+    handleSessionSubmit(e) {
+        e.preventDefault();
+        const date = document.getElementById('sessionDate').value;
+        const entry = document.getElementById('sessionEntryTime').value;
+        const exit = document.getElementById('sessionExitTime').value;
+        const meetLink = document.getElementById('sessionMeetLink').value.trim();
+        const obs = document.getElementById('sessionObservation').value.trim();
+
+        if (!date) { this.showToast('La fecha es obligatoria', 'error'); return; }
+        if (!entry) { this.showToast('La hora de entrada es obligatoria', 'error'); return; }
+        if (!exit)  { this.showToast('La hora de salida es obligatoria', 'error'); return; }
+        if (exit <= entry) { this.showToast('La hora de salida debe ser mayor que la de entrada', 'error'); return; }
+        if (meetLink && !meetLink.startsWith('http')) { this.showToast('El enlace Meet debe comenzar con https://', 'error'); return; }
+
+        const [eh, em] = entry.split(':').map(Number);
+        const [xh, xm] = exit.split(':').map(Number);
+        const totalHours = Math.round(((xh * 60 + xm) - (eh * 60 + em)) / 60 * 10) / 10;
+
+        const sessionData = { date, entryTime: entry, exitTime: exit, totalHours, meetLink, observation: obs };
+
+        if (this._editingSessionId) {
+            DataManager.updateSessionInAttendance(this._currentPlanillaId, this._editingSessionId, sessionData);
+            this.showToast('Sesión actualizada correctamente', 'success');
+        } else {
+            DataManager.addSessionToAttendance(this._currentPlanillaId, sessionData);
+            this.showToast('Sesión agregada correctamente', 'success');
+        }
+
+        this.closeModal();
+        const planilla = DataManager.getAllTeacherAttendance().find(p => p.id === this._currentPlanillaId);
+        const group = DataManager.getGroupById(this._currentGroupId);
+        this.renderAttStatusBar(planilla, group);
+        this.renderSessionsTable(planilla);
+        this.renderPlanillaActions(planilla);
+    }
+
+    savePlanillaDraft() {
+        this.showToast('Borrador guardado correctamente', 'success');
+    }
+
+    sendPlanilla() {
+        if (confirm('¿Enviar la planilla? El administrador podrá revisarla. Ya no podrás editar las sesiones.')) {
+            DataManager.updateTeacherAttendanceStatus(this._currentPlanillaId, 'enviado');
+            const planilla = DataManager.getAllTeacherAttendance().find(p => p.id === this._currentPlanillaId);
+            const group = DataManager.getGroupById(this._currentGroupId);
+            this.renderAttStatusBar(planilla, group);
+            this.renderSessionsTable(planilla);
+            this.renderPlanillaActions(planilla);
+            this.showToast('Planilla enviada al administrador', 'success');
+        }
+    }
+
+    printPlanilla() {
+        this.showToast('Vista de impresión simulada — usar Ctrl+P para imprimir la vista actual', 'success');
     }
 
     // ========== GRADES MODULE ==========
