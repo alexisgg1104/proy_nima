@@ -327,6 +327,8 @@ class SAIIApp {
 
         students.forEach(student => {
             const row = document.createElement('tr');
+            const statusLabel = student.status === 'active' ? 'Activo' : 'Inactivo';
+            const statusClass = student.status === 'active' ? 'badge-active' : 'badge-inactive';
             row.innerHTML = `
                 <td>${student.code}</td>
                 <td>${student.dni}</td>
@@ -334,10 +336,12 @@ class SAIIApp {
                 <td>${student.lastName}</td>
                 <td>${student.email}</td>
                 <td>Ciclo ${student.cycle}</td>
-                <td><span class="badge-status ${student.status === 'active' ? 'badge-active' : 'badge-inactive'}">${student.status === 'active' ? 'Activo' : 'Inactivo'}</span></td>
+                <td><span class="badge-status ${statusClass}">${statusLabel}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-primary" onclick="app.editStudent('${student.id}')">Editar</button>
-                    <button class="btn btn-sm btn-danger" onclick="app.deleteStudent('${student.id}')">Eliminar</button>
+                    <div class="action-icons">
+                        <button class="icon-btn icon-edit" onclick="app.editStudent('${student.id}')" title="Editar">&#9998;</button>
+                        <button class="icon-btn icon-delete" onclick="app.deleteStudent('${student.id}')" title="Desactivar">&#128683;</button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(row);
@@ -523,8 +527,8 @@ class SAIIApp {
                     </div>
                     ${moduleTotal !== 100 ? '<div style="padding: 0.5rem; background: rgba(211, 47, 47, 0.1); color: #d32f2f; border-radius: 4px; font-size: 0.85rem;">⚠️ Los porcentajes no suman 100%</div>' : ''}
                     <div class="course-actions">
-                        <button class="btn btn-sm btn-primary" onclick="app.viewCourseDetails('${course.id}')">Ver Detalles</button>
-                        <button class="btn btn-sm btn-secondary" onclick="app.editCourse('${course.id}')">Editar</button>
+                        <button class="icon-btn icon-view" onclick="app.viewCourseDetails('${course.id}')" title="Ver detalles">&#128269;</button>
+                        <button class="icon-btn icon-edit" onclick="app.editCourse('${course.id}')" title="Editar">&#9998;</button>
                     </div>
                 </div>
             `;
@@ -560,6 +564,8 @@ class SAIIApp {
 
         teachers.forEach(teacher => {
             const row = document.createElement('tr');
+            const statusLabel = teacher.status === 'active' ? 'Activo' : 'Inactivo';
+            const statusClass = teacher.status === 'active' ? 'badge-active' : 'badge-inactive';
             row.innerHTML = `
                 <td>${teacher.code}</td>
                 <td>${teacher.dni}</td>
@@ -567,10 +573,12 @@ class SAIIApp {
                 <td>${teacher.lastName}</td>
                 <td>${teacher.specialty}</td>
                 <td>${teacher.email}</td>
-                <td><span class="badge-status badge-active">${teacher.status === 'active' ? 'Activo' : 'Inactivo'}</span></td>
+                <td><span class="badge-status ${statusClass}">${statusLabel}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-primary" onclick="app.editTeacher('${teacher.id}')">Editar</button>
-                    <button class="btn btn-sm btn-danger" onclick="app.deleteTeacher('${teacher.id}')">Eliminar</button>
+                    <div class="action-icons">
+                        <button class="icon-btn icon-edit" onclick="app.editTeacher('${teacher.id}')" title="Editar">&#9998;</button>
+                        <button class="icon-btn icon-delete" onclick="app.deleteTeacher('${teacher.id}')" title="Desactivar">&#128683;</button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(row);
@@ -624,29 +632,35 @@ class SAIIApp {
         const tbody = document.getElementById('groupsTableBody');
         tbody.innerHTML = '';
 
+        // Mapas de estado: clave interna -> etiqueta en español + clase CSS
+        const statusMap = {
+            'open':       { label: 'Abierto',   css: 'badge-open' },
+            'inprogress': { label: 'En curso',  css: 'badge-inprogress' },
+            'finished':   { label: 'Terminado', css: 'badge-finished' },
+            'closed':     { label: 'Cerrado',   css: 'badge-closed' }
+        };
+
         groups.forEach(group => {
             const enrolledCount = DataManager.getEnrollments(group.id).length;
-            const statusColors = {
-                'open': 'badge-approved',
-                'inprogress': 'badge-pending',
-                'finished': 'badge-rejected',
-                'closed': 'badge-inactive'
-            };
+            const statusInfo = statusMap[group.status] || { label: group.status, css: 'badge-pending' };
+            const modalityLabel = group.modality === 'regular' ? 'Curso regular' : 'Examen suficiencia';
 
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${group.code}</td>
                 <td>${group.courseName}</td>
                 <td>${group.teacherName}</td>
-                <td>${group.modality === 'regular' ? 'Curso regular' : 'Examen suficiencia'}</td>
+                <td>${modalityLabel}</td>
                 <td>${group.startDate}</td>
                 <td>${group.endDate}</td>
                 <td>${group.hours}</td>
                 <td>${enrolledCount}/${group.maxQuota}</td>
-                <td><span class="badge-status ${statusColors[group.status] || 'badge-approved'}">${group.status}</span></td>
+                <td><span class="badge-status ${statusInfo.css}">${statusInfo.label}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-primary" onclick="app.viewGroupDetails('${group.id}')">Ver</button>
-                    <button class="btn btn-sm btn-secondary" onclick="app.editGroup('${group.id}')">Editar</button>
+                    <div class="action-icons">
+                        <button class="icon-btn icon-view" onclick="app.viewGroupDetails('${group.id}')" title="Ver detalle">&#128269;</button>
+                        <button class="icon-btn icon-edit" onclick="app.editGroup('${group.id}')" title="Editar">&#9998;</button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(row);
@@ -1194,22 +1208,33 @@ class SAIIApp {
         const tbody = document.getElementById('usersTableBody');
         tbody.innerHTML = '';
 
+        const roleLabels = {
+            'admin': 'Administrador',
+            'secretary': 'Secretaria',
+            'teacher': 'Docente',
+            'coordinator': 'Coordinador'
+        };
+
         mockData.users.forEach(user => {
+            const statusLabel = user.status === 'active' ? 'Activo' : 'Inactivo';
+            const statusClass = user.status === 'active' ? 'badge-active' : 'badge-inactive';
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${user.username}</td>
                 <td>${user.fullName}</td>
                 <td>
                     <span class="badge-status badge-active">
-                        ${user.role === 'admin' ? 'Administrador' : user.role === 'secretary' ? 'Secretaria' : user.role === 'teacher' ? 'Docente' : 'Coordinador'}
+                        ${roleLabels[user.role] || user.role}
                     </span>
                 </td>
                 <td>${user.email}</td>
-                <td><span class="badge-status badge-active">${user.status === 'active' ? 'Activo' : 'Inactivo'}</span></td>
+                <td><span class="badge-status ${statusClass}">${statusLabel}</span></td>
                 <td>${user.lastLogin}</td>
                 <td>
-                    <button class="btn btn-sm btn-primary" onclick="app.editUser('${user.id}')">Editar</button>
-                    <button class="btn btn-sm btn-danger" onclick="app.deleteUser('${user.id}')">Eliminar</button>
+                    <div class="action-icons">
+                        <button class="icon-btn icon-edit" onclick="app.editUser('${user.id}')" title="Editar">&#9998;</button>
+                        <button class="icon-btn icon-delete" onclick="app.deleteUser('${user.id}')" title="Desactivar">&#128683;</button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(row);

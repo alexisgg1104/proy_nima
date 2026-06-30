@@ -54,8 +54,11 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <div class="logo">SAII</div>
-                <p class="logo-subtitle">Instituto de Informática</p>
+                <div class="sidebar-brand">
+                    <div class="logo">SAII</div>
+                    <p class="logo-subtitle">Instituto de Informática</p>
+                    <p class="logo-university">Universidad Nacional de Piura</p>
+                </div>
                 <button class="sidebar-toggle" id="sidebarToggle">☰</button>
             </div>
             
@@ -135,16 +138,16 @@
             <!-- Header -->
             <header class="header">
                 <div class="header-left">
-                    <input type="text" class="search-input" id="globalSearch" placeholder="Buscar alumnos, cursos, docentes...">
+                    <span class="header-institution-label">Sistema Administrativo del Instituto de Informática — UNP</span>
                 </div>
                 
                 <div class="header-right">
-                    <button class="header-btn notifications-btn" id="notificationsBtn">
+                    <button class="header-btn notifications-btn" id="notificationsBtn" title="Notificaciones">
                         🔔
                         <span class="badge">3</span>
                     </button>
                     
-                    <button class="header-btn theme-btn" id="themeToggle">
+                    <button class="header-btn theme-btn" id="themeToggle" title="Cambiar tema">
                         🌙
                     </button>
                     
@@ -359,7 +362,7 @@
                     <div class="module-header">
                         <div class="module-controls">
                             <input type="text" class="search-field" id="studentSearch" placeholder="Buscar por código, DNI, nombre...">
-                            <button class="btn btn-primary" data-action="new-student">Nuevo Alumno</button>
+                            <button class="btn btn-primary icon-add-btn" data-action="new-student" title="Nuevo Alumno">➕ Nuevo Alumno</button>
                         </div>
                     </div>
 
@@ -408,7 +411,7 @@
                 <div id="courses" class="view">
                     <div class="module-header">
                         <div class="module-controls">
-                            <button class="btn btn-primary" data-action="new-course">Nuevo Curso</button>
+                            <button class="btn btn-primary icon-add-btn" data-action="new-course" title="Nuevo Curso">➕ Nuevo Curso</button>
                         </div>
                     </div>
 
@@ -421,7 +424,7 @@
                     <div class="module-header">
                         <div class="module-controls">
                             <input type="text" class="search-field" id="teacherSearch" placeholder="Buscar por código, DNI, nombre...">
-                            <button class="btn btn-primary" data-action="new-teacher">Nuevo Docente</button>
+                            <button class="btn btn-primary icon-add-btn" data-action="new-teacher" title="Nuevo Docente">➕ Nuevo Docente</button>
                         </div>
                     </div>
 
@@ -450,7 +453,7 @@
                     <div class="module-header">
                         <div class="module-controls">
                             <input type="text" class="search-field" id="groupSearch" placeholder="Buscar por código o curso...">
-                            <button class="btn btn-primary" data-action="new-group">Abrir Nuevo Grupo</button>
+                            <button class="btn btn-primary icon-add-btn" data-action="new-group" title="Abrir Nuevo Grupo">➕ Abrir Nuevo Grupo</button>
                         </div>
                     </div>
 
@@ -648,7 +651,7 @@
                 <div id="certificates" class="view">
                     <div class="module-header">
                         <div class="module-controls">
-                            <button class="btn btn-primary" data-action="new-certificate">Generar Nueva Constancia</button>
+                            <button class="btn btn-primary icon-add-btn" data-action="new-certificate" title="Generar Nueva Constancia">➕ Generar Constancia</button>
                         </div>
                     </div>
 
@@ -776,7 +779,7 @@
                 <div id="users" class="view">
                     <div class="module-header">
                         <div class="module-controls">
-                            <button class="btn btn-primary" data-action="new-user">Nuevo Usuario</button>
+                            <button class="btn btn-primary icon-add-btn" data-action="new-user" title="Nuevo Usuario">➕ Nuevo Usuario</button>
                         </div>
                     </div>
 
