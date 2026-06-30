@@ -1129,6 +1129,138 @@
         </div>
     </div>
 
+    <!-- Modal: Detalle de Grupo -->
+    <div id="groupDetailModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Detalle del Grupo Académico</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="groupDetailBody">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Nuevo / Editar Grupo Académico -->
+    <div id="groupModal" class="modal modal-lg" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="groupModalTitle">Abrir Nuevo Grupo Académico</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="groupForm" class="form-modal">
+
+                    <!-- Fila 1: Código y Modalidad -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Código de Grupo *</label>
+                            <input type="text" id="groupCode" placeholder="Ej: CB-2024-03" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Modalidad *</label>
+                            <select id="groupModality" required onchange="app.onGroupModalityChange()">
+                                <option value="">-- Seleccione --</option>
+                                <option value="regular">Curso regular</option>
+                                <option value="exam">Examen de suficiencia</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Fila 2: Curso y Docente -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Curso *</label>
+                            <select id="groupCourse" required>
+                                <option value="">-- Seleccione un curso --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label id="groupTeacherLabel">Docente *</label>
+                            <select id="groupTeacher" required>
+                                <option value="">-- Seleccione un docente --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Campos exclusivos: Curso regular -->
+                    <div id="groupFieldsRegular" class="group-conditional-fields">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Fecha de inicio *</label>
+                                <input type="date" id="groupStartDate">
+                            </div>
+                            <div class="form-group">
+                                <label>Fecha de fin *</label>
+                                <input type="date" id="groupEndDate">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Horas académicas *</label>
+                                <input type="number" id="groupHours" min="1" placeholder="Ej: 120">
+                            </div>
+                            <div class="form-group">
+                                <label>Cupo máximo *</label>
+                                <input type="number" id="groupMaxQuota" min="1" placeholder="Ej: 30">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campos exclusivos: Examen de suficiencia -->
+                    <div id="groupFieldsExam" class="group-conditional-fields" style="display:none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Fecha del examen *</label>
+                                <input type="date" id="groupExamDate">
+                            </div>
+                            <div class="form-group">
+                                <label>Hora del examen</label>
+                                <input type="time" id="groupExamTime">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Duración (horas)</label>
+                                <input type="number" id="groupExamHours" min="1" placeholder="Ej: 2">
+                            </div>
+                            <div class="form-group">
+                                <label>Cupo máximo *</label>
+                                <input type="number" id="groupExamMaxQuota" min="1" placeholder="Ej: 50">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campos comunes -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Aula / Laboratorio</label>
+                            <input type="text" id="groupClassroom" placeholder="Ej: Lab. Informática 1">
+                        </div>
+                        <div class="form-group">
+                            <label>Estado *</label>
+                            <select id="groupStatus" required>
+                                <option value="open">Abierto</option>
+                                <option value="inprogress">En curso</option>
+                                <option value="finished">Terminado</option>
+                                <option value="closed">Cerrado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Observaciones</label>
+                        <textarea id="groupObservations" rows="2" placeholder="Notas adicionales..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar Grupo</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div id="notificationToast" class="toast" style="display: none;">
         <span id="toastMessage"></span>
     </div>

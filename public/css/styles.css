@@ -987,6 +987,25 @@ body {
     border-color: var(--color-primary);
 }
 
+.icon-close {
+    color: #e65100;
+    border-color: rgba(230, 81, 0, 0.25);
+    background: rgba(230, 81, 0, 0.06);
+}
+
+.icon-close:hover {
+    background: #e65100;
+    color: white;
+    border-color: #e65100;
+}
+
+/* Group conditional fields */
+.group-conditional-fields {
+    padding: var(--spacing-sm) 0;
+    border-top: 1px dashed var(--color-border);
+    margin-top: var(--spacing-sm);
+}
+
 /* ============================================
    DETAIL GRID (Modal de detalle - Fase 2)
    ============================================ */

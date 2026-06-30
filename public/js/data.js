@@ -325,6 +325,15 @@ const DataManager = {
         return newGroup;
     },
 
+    updateGroup: function(id, updates) {
+        const group = mockData.groups.find(g => g.id === id);
+        if (group) {
+            Object.assign(group, updates);
+            return group;
+        }
+        return null;
+    },
+
     // Enrollment operations
     getEnrollments: function(groupId) {
         return mockData.enrollments.filter(e => e.groupId === groupId);

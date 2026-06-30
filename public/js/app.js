@@ -926,6 +926,11 @@ class SAIIApp {
         const tbody = document.getElementById('groupsTableBody');
         tbody.innerHTML = '';
 
+        if (groups.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">No se encontraron grupos</td></tr>';
+            return;
+        }
+
         // Mapas de estado: clave interna -> etiqueta en español + clase CSS
         const statusMap = {
             'open':       { label: 'Abierto',   css: 'badge-open' },
@@ -938,6 +943,7 @@ class SAIIApp {
             const enrolledCount = DataManager.getEnrollments(group.id).length;
             const statusInfo = statusMap[group.status] || { label: group.status, css: 'badge-pending' };
             const modalityLabel = group.modality === 'regular' ? 'Curso regular' : 'Examen suficiencia';
+            const isClosed = group.status === 'closed';
 
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -945,15 +951,17 @@ class SAIIApp {
                 <td>${group.courseName}</td>
                 <td>${group.teacherName}</td>
                 <td>${modalityLabel}</td>
-                <td>${group.startDate}</td>
-                <td>${group.endDate}</td>
-                <td>${group.hours}</td>
+                <td>${group.startDate || group.examDate || '-'}</td>
+                <td>${group.endDate || '-'}</td>
+                <td>${group.hours || group.examHours || '-'}</td>
                 <td>${enrolledCount}/${group.maxQuota}</td>
                 <td><span class="badge-status ${statusInfo.css}">${statusInfo.label}</span></td>
                 <td>
                     <div class="action-icons">
                         <button class="icon-btn icon-view" onclick="app.viewGroupDetails('${group.id}')" title="Ver detalle">&#128269;</button>
-                        <button class="icon-btn icon-edit" onclick="app.editGroup('${group.id}')" title="Editar">&#9998;</button>
+                        <button class="icon-btn icon-edit" onclick="app.editGroup('${group.id}')" title="Editar" ${isClosed ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>&#9998;</button>
+                        <button class="icon-btn icon-close" onclick="app.closeGroup('${group.id}')" title="Cerrar grupo" ${isClosed ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>&#128274;</button>
+                        <button class="icon-btn icon-delete" onclick="app.deleteGroup('${group.id}')" title="Desactivar">&#128683;</button>
                     </div>
                 </td>
             `;
@@ -995,19 +1003,238 @@ class SAIIApp {
 
     viewGroupDetails(groupId) {
         const group = DataManager.getGroupById(groupId);
+        if (!group) return;
+
         const enrolledCount = DataManager.getEnrollments(groupId).length;
-        
-        if (group) {
-            alert(`Grupo: ${group.code}\nCurso: ${group.courseName}\nDocente: ${group.teacherName}\nMatriculados: ${enrolledCount}/${group.maxQuota}\nEstado: ${group.status}`);
-        }
+        const statusMap = {
+            'open': { label: 'Abierto', css: 'badge-open' },
+            'inprogress': { label: 'En curso', css: 'badge-inprogress' },
+            'finished': { label: 'Terminado', css: 'badge-finished' },
+            'closed': { label: 'Cerrado', css: 'badge-closed' }
+        };
+        const statusInfo = statusMap[group.status] || { label: group.status, css: 'badge-pending' };
+        const modalityLabel = group.modality === 'regular' ? 'Curso regular' : 'Examen de suficiencia';
+
+        const isExam = group.modality === 'exam';
+        const body = document.getElementById('groupDetailBody');
+        body.innerHTML = `
+            <div class="detail-grid">
+                <div class="detail-item"><span class="detail-label">Código</span><span class="detail-value">${group.code}</span></div>
+                <div class="detail-item"><span class="detail-label">Modalidad</span><span class="detail-value">${modalityLabel}</span></div>
+                <div class="detail-item detail-full"><span class="detail-label">Curso</span><span class="detail-value">${group.courseName}</span></div>
+                <div class="detail-item"><span class="detail-label">Docente</span><span class="detail-value">${group.teacherName}</span></div>
+                <div class="detail-item"><span class="detail-label">Estado</span><span class="detail-value"><span class="badge-status ${statusInfo.css}">${statusInfo.label}</span></span></div>
+                <div class="detail-item"><span class="detail-label">${isExam ? 'Fecha examen' : 'Fecha inicio'}</span><span class="detail-value">${group.startDate || group.examDate || '-'}</span></div>
+                <div class="detail-item"><span class="detail-label">${isExam ? 'Hora examen' : 'Fecha fin'}</span><span class="detail-value">${isExam ? (group.examTime || '-') : (group.endDate || '-')}</span></div>
+                <div class="detail-item"><span class="detail-label">Horas</span><span class="detail-value">${group.hours || group.examHours || '-'}</span></div>
+                <div class="detail-item"><span class="detail-label">Cupo máximo</span><span class="detail-value">${group.maxQuota}</span></div>
+                <div class="detail-item"><span class="detail-label">Matriculados</span><span class="detail-value">${enrolledCount} / ${group.maxQuota}</span></div>
+                ${group.classroom ? `<div class="detail-item"><span class="detail-label">Aula / Lab.</span><span class="detail-value">${group.classroom}</span></div>` : ''}
+                ${group.observations ? `<div class="detail-item detail-full"><span class="detail-label">Observaciones</span><span class="detail-value">${group.observations}</span></div>` : ''}
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="app.editGroup('${group.id}'); closeModal();">Editar</button>
+                ${group.status !== 'closed' ? `<button class="btn btn-secondary" onclick="app.closeGroup('${group.id}'); closeModal();">Cerrar Grupo</button>` : ''}
+                <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+            </div>
+        `;
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('groupDetailModal').style.display = 'block';
     }
 
     editGroup(groupId) {
-        alert('Editar grupo - ID: ' + groupId);
+        this.openGroupModal(groupId);
     }
 
-    openGroupModal() {
-        alert('Crear nuevo grupo académico - Modal no implementado en esta versión demo');
+    openGroupModal(groupId = null) {
+        const modal = document.getElementById('groupModal');
+        const form = document.getElementById('groupForm');
+        const title = document.getElementById('groupModalTitle');
+        this._editingGroupId = groupId;
+
+        form.reset();
+        // Reset conditional sections
+        document.getElementById('groupFieldsRegular').style.display = 'block';
+        document.getElementById('groupFieldsExam').style.display = 'none';
+
+        // Populate course select
+        const courseSelect = document.getElementById('groupCourse');
+        courseSelect.innerHTML = '<option value="">-- Seleccione un curso --</option>';
+        DataManager.getCourses().forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            courseSelect.appendChild(opt);
+        });
+
+        // Populate teacher select
+        const teacherSelect = document.getElementById('groupTeacher');
+        teacherSelect.innerHTML = '<option value="">-- Seleccione un docente --</option>';
+        DataManager.getTeachers().forEach(t => {
+            if (t.status !== 'inactive') {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = `${t.firstName} ${t.lastName} (${t.specialty})`;
+                teacherSelect.appendChild(opt);
+            }
+        });
+
+        if (groupId) {
+            title.textContent = 'Editar Grupo Académico';
+            const group = DataManager.getGroupById(groupId);
+            if (group) {
+                document.getElementById('groupCode').value = group.code;
+                document.getElementById('groupModality').value = group.modality;
+                document.getElementById('groupCourse').value = group.courseId;
+                document.getElementById('groupTeacher').value = group.teacherId;
+                document.getElementById('groupStatus').value = group.status;
+                document.getElementById('groupClassroom').value = group.classroom || '';
+                document.getElementById('groupObservations').value = group.observations || '';
+
+                if (group.modality === 'regular') {
+                    document.getElementById('groupFieldsRegular').style.display = 'block';
+                    document.getElementById('groupFieldsExam').style.display = 'none';
+                    document.getElementById('groupStartDate').value = group.startDate || '';
+                    document.getElementById('groupEndDate').value = group.endDate || '';
+                    document.getElementById('groupHours').value = group.hours || '';
+                    document.getElementById('groupMaxQuota').value = group.maxQuota || '';
+                } else {
+                    document.getElementById('groupFieldsRegular').style.display = 'none';
+                    document.getElementById('groupFieldsExam').style.display = 'block';
+                    document.getElementById('groupExamDate').value = group.examDate || group.startDate || '';
+                    document.getElementById('groupExamTime').value = group.examTime || '';
+                    document.getElementById('groupExamHours').value = group.examHours || group.hours || '';
+                    document.getElementById('groupExamMaxQuota').value = group.maxQuota || '';
+                }
+            }
+        } else {
+            title.textContent = 'Abrir Nuevo Grupo Académico';
+        }
+
+        document.getElementById('modalOverlay').style.display = 'block';
+        modal.style.display = 'block';
+        form.onsubmit = (e) => this.handleGroupSubmit(e);
+    }
+
+    onGroupModalityChange() {
+        const modality = document.getElementById('groupModality').value;
+        document.getElementById('groupFieldsRegular').style.display = modality === 'regular' ? 'block' : 'none';
+        document.getElementById('groupFieldsExam').style.display = modality === 'exam' ? 'block' : 'none';
+    }
+
+    handleGroupSubmit(e) {
+        e.preventDefault();
+        const modality = document.getElementById('groupModality').value;
+        const courseId = document.getElementById('groupCourse').value;
+        const teacherId = document.getElementById('groupTeacher').value;
+        const course = DataManager.getCourseById(courseId);
+        const teacher = DataManager.getTeacherById(teacherId);
+
+        const data = {
+            code: document.getElementById('groupCode').value.trim(),
+            modality: modality,
+            courseId: courseId,
+            courseName: course ? course.name : '',
+            teacherId: teacherId,
+            teacherName: teacher ? `${teacher.firstName} ${teacher.lastName}` : '',
+            status: document.getElementById('groupStatus').value,
+            classroom: document.getElementById('groupClassroom').value.trim(),
+            observations: document.getElementById('groupObservations').value.trim()
+        };
+
+        if (modality === 'regular') {
+            data.startDate = document.getElementById('groupStartDate').value;
+            data.endDate = document.getElementById('groupEndDate').value;
+            data.hours = parseInt(document.getElementById('groupHours').value) || 0;
+            data.maxQuota = parseInt(document.getElementById('groupMaxQuota').value) || 0;
+            data.examDate = null;
+            data.examTime = null;
+            data.examHours = null;
+        } else {
+            data.examDate = document.getElementById('groupExamDate').value;
+            data.startDate = data.examDate;
+            data.examTime = document.getElementById('groupExamTime').value;
+            data.examHours = parseInt(document.getElementById('groupExamHours').value) || 0;
+            data.hours = data.examHours;
+            data.maxQuota = parseInt(document.getElementById('groupExamMaxQuota').value) || 0;
+            data.endDate = data.examDate;
+        }
+
+        if (!this.validateGroupData(data)) return;
+
+        const groupId = this._editingGroupId;
+        if (groupId) {
+            DataManager.updateGroup(groupId, data);
+            this.showToast('Grupo actualizado correctamente', 'success');
+        } else {
+            DataManager.addGroup(data);
+            this.showToast('Grupo creado correctamente', 'success');
+        }
+        this.closeModal();
+        this.loadGroups();
+    }
+
+    validateGroupData(data) {
+        if (!data.code) {
+            this.showToast('El código del grupo es obligatorio', 'error');
+            return false;
+        }
+        if (!data.modality) {
+            this.showToast('Seleccione una modalidad', 'error');
+            return false;
+        }
+        if (!data.courseId) {
+            this.showToast('Seleccione un curso', 'error');
+            return false;
+        }
+        if (!data.teacherId) {
+            this.showToast('Seleccione un docente', 'error');
+            return false;
+        }
+        if (!data.maxQuota || data.maxQuota < 1) {
+            this.showToast('El cupo máximo debe ser mayor a cero', 'error');
+            return false;
+        }
+        if (data.modality === 'regular') {
+            if (!data.startDate) {
+                this.showToast('La fecha de inicio es obligatoria', 'error');
+                return false;
+            }
+            if (!data.endDate) {
+                this.showToast('La fecha de fin es obligatoria', 'error');
+                return false;
+            }
+            if (data.startDate > data.endDate) {
+                this.showToast('La fecha de fin debe ser posterior a la de inicio', 'error');
+                return false;
+            }
+        } else {
+            if (!data.examDate) {
+                this.showToast('La fecha del examen es obligatoria', 'error');
+                return false;
+            }
+        }
+        if (!data.status) {
+            this.showToast('El estado es obligatorio', 'error');
+            return false;
+        }
+        return true;
+    }
+
+    closeGroup(groupId) {
+        if (confirm('¿Desea cerrar este grupo? Esta acción no se puede revertir desde el sistema.')) {
+            DataManager.updateGroup(groupId, { status: 'closed' });
+            this.showToast('Grupo cerrado correctamente', 'success');
+            this.loadGroups();
+        }
+    }
+
+    deleteGroup(groupId) {
+        if (confirm('¿Desactivar este grupo académico?')) {
+            DataManager.updateGroup(groupId, { status: 'closed' });
+            this.showToast('Grupo desactivado', 'success');
+            this.loadGroups();
+        }
     }
 
     // ========== ENROLLMENTS MODULE ==========
