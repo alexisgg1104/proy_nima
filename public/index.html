@@ -495,57 +495,75 @@
 
                 <!-- Enrollments View -->
                 <div id="enrollments" class="view">
-                    <div class="module-header">
-                        <label>Seleccione un grupo:</label>
-                        <select id="enrollmentGroupSelect" class="filter-select">
+
+                    <!-- Selector de grupo -->
+                    <div class="enrollment-selector-bar">
+                        <label class="enrollment-selector-label">Seleccione un grupo académico:</label>
+                        <select id="enrollmentGroupSelect" class="filter-select enrollment-group-select">
                             <option value="">-- Seleccione un grupo --</option>
                         </select>
                     </div>
 
                     <div id="enrollmentContent" style="display: none;">
-                        <div class="enrollment-info card" id="enrollmentGroupInfo">
+
+                        <!-- Card resumen del grupo -->
+                        <div class="enrollment-summary-card" id="enrollmentGroupInfo">
                         </div>
 
-                        <div class="enrollment-sections">
-                            <div class="enrollment-section">
-                                <h3>Buscar Alumnos</h3>
-                                <input type="text" class="search-field" id="enrollmentStudentSearch" placeholder="Código, DNI o nombre...">
-                                <div class="table-responsive">
-                                    <table class="data-table" id="availableStudentsTable">
-                                        <thead>
-                                            <tr>
-                                                <th>Código</th>
-                                                <th>Alumno</th>
-                                                <th>DNI</th>
-                                                <th>Ciclo</th>
-                                                <th>Acción</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="availableStudentsBody">
-                                        </tbody>
-                                    </table>
-                                </div>
+                        <!-- Búsqueda de alumnos -->
+                        <div class="enrollment-search-card">
+                            <div class="enrollment-search-header">
+                                <span class="enrollment-search-title">&#128269; Buscar y agregar alumno</span>
+                                <small class="enrollment-search-hint">Busca por código, DNI o nombre</small>
                             </div>
-
-                            <div class="enrollment-section">
-                                <h3>Alumnos Matriculados (<span id="enrolledCount">0</span>/<span id="enrolledQuota">30</span>)</h3>
-                                <div class="table-responsive">
-                                    <table class="data-table" id="enrolledStudentsTable">
-                                        <thead>
-                                            <tr>
-                                                <th>Código</th>
-                                                <th>Alumno</th>
-                                                <th>DNI</th>
-                                                <th>Fecha Matrícula</th>
-                                                <th>Acción</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="enrolledStudentsBody">
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <input type="text" class="search-field" id="enrollmentStudentSearch" placeholder="Código, DNI o nombre del alumno...">
+                            <div id="enrollmentSearchResults" class="enrollment-search-results" style="display:none;">
+                                <table class="data-table" id="availableStudentsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Alumno</th>
+                                            <th>DNI</th>
+                                            <th>Ciclo</th>
+                                            <th>Promoc.</th>
+                                            <th>Agregar</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="availableStudentsBody">
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
+
+                        <!-- Tabla de alumnos matriculados -->
+                        <div class="enrollment-table-card">
+                            <div class="enrollment-table-header">
+                                <span class="enrollment-table-title">&#127979; Alumnos Matriculados</span>
+                                <span class="enrollment-counter">
+                                    <span id="enrolledCount">0</span> / <span id="enrolledQuota">0</span> cupos
+                                    &nbsp;<span id="enrolledAvailableBadge" class="enrollment-available-badge"></span>
+                                </span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="data-table" id="enrolledStudentsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Alumno</th>
+                                            <th>DNI</th>
+                                            <th>Ciclo</th>
+                                            <th>Promoción</th>
+                                            <th>Fecha de matrícula</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="enrolledStudentsBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 

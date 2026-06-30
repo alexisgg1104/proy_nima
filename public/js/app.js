@@ -1265,48 +1265,108 @@ class SAIIApp {
 
         contentDiv.style.display = 'block';
 
-        // Show group info
+        const enrollments = DataManager.getEnrollments(groupId);
+        const enrolledCount = enrollments.length;
+        const available = group.maxQuota - enrolledCount;
+        const modalityLabel = group.modality === 'regular' ? 'Curso regular' : 'Examen de suficiencia';
+
+        const statusMap = {
+            'open': 'Abierto', 'inprogress': 'En curso',
+            'finished': 'Terminado', 'closed': 'Cerrado'
+        };
+        const statusLabel = statusMap[group.status] || group.status;
+
+        // Show enhanced group summary card
         const infoDiv = document.getElementById('enrollmentGroupInfo');
         infoDiv.innerHTML = `
-            <p><strong>Grupo:</strong> ${group.code}</p>
-            <p><strong>Curso:</strong> ${group.courseName}</p>
-            <p><strong>Docente:</strong> ${group.teacherName}</p>
-            <p><strong>Modalidad:</strong> ${group.modality === 'regular' ? 'Curso regular' : 'Examen de suficiencia'}</p>
-            <p><strong>Cupo:</strong> ${group.maxQuota} estudiantes</p>
+            <div class="enrollment-summary-grid">
+                <div class="enrollment-summary-item">
+                    <span class="enrollment-summary-label">Grupo</span>
+                    <span class="enrollment-summary-value">${group.code}</span>
+                </div>
+                <div class="enrollment-summary-item">
+                    <span class="enrollment-summary-label">Curso</span>
+                    <span class="enrollment-summary-value">${group.courseName}</span>
+                </div>
+                <div class="enrollment-summary-item">
+                    <span class="enrollment-summary-label">Docente</span>
+                    <span class="enrollment-summary-value">${group.teacherName}</span>
+                </div>
+                <div class="enrollment-summary-item">
+                    <span class="enrollment-summary-label">Modalidad</span>
+                    <span class="enrollment-summary-value">${modalityLabel}</span>
+                </div>
+                <div class="enrollment-summary-item">
+                    <span class="enrollment-summary-label">Cupo máximo</span>
+                    <span class="enrollment-summary-value">${group.maxQuota}</span>
+                </div>
+                <div class="enrollment-summary-item">
+                    <span class="enrollment-summary-label">Matriculados</span>
+                    <span class="enrollment-summary-value" style="color: var(--color-primary); font-weight:700;">${enrolledCount}</span>
+                </div>
+                <div class="enrollment-summary-item">
+                    <span class="enrollment-summary-label">Cupos disponibles</span>
+                    <span class="enrollment-summary-value" style="color: ${available > 0 ? '#388e3c' : '#c62828'}; font-weight:700;">${available}</span>
+                </div>
+                <div class="enrollment-summary-item">
+                    <span class="enrollment-summary-label">Estado</span>
+                    <span class="enrollment-summary-value">${statusLabel}</span>
+                </div>
+            </div>
         `;
 
-        // Load available students
-        const enrolledIds = DataManager.getEnrollments(groupId).map(e => e.studentId);
-        let availableStudents = DataManager.getStudents().filter(s => !enrolledIds.includes(s.id) && s.status === 'active');
+        // Update counter badge
+        document.getElementById('enrolledCount').textContent = enrolledCount;
+        document.getElementById('enrolledQuota').textContent = group.maxQuota;
+        const badge = document.getElementById('enrolledAvailableBadge');
+        badge.textContent = available > 0 ? `${available} disponibles` : 'Sin cupos';
+        badge.className = 'enrollment-available-badge ' + (available > 0 ? 'badge-available' : 'badge-full');
 
-        this.renderAvailableStudents(availableStudents, groupId);
+        // Clear search
+        const searchInput = document.getElementById('enrollmentStudentSearch');
+        searchInput.value = '';
+        document.getElementById('enrollmentSearchResults').style.display = 'none';
+
         this.renderEnrolledStudents(groupId);
 
         // Search functionality
-        const searchInput = document.getElementById('enrollmentStudentSearch');
-        searchInput.addEventListener('input', () => {
-            const query = searchInput.value.toLowerCase();
-            let filtered = DataManager.getStudents().filter(s => 
+        searchInput.oninput = () => {
+            const query = searchInput.value.trim().toLowerCase();
+            if (!query) {
+                document.getElementById('enrollmentSearchResults').style.display = 'none';
+                return;
+            }
+            const enrolledIds = DataManager.getEnrollments(groupId).map(e => e.studentId);
+            let filtered = DataManager.getStudents().filter(s =>
+                s.status === 'active' &&
                 !enrolledIds.includes(s.id) &&
-                (s.code.includes(query) || s.dni.includes(query) || s.firstName.toLowerCase().includes(query))
-            );
+                (s.code.includes(query) || s.dni.includes(query) ||
+                 s.firstName.toLowerCase().includes(query) || s.lastName.toLowerCase().includes(query))
+            ).slice(0, 5);
             this.renderAvailableStudents(filtered, groupId);
-        });
+            document.getElementById('enrollmentSearchResults').style.display = filtered.length > 0 ? 'block' : 'none';
+        };
     }
 
     renderAvailableStudents(students, groupId) {
         const tbody = document.getElementById('availableStudentsBody');
         tbody.innerHTML = '';
 
+        if (students.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 1rem; color:var(--color-text-secondary);">No se encontraron alumnos disponibles</td></tr>';
+            return;
+        }
+
         students.forEach(student => {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${student.code}</td>
-                <td>${student.firstName} ${student.lastName}</td>
+                <td><strong>${student.firstName} ${student.lastName}</strong></td>
                 <td>${student.dni}</td>
                 <td>Ciclo ${student.cycle}</td>
+                <td>Prom. ${student.promotion}</td>
                 <td>
-                    <button class="btn btn-sm btn-primary" onclick="app.addEnrollment('${groupId}', '${student.id}')">Agregar</button>
+                    <button class="icon-btn icon-add" onclick="app.addEnrollment('${groupId}', '${student.id}')" title="Agregar al grupo">&#43;&#10003;</button>
                 </td>
             `;
             tbody.appendChild(row);
@@ -1315,27 +1375,96 @@ class SAIIApp {
 
     renderEnrolledStudents(groupId) {
         const enrollments = DataManager.getEnrollments(groupId);
-        const enrolledStudents = enrollments.map(e => DataManager.getStudentById(e.studentId));
         const tbody = document.getElementById('enrolledStudentsBody');
         tbody.innerHTML = '';
 
-        document.getElementById('enrolledCount').textContent = enrolledStudents.length;
+        const group = DataManager.getGroupById(groupId);
+        const enrolledCount = enrollments.length;
 
-        enrolledStudents.forEach(student => {
+        // Update counters
+        document.getElementById('enrolledCount').textContent = enrolledCount;
+        if (group) {
+            document.getElementById('enrolledQuota').textContent = group.maxQuota;
+            const available = group.maxQuota - enrolledCount;
+            const badge = document.getElementById('enrolledAvailableBadge');
+            badge.textContent = available > 0 ? `${available} disponibles` : 'Sin cupos';
+            badge.className = 'enrollment-available-badge ' + (available > 0 ? 'badge-available' : 'badge-full');
+        }
+
+        if (enrollments.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2rem; color:var(--color-text-secondary);">No hay alumnos matriculados en este grupo</td></tr>';
+            return;
+        }
+
+        enrollments.forEach(enrollment => {
+            const student = DataManager.getStudentById(enrollment.studentId);
             if (!student) return;
-            const enrollment = enrollments.find(e => e.studentId === student.id);
+            const statusLabel = enrollment.status === 'active' ? 'Activo' : 'Retirado';
+            const statusClass = enrollment.status === 'active' ? 'badge-active' : 'badge-inactive';
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${student.code}</td>
-                <td>${student.firstName} ${student.lastName}</td>
+                <td><strong>${student.firstName} ${student.lastName}</strong></td>
                 <td>${student.dni}</td>
+                <td>Ciclo ${student.cycle}</td>
+                <td>Promoción ${student.promotion}</td>
                 <td>${enrollment.enrollmentDate}</td>
+                <td><span class="badge-status ${statusClass}">${statusLabel}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-danger" onclick="app.removeEnrollment('${enrollment.id}', '${groupId}')">Remover</button>
+                    <div class="action-icons">
+                        <button class="icon-btn icon-view" onclick="app.viewEnrollmentDetail('${enrollment.id}', '${groupId}')" title="Ver matrícula">&#128269;</button>
+                        <button class="icon-btn icon-edit" onclick="app.editEnrollmentStatus('${enrollment.id}', '${groupId}')" title="Editar estado">&#9998;</button>
+                        <button class="icon-btn icon-delete" onclick="app.removeEnrollment('${enrollment.id}', '${groupId}')" title="Retirar alumno">&#128683;</button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(row);
         });
+    }
+
+    viewEnrollmentDetail(enrollmentId, groupId) {
+        const enrollment = DataManager.getEnrollments(groupId).find(e => e.id === enrollmentId);
+        if (!enrollment) return;
+        const student = DataManager.getStudentById(enrollment.studentId);
+        const group = DataManager.getGroupById(groupId);
+        if (!student || !group) return;
+
+        const statusLabel = enrollment.status === 'active' ? 'Activo' : 'Retirado';
+        const statusClass = enrollment.status === 'active' ? 'badge-active' : 'badge-inactive';
+        const body = document.getElementById('studentDetailBody');
+        body.innerHTML = `
+            <div class="detail-grid">
+                <div class="detail-item"><span class="detail-label">Código alumno</span><span class="detail-value">${student.code}</span></div>
+                <div class="detail-item"><span class="detail-label">DNI</span><span class="detail-value">${student.dni}</span></div>
+                <div class="detail-item detail-full"><span class="detail-label">Alumno</span><span class="detail-value">${student.firstName} ${student.lastName}</span></div>
+                <div class="detail-item"><span class="detail-label">Ciclo</span><span class="detail-value">Ciclo ${student.cycle}</span></div>
+                <div class="detail-item"><span class="detail-label">Promoción</span><span class="detail-value">Promoción ${student.promotion}</span></div>
+                <div class="detail-item"><span class="detail-label">Grupo</span><span class="detail-value">${group.code}</span></div>
+                <div class="detail-item"><span class="detail-label">Curso</span><span class="detail-value">${group.courseName}</span></div>
+                <div class="detail-item"><span class="detail-label">Fecha de matrícula</span><span class="detail-value">${enrollment.enrollmentDate}</span></div>
+                <div class="detail-item"><span class="detail-label">Estado</span><span class="detail-value"><span class="badge-status ${statusClass}">${statusLabel}</span></span></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+            </div>
+        `;
+        const title = document.getElementById('studentDetailModal').querySelector('h2');
+        if (title) title.textContent = 'Detalle de Matrícula';
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('studentDetailModal').style.display = 'block';
+    }
+
+    editEnrollmentStatus(enrollmentId, groupId) {
+        const enrollment = DataManager.getEnrollments(groupId).find(e => e.id === enrollmentId);
+        if (!enrollment) return;
+        const student = DataManager.getStudentById(enrollment.studentId);
+        const newStatus = enrollment.status === 'active' ? 'inactive' : 'active';
+        const label = newStatus === 'active' ? 'reactivar' : 'suspender';
+        if (confirm(`¿Desea ${label} la matrícula de ${student ? student.firstName + ' ' + student.lastName : 'este alumno'}?`)) {
+            enrollment.status = newStatus;
+            this.showToast(`Matrícula ${newStatus === 'active' ? 'reactivada' : 'suspendida'} correctamente`, 'success');
+            this.renderEnrolledStudents(groupId);
+        }
     }
 
     addEnrollment(groupId, studentId) {
