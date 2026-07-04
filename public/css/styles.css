@@ -2416,3 +2416,32 @@ body {
     }
 }
 
+/* ============================================
+   GRADES MODULE FASE 6 STYLES
+   ============================================ */
+.grades-summary-card {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.grade-input {
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.grade-input:focus {
+    outline: none;
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px rgba(30, 91, 168, 0.25);
+}
+
+.grade-input:disabled {
+    background: var(--color-bg-secondary) !important;
+    color: var(--color-text-secondary) !important;
+    border-color: var(--color-border) !important;
+    cursor: not-allowed;
+}
+

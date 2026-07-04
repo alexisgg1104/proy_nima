@@ -43,7 +43,7 @@ El detalle operativo completo de cada fase está en `SAII_ESTADO_Y_PROMPTS.md`.
 | Fase 3 | Grupos Académicos | Pendiente / siguiente fase sugerida | `SAII_ESTADO_Y_PROMPTS.md` |
 | Fase 4 | Rediseño de Matrículas | Pendiente | `SAII_ESTADO_Y_PROMPTS.md` |
 | Fase 5 | Control de Asistencia de Alumnos | **Completada (corregida)** | `SAII_ESTADO_Y_PROMPTS.md` + `SAII_ASISTENCIA_ALUMNOS.md` |
-| Fase 6 | Registro de Notas | Pendiente | `SAII_ESTADO_Y_PROMPTS.md` |
+| Fase 6 | Registro de Notas | **Completada** | `SAII_ESTADO_Y_PROMPTS.md` |
 | Fase 7 | Certificados, Reportes, Usuarios, Roles y Configuración | Pendiente | `SAII_ESTADO_Y_PROMPTS.md` |
 | Etapa posterior | Backend PHP MVC + MySQL | Pendiente futuro | Documento backend por definir |
 
@@ -178,21 +178,21 @@ Referencia operativa: ver sección **Fase 5 pendiente — Control de Asistencia 
 
 ## Fase 6: Registro de Notas
 
-Estado: **Pendiente**.
+Estado: **Completada**.
 
-- [ ] Registro de notas diferenciado por rol.
-- [ ] Vista Docente para registrar notas solo de grupos asignados.
-- [ ] Vista Administrador para consultar actas registradas.
-- [ ] Tabla de notas correcta y funcional.
-- [ ] Cada módulo debe ser una columna.
-- [ ] Cada alumno debe ser una fila.
-- [ ] No poner módulos como filas.
-- [ ] Calcular promedio ponderado usando los porcentajes de módulos.
-- [ ] Validar notas entre 0 y 20.
-- [ ] No cerrar acta si faltan notas.
-- [ ] Dejar los datos de notas listos para Certificados y Reportes.
+- [x] Registro de notas diferenciado por rol.
+- [x] Vista Docente para registrar notas solo de grupos asignados.
+- [x] Vista Administrador para consultar actas registradas.
+- [x] Tabla de notas correcta y funcional.
+- [x] Cada módulo debe ser una columna.
+- [x] Cada alumno debe ser una fila.
+- [x] No poner módulos como filas.
+- [x] Calcular promedio ponderado usando los porcentajes de módulos.
+- [x] Validar notas entre 0 y 20.
+- [x] No cerrar acta si faltan notas.
+- [x] Dejar los datos de notas listos para Certificados y Reportes.
 
-Referencia operativa: ver sección **Fase 6 pendiente — Registro de Notas** en `SAII_ESTADO_Y_PROMPTS.md`.
+Referencia operativa: ver sección **Fase 6 — Registro de Notas** en `SAII_ESTADO_Y_PROMPTS.md`.
 
 ---
 
@@ -380,11 +380,54 @@ El agente debe actualizar esta sección al terminar cada fase.
 
 #### Fase 6 — Registro de Notas
 
-- Fecha: pendiente.
-- Rama: pendiente.
-- Commit o mensaje sugerido: `feat: fase 6 registro de notas`.
-- Estado final: Pendiente.
-- Resumen del agente: pendiente.
+- Fecha: 2026-07-04
+- Rama: alexis/fase-6-registro-notas (sugerida)
+- Commit o mensaje sugerido: `feat: fase 6 registro de notas`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `public/js/data.js`
+  - `public/index.html`
+  - `public/js/app.js`
+  - `public/css/styles.css`
+  - `SAII_BACKLOG.md`
+- Funciones creadas o modificadas:
+  - `DataManager.ensureAllGroupsHaveGradeSheet()`
+  - `DataManager.getGradeSheetByGroup()`
+  - `DataManager.updateGradeSheetStatus()`
+  - `DataManager.getTeacherIdForUser()`
+  - `DataManager.isGradeSheetComplete()`
+  - `SAIIApp.setupGrades()`
+  - `SAIIApp.setupAdminGradesView()`
+  - `SAIIApp.renderAdminGradesTable()`
+  - `SAIIApp.viewGradeSheetDetail()`
+  - `SAIIApp.onModalGradeInputChange()`
+  - `SAIIApp.saveModalGrades()`
+  - `SAIIApp.closeModalGradeSheetFromModal()`
+  - `SAIIApp.reopenGradeSheet()`
+  - `SAIIApp.setupTeacherGradesView()`
+  - `SAIIApp.loadTeacherGradesTable()`
+  - `SAIIApp.onGradeInputChange()`
+  - `SAIIApp.focusStudentGrades()`
+  - `SAIIApp.clearStudentGrades()`
+  - `SAIIApp.viewStudentGradesDetail()`
+  - `SAIIApp.saveTeacherGrades()`
+  - `SAIIApp.closeTeacherGradeSheet()`
+- Cambios principales:
+  - Se dividió el módulo de notas en dos vistas basadas en roles (Administrador y Docente).
+  - Vista Docente: Selección de grupo asignado, tabla horizontal compacta (tipo Excel académico) con cálculo de promedio ponderado automático y estado por alumno en tiempo real.
+  - Corrección de bug en el modal "Detalle de Acta de Calificaciones": Ahora la sábana de notas se muestra con inputs editables y botones de acción (Guardar/Cerrar) en el pie del modal cuando el docente visualiza un acta en estado borrador (evaluación insensible a mayúsculas/minúsculas).
+  - Integración del promedio de grupo en tiempo real dentro del modal (`#modalGroupAverage`) y la tabla inline (`#inlineGroupAverage`).
+  - Habilitación del listado general de actas para docentes, filtrado para mostrar solo sus grupos asignados.
+  - Vista Administrador: Listado de todas las actas con filtros avanzados, promedio de grupo, y acciones de ver acta (solo lectura) y reabrir acta cerrada (para volver al estado borrador).
+- Pruebas realizadas:
+  - Mapeo automático de docente (`roberto.silva` -> `TCH001`).
+  - Visualización del listado general de actas para docentes (filtrado exclusivamente para sus grupos).
+  - Edición de calificaciones en el modal "Detalle de Acta de Calificaciones" como docente en estado borrador, con límites (0-20) y recálculo automático de promedio de alumno y promedio de grupo en tiempo real.
+  - Validación de que el administrador ve la sábana de notas del modal en modo de solo lectura.
+  - Guardado y cierre de acta desde el modal del docente, verificando bloqueo de inputs tras el cierre.
+  - Reabrir acta cerrada por el administrador, rehabilitando la edición en el modal del docente.
+- Pendientes / riesgos: ninguno crítico.
+- Siguiente fase sugerida: Fase 7 — Certificados, Reportes, Usuarios, Roles y Configuración.
 
 #### Fase 7 — Certificados, Reportes, Usuarios, Roles y Configuración
 

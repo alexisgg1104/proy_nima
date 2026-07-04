@@ -685,35 +685,55 @@
 
                 <!-- Grades View -->
                 <div id="grades" class="view">
-                    <div class="module-header">
-                        <div class="grades-controls">
-                            <div class="control-group">
-                                <label>Grupo:</label>
-                                <select id="gradesGroupSelect" class="filter-select">
-                                    <option value="">-- Seleccione un grupo --</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div id="gradesContent" style="display: none;">
-                        <div class="grades-header">
-                            <p id="gradesInfo"></p>
+
+                    <!-- VISTA ADMINISTRADOR -->
+                    <div id="gradesAdminView" style="display: none;">
+                        <div class="module-header" style="margin-bottom: var(--spacing-lg);">
+                            <h2 class="module-title">Actas de Notas Registradas</h2>
+                        </div>
+
+                        <!-- Filtros -->
+                        <div class="filters-bar">
+                            <select id="gradesAdminFilterCourse" class="filter-select">
+                                <option value="">Todos los cursos</option>
+                            </select>
+                            <select id="gradesAdminFilterGroup" class="filter-select">
+                                <option value="">Todos los grupos</option>
+                            </select>
+                            <select id="gradesAdminFilterTeacher" class="filter-select">
+                                <option value="">Todos los docentes</option>
+                            </select>
+                            <select id="gradesAdminFilterModality" class="filter-select">
+                                <option value="">Todas las modalidades</option>
+                                <option value="regular">Curso regular</option>
+                                <option value="exam">Examen de suficiencia</option>
+                            </select>
+                            <select id="gradesAdminFilterStatus" class="filter-select">
+                                <option value="">Todos los estados</option>
+                                <option value="borrador">Borrador</option>
+                                <option value="cerrada">Cerrada</option>
+                            </select>
                         </div>
 
                         <div class="table-responsive">
-                            <table class="data-table grades-table" id="gradesTable">
-                                <thead id="gradesTableHead">
+                            <table class="data-table" id="gradesAdminTable">
+                                <thead>
+                                    <tr>
+                                        <th>Grupo</th>
+                                        <th>Curso</th>
+                                        <th>Docente</th>
+                                        <th>Modalidad</th>
+                                        <th>Matriculados</th>
+                                        <th>Notas completas</th>
+                                        <th>Promedio del grupo</th>
+                                        <th>Estado del acta</th>
+                                        <th>Acciones</th>
+                                    </tr>
                                 </thead>
-                                <tbody id="gradesTableBody">
+                                <tbody id="gradesAdminTableBody">
                                 </tbody>
                             </table>
-                        </div>
-
-                        <div class="grades-actions">
-                            <button class="btn btn-primary" id="saveGradesBtn">Guardar Notas</button>
-                            <button class="btn btn-secondary" id="closeGradesBtn">Cerrar Acta</button>
-                            <button class="btn btn-secondary" id="exportGradesBtn">Exportar Acta</button>
                         </div>
                     </div>
                 </div>
@@ -1395,6 +1415,30 @@
                 <div class="modal-actions" style="margin-top:1rem;">
                     <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Detalle de Acta de Notas (Administrador) -->
+    <div id="gradesDetailModal" class="modal modal-attendance" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Detalle de Acta de Calificaciones</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="gradesDetailBody">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Detalle de Notas de Alumno (Docente) -->
+    <div id="studentGradesDetailModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Ficha de Calificaciones del Alumno</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="studentGradesDetailBody">
             </div>
         </div>
     </div>

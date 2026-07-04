@@ -288,6 +288,12 @@ const mockData = {
         { id: 'GRD005', groupId: 'GRP001', studentId: 'ALU007', moduleGrades: { MOD001: 15, MOD002: 16, MOD003: 14 } },
     ],
 
+    // Grade Sheets status (Fase 6)
+    gradeSheets: [
+        { groupId: 'GRP001', status: 'borrador', updatedAt: '2024-03-15' },
+        { groupId: 'GRP003', status: 'cerrada', updatedAt: '2024-03-20' }
+    ],
+
     // Certificates
     certificates: [
         { id: 'CRT001', studentId: 'ALU001', groupId: 'GRP001', code: 'CERT-2024-00001', issueDate: '2024-03-20', status: 'issued' },
@@ -297,35 +303,46 @@ const mockData = {
 
     // System Users
     users: [
-        { id: 'USR001', username: 'admin', fullName: 'Administrador Principal', role: 'admin', email: 'admin@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-15 10:30' },
-        { id: 'USR002', username: 'secretaria', fullName: 'Juan María Secretaria', role: 'secretary', email: 'secretaria@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-14 09:15' },
-        { id: 'USR003', username: 'roberto.silva', fullName: 'Roberto Silva Acosta', role: 'teacher', email: 'roberto.silva@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-15 08:00' },
-        { id: 'USR004', username: 'coordinador', fullName: 'Carlos Coordinador Académico', role: 'coordinator', email: 'coordinador@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-13 14:45' },
+        { id: 'USR001', username: 'admin', password: 'admin123', fullName: 'Admin', role: 'admin', email: 'admin@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-15 10:30' },
+        { id: 'USR002', username: 'secretaria', password: 'secretaria123', fullName: 'Juan María Secretaria', role: 'secretary', email: 'secretaria@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-14 09:15' },
+        { id: 'USR003', username: 'roberto.silva', password: 'docente123', fullName: 'Roberto Silva', role: 'teacher', email: 'roberto.silva@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-15 08:00' },
+        { id: 'USR004', username: 'coordinador', password: 'coordinador123', fullName: 'Carlos Coordinador Académico', role: 'coordinator', email: 'coordinador@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-13 14:45' },
+        { id: 'USR005', username: 'lucia.espinoza', password: 'docente123', fullName: 'Lucía Espinoza', role: 'teacher', email: 'lucia.espinoza@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-15 08:30' },
     ],
 
 };
 
 // Utility functions for data management
 const DataManager = {
+    currentUser: null,
+
     // Login validation
     validateLogin: function(username, password, role) {
-        // Mock login - always succeeds for demo purposes
         if (username && password && role) {
-            const user = mockData.users.find(u => u.username === username && u.role === role);
+            const user = mockData.users.find(u => 
+                u.username.toLowerCase() === username.toLowerCase() && 
+                u.password === password && 
+                u.role.toLowerCase() === role.toLowerCase()
+            );
             if (user) {
-                mockData.currentUser = { ...user };
+                let teacherId = null;
+                if (user.role === 'teacher') {
+                    const teacher = mockData.teachers.find(t => t.email === user.email);
+                    teacherId = teacher ? teacher.id : null;
+                }
+                const loggedUser = {
+                    id: user.id,
+                    username: user.username,
+                    fullName: user.fullName,
+                    role: user.role,
+                    email: user.email,
+                    teacherId: teacherId
+                };
+                mockData.currentUser = loggedUser;
+                DataManager.currentUser = loggedUser;
+                localStorage.setItem('saii_currentUser', JSON.stringify(loggedUser));
                 return true;
             }
-            // Demo: allow any login
-            mockData.currentUser = {
-                id: 'USR999',
-                username: username,
-                fullName: 'Usuario Demo',
-                email: username + '@institutoinformatica.edu.pe',
-                role: role,
-                lastLogin: new Date()
-            };
-            return true;
         }
         return false;
     },
@@ -628,6 +645,72 @@ const DataManager = {
 
     getCertificatesByGroup: function(groupId) {
         return mockData.certificates.filter(c => c.groupId === groupId);
+    },
+
+    // ===== GRADE SHEETS (FASE 6) =====
+    ensureAllGroupsHaveGradeSheet: function() {
+        if (!mockData.gradeSheets) {
+            mockData.gradeSheets = [];
+        }
+        mockData.groups.forEach(g => {
+            const exists = mockData.gradeSheets.find(gs => gs.groupId === g.id);
+            if (!exists) {
+                mockData.gradeSheets.push({
+                    groupId: g.id,
+                    status: (g.status === 'closed' || g.status === 'finished') ? 'cerrada' : 'borrador',
+                    updatedAt: new Date().toISOString().split('T')[0]
+                });
+            }
+        });
+    },
+
+    getGradeSheetByGroup: function(groupId) {
+        this.ensureAllGroupsHaveGradeSheet();
+        return mockData.gradeSheets.find(gs => gs.groupId === groupId) || null;
+    },
+
+    updateGradeSheetStatus: function(groupId, newStatus) {
+        this.ensureAllGroupsHaveGradeSheet();
+        const gs = mockData.gradeSheets.find(gs => gs.groupId === groupId);
+        if (gs) {
+            gs.status = newStatus;
+            gs.updatedAt = new Date().toISOString().split('T')[0];
+            return gs;
+        }
+        return null;
+    },
+
+    getTeacherIdForUser: function(user) {
+        if (!user) return null;
+        if (user.teacherId) return user.teacherId;
+        if (user.role !== 'teacher') return null;
+        const teacher = mockData.teachers.find(t => t.email === user.email);
+        return teacher ? teacher.id : null;
+    },
+
+    isGradeSheetComplete: function(groupId) {
+        const group = this.getGroupById(groupId);
+        if (!group) return false;
+        const course = this.getCourseById(group.courseId);
+        if (!course) return false;
+        
+        const enrolled = this.getEnrolledStudentsByGroup(groupId);
+        if (enrolled.length === 0) return false;
+        
+        for (let i = 0; i < enrolled.length; i++) {
+            const student = enrolled[i];
+            const grade = mockData.grades.find(g => g.groupId === groupId && g.studentId === student.id);
+            if (!grade) return false;
+            
+            for (let j = 0; j < course.modules.length; j++) {
+                const mod = course.modules[j];
+                const val = grade.moduleGrades[mod.id];
+                if (val === undefined || val === null || val === '') {
+                    return false;
+                }
+            }
+        }
+        return true;
     },
 
 };

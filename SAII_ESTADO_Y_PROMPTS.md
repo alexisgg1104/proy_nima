@@ -767,7 +767,7 @@ git commit -m "feat: fase 5 asistencia alumnos"
 
 ---
 
-## Fase 6 pendiente — Registro de Notas
+## Fase 6 — Registro de Notas
 
 ### Prompt operativo
 

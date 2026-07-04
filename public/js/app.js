@@ -5,6 +5,18 @@ class SAIIApp {
     constructor() {
         this.currentView = 'dashboard';
         this.isDarkMode = localStorage.getItem('saii_darkMode') === 'true';
+        
+        // Restore user session from localStorage
+        const storedUser = localStorage.getItem('saii_currentUser');
+        if (storedUser) {
+            try {
+                DataManager.currentUser = JSON.parse(storedUser);
+                mockData.currentUser = DataManager.currentUser;
+            } catch (e) {
+                console.error("Error restoring session", e);
+            }
+        }
+        
         this.init();
     }
 
@@ -12,6 +24,14 @@ class SAIIApp {
         this.setupEventListeners();
         this.applyTheme();
         this.setupLoginForm();
+        
+        // If user is already logged in, skip login screen
+        if (DataManager.currentUser) {
+            this.loginUser(DataManager.currentUser.role);
+        } else {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('appContainer').style.display = 'none';
+        }
     }
 
     // ========== LOGIN MANAGEMENT ==========
@@ -40,14 +60,14 @@ class SAIIApp {
                 this.loginUser(role);
             }, 500);
         } else {
-            this.showToast('Usuario o contraseña incorrectos', 'error');
+            this.showToast('Usuario, contraseña o rol incorrectos', 'error');
         }
     }
 
     loginUser(role) {
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('appContainer').style.display = 'flex';
-        document.getElementById('currentUser').textContent = DataManager.currentUser.fullName;
+        document.getElementById('currentUser').textContent = DataManager.currentUser.fullName || DataManager.currentUser.name;
         
         // Set role-based access
         this.setRolePermissions(role);
@@ -80,6 +100,9 @@ class SAIIApp {
     }
 
     logout() {
+        localStorage.removeItem('saii_currentUser');
+        DataManager.currentUser = null;
+        mockData.currentUser = null;
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('appContainer').style.display = 'none';
         document.getElementById('loginForm').reset();
@@ -2213,131 +2236,450 @@ class SAIIApp {
         this.showToast('Vista de impresión simulada — usar Ctrl+P para imprimir la vista actual', 'success');
     }
 
-    // ========== GRADES MODULE ==========
+    // ========== GRADES MODULE — FASE 6 ==========
     setupGrades() {
-        const groupSelect = document.getElementById('gradesGroupSelect');
-        const groups = DataManager.getGroups();
+        const adminView = document.getElementById('gradesAdminView');
+        const teacherView = document.getElementById('gradesTeacherView');
 
-        groupSelect.innerHTML = '<option value="">-- Seleccione un grupo --</option>';
-        groups.forEach(group => {
-            const option = document.createElement('option');
-            option.value = group.id;
-            option.textContent = `${group.code} - ${group.courseName}`;
-            groupSelect.appendChild(option);
-        });
-
-        groupSelect.addEventListener('change', () => this.loadGradesTable(groupSelect.value));
+        if (adminView) adminView.style.display = 'block';
+        if (teacherView) teacherView.style.display = 'none';
+        this.setupAdminGradesView();
     }
 
-    loadGradesTable(groupId) {
-        const contentDiv = document.getElementById('gradesContent');
-        if (!groupId) {
-            contentDiv.style.display = 'none';
+    // --- VISTA ADMINISTRADOR ---
+    setupAdminGradesView() {
+        const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
+        
+        // Populate course filter
+        const courseFilter = document.getElementById('gradesAdminFilterCourse');
+        courseFilter.innerHTML = '<option value="">Todos los cursos</option>';
+        DataManager.getCourses().forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            courseFilter.appendChild(opt);
+        });
+
+        // Populate group filter
+        const groupFilter = document.getElementById('gradesAdminFilterGroup');
+        groupFilter.innerHTML = '<option value="">Todos los grupos</option>';
+        DataManager.getGroups().forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g.id;
+            opt.textContent = g.code;
+            groupFilter.appendChild(opt);
+        });
+
+        // Populate teacher filter
+        const teacherFilter = document.getElementById('gradesAdminFilterTeacher');
+        teacherFilter.innerHTML = '<option value="">Todos los docentes</option>';
+        DataManager.getTeachers().forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.textContent = `${t.firstName} ${t.lastName}`;
+            teacherFilter.appendChild(opt);
+        });
+
+        // Hide/Show teacher filter depending on role
+        if (role === 'teacher') {
+            if (teacherFilter) teacherFilter.style.display = 'none';
+        } else {
+            if (teacherFilter) teacherFilter.style.display = 'inline-block';
+        }
+
+        this.renderAdminGradesTable();
+
+        const apply = () => this.renderAdminGradesTable();
+        courseFilter.onchange = apply;
+        groupFilter.onchange = apply;
+        teacherFilter.onchange = apply;
+        document.getElementById('gradesAdminFilterModality').onchange = apply;
+        document.getElementById('gradesAdminFilterStatus').onchange = apply;
+    }
+
+    renderAdminGradesTable() {
+        const tbody = document.getElementById('gradesAdminTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        const courseFilter = document.getElementById('gradesAdminFilterCourse').value;
+        const groupFilter = document.getElementById('gradesAdminFilterGroup').value;
+        const teacherFilter = document.getElementById('gradesAdminFilterTeacher') ? document.getElementById('gradesAdminFilterTeacher').value : '';
+        const modalityFilter = document.getElementById('gradesAdminFilterModality').value;
+        const statusFilter = document.getElementById('gradesAdminFilterStatus').value;
+
+        // Ensure all groups have a gradeSheet status
+        DataManager.ensureAllGroupsHaveGradeSheet();
+
+        let filteredGroups = DataManager.getGroups();
+
+        const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
+        const teacherId = DataManager.getTeacherIdForUser(DataManager.currentUser);
+
+        if (role === 'teacher' && teacherId) {
+            filteredGroups = filteredGroups.filter(g => g.teacherId === teacherId);
+        } else {
+            if (teacherFilter) filteredGroups = filteredGroups.filter(g => g.teacherId === teacherFilter);
+        }
+
+        if (courseFilter) filteredGroups = filteredGroups.filter(g => g.courseId === courseFilter);
+        if (groupFilter) filteredGroups = filteredGroups.filter(g => g.id === groupFilter);
+        if (modalityFilter) filteredGroups = filteredGroups.filter(g => g.modality === modalityFilter);
+
+        // Filter by gradeSheet status
+        filteredGroups = filteredGroups.filter(g => {
+            const sheet = DataManager.getGradeSheetByGroup(g.id);
+            const status = sheet ? sheet.status : 'borrador';
+            if (statusFilter && status.toLowerCase() !== statusFilter.toLowerCase()) return false;
+            return true;
+        });
+
+        if (filteredGroups.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">No se encontraron actas de notas</td></tr>';
             return;
         }
 
-        contentDiv.style.display = 'block';
+        const statusMap = {
+            borrador: { label: 'Borrador', css: 'badge-pending' },
+            cerrada: { label: 'Cerrada', css: 'badge-closed' }
+        };
 
-        const group = DataManager.getGroupById(groupId);
-        const course = DataManager.getCourseById(group.courseId);
-        const students = DataManager.getStudentsByGroup(groupId);
-
-        document.getElementById('gradesInfo').textContent = `Grupo: ${group.code} - Curso: ${group.courseName} | Docente: ${group.teacherName}`;
-
-        // Build table headers
-        const thead = document.getElementById('gradesTableHead');
-        thead.innerHTML = '<tr>';
-        thead.innerHTML += '<th>Código</th><th>Alumno</th>';
-        
-        course.modules.forEach(module => {
-            thead.innerHTML += `<th>${module.name} (${module.percentage}%)</th>`;
-        });
-
-        thead.innerHTML += '<th>Promedio</th><th>Estado</th></tr>';
-
-        // Build table body
-        const tbody = document.getElementById('gradesTableBody');
-        tbody.innerHTML = '';
-
-        students.forEach(student => {
-            const grade = mockData.grades.find(g => g.groupId === groupId && g.studentId === student.id);
-            const moduleGrades = grade ? grade.moduleGrades : {};
-            const average = DataManager.calculateAverage(moduleGrades, course);
-            const isApproved = average >= 11;
-
-            let row = `<tr><td>${student.code}</td><td>${student.firstName} ${student.lastName}</td>`;
-
-            course.modules.forEach(module => {
-                const gradeValue = moduleGrades[module.id] || '';
-                row += `<td><input type="number" min="0" max="20" value="${gradeValue}" class="grade-input" data-student="${student.id}" data-module="${module.id}" style="width: 60px; padding: 0.3rem;"></td>`;
-            });
-
-            row += `<td><strong class="grade-average">${average || '-'}</strong></td>`;
-            row += `<td><span class="badge-status ${isApproved ? 'badge-approved' : 'badge-rejected'}">${average ? (isApproved ? 'Aprobado' : 'Desaprobado') : '-'}</span></td>`;
-            row += '</tr>';
-
-            tbody.innerHTML += row;
-        });
-
-        // Update averages when grades change
-        const gradeInputs = document.querySelectorAll('.grade-input');
-        gradeInputs.forEach(input => {
-            input.addEventListener('change', () => this.updateGradeAverage(groupId, course));
-        });
-
-        // Save button handler
-        document.getElementById('saveGradesBtn').onclick = () => this.saveGrades(groupId, course, students);
-    }
-
-    updateGradeAverage(groupId, course) {
-        const tbody = document.getElementById('gradesTableBody');
-        const rows = tbody.querySelectorAll('tr');
-
-        rows.forEach((row, index) => {
-            const inputs = row.querySelectorAll('.grade-input');
-            const moduleGrades = {};
+        filteredGroups.forEach(group => {
+            const sheet = DataManager.getGradeSheetByGroup(group.id);
+            const status = sheet ? sheet.status : 'borrador';
+            const statusKey = status.toLowerCase();
+            const statusInfo = statusMap[statusKey] || { label: status, css: 'badge-pending' };
+            const course = DataManager.getCourseById(group.courseId);
+            const enrolled = DataManager.getEnrolledStudentsByGroup(group.id);
             
-            inputs.forEach((input, moduleIndex) => {
-                const moduleId = input.getAttribute('data-module');
-                moduleGrades[moduleId] = parseFloat(input.value) || 0;
+            // Calculate how many students have complete grades
+            let completeGradesCount = 0;
+            let groupSum = 0;
+            
+            enrolled.forEach(student => {
+                const gradeRecord = mockData.grades.find(g => g.groupId === group.id && g.studentId === student.id);
+                if (gradeRecord && course) {
+                    let complete = true;
+                    course.modules.forEach(m => {
+                        const val = gradeRecord.moduleGrades[m.id];
+                        if (val === undefined || val === null || val === '') {
+                            complete = false;
+                        }
+                    });
+                    if (complete) {
+                        completeGradesCount++;
+                        const avg = DataManager.calculateAverage(gradeRecord.moduleGrades, course);
+                        groupSum += avg;
+                    }
+                }
             });
 
-            const average = DataManager.calculateAverage(moduleGrades, course);
-            const isApproved = average >= 11;
+            const notesComplete = `${completeGradesCount} / ${enrolled.length}`;
+            const groupAverage = completeGradesCount > 0 ? (groupSum / completeGradesCount).toFixed(1) : '-';
 
-            const averageCell = row.querySelector('.grade-average');
-            const statusCell = row.querySelector('.badge-status');
-
-            averageCell.textContent = average.toFixed(2);
-            statusCell.textContent = isApproved ? 'Aprobado' : 'Desaprobado';
-            statusCell.className = `badge-status ${isApproved ? 'badge-approved' : 'badge-rejected'}`;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${group.code}</strong></td>
+                <td>${group.courseName}</td>
+                <td>${group.teacherName}</td>
+                <td>${group.modality === 'regular' ? 'Curso regular' : 'Examen de suficiencia'}</td>
+                <td>${enrolled.length}</td>
+                <td>${notesComplete}</td>
+                <td><strong>${groupAverage}</strong></td>
+                <td><span class="badge-status ${statusInfo.css}">${statusInfo.label}</span></td>
+                <td>
+                    <div class="action-icons">
+                        <button class="icon-btn icon-view" onclick="app.viewGradeSheetDetail('${group.id}')" title="Ver / editar acta completa">&#128269;</button>
+                        <button class="icon-btn icon-print" onclick="app.printGradeSheet('${group.id}')" title="Imprimir">&#128424;</button>
+                        <button class="icon-btn icon-export" onclick="app.exportGradeSheet('${group.id}')" title="Exportar acta">&#128197;</button>
+                        ${(role === 'admin' && statusKey === 'cerrada') ? `<button class="icon-btn icon-unlock" onclick="app.reopenGradeSheet('${group.id}')" title="Reabrir acta">&#128275;</button>` : ''}
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
         });
     }
 
-    saveGrades(groupId, course, students) {
-        const tbody = document.getElementById('gradesTableBody');
-        const rows = tbody.querySelectorAll('tr');
+    viewGradeSheetDetail(groupId) {
+        const group = DataManager.getGroupById(groupId);
+        if (!group) return;
+        const course = DataManager.getCourseById(group.courseId);
+        const enrolled = DataManager.getEnrolledStudentsByGroup(groupId);
+        const sheet = DataManager.getGradeSheetByGroup(groupId);
+        const status = sheet ? sheet.status : 'borrador';
+        const isBorrador = status.toLowerCase() === 'borrador';
 
-        rows.forEach((row, index) => {
-            const student = students[index];
-            const inputs = row.querySelectorAll('.grade-input');
+        const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
+        const canEdit = role === 'teacher' && isBorrador;
+
+        let headers = '<th>Código</th><th>Alumno</th>';
+        course.modules.forEach(m => {
+            headers += `<th>${m.name} (${m.percentage}%)</th>`;
+        });
+        headers += '<th>Promedio</th><th>Estado</th>';
+
+        let rows = '';
+        enrolled.forEach(student => {
+            const gradeRecord = mockData.grades.find(g => g.groupId === groupId && g.studentId === student.id);
+            const moduleGrades = gradeRecord ? gradeRecord.moduleGrades : {};
+            
+            let isComplete = true;
+            course.modules.forEach(m => {
+                const val = moduleGrades[m.id];
+                if (val === undefined || val === null || val === '') {
+                    isComplete = false;
+                }
+            });
+
+            const avg = isComplete ? DataManager.calculateAverage(moduleGrades, course) : null;
+            const isApproved = avg >= 11;
+            const statusLabel = isComplete ? (isApproved ? 'Aprobado' : 'Desaprobado') : 'Pendiente';
+            const statusClass = isComplete ? (isApproved ? 'badge-approved' : 'badge-rejected') : 'badge-pending';
+
+            rows += `<tr data-student-id="${student.id}">
+                <td>${student.code}</td>
+                <td><strong>${student.firstName} ${student.lastName}</strong></td>
+            `;
+
+            course.modules.forEach(m => {
+                const val = moduleGrades[m.id];
+                const displayVal = val !== undefined && val !== null ? val : '';
+                if (canEdit) {
+                    rows += `
+                        <td>
+                            <input type="number" 
+                                   class="modal-grade-input" 
+                                   min="0" 
+                                   max="20" 
+                                   step="1"
+                                   value="${displayVal}" 
+                                   data-student-id="${student.id}"
+                                   data-module-id="${m.id}" 
+                                   oninput="app.onModalGradeInputChange(this, '${groupId}', '${student.id}')"
+                                   style="width: 65px; text-align: center; padding: 0.3rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-bg-primary); color: var(--color-text-primary);" />
+                        </td>
+                    `;
+                } else {
+                    rows += `<td style="text-align: center;">${val !== undefined && val !== null && val !== '' ? val : '-'}</td>`;
+                }
+            });
+
+            rows += `
+                <td><strong class="modal-row-average">${avg !== null ? avg.toFixed(1) : '-'}</strong></td>
+                <td><span class="badge-status ${statusClass} modal-row-status">${statusLabel}</span></td>
+            </tr>`;
+        });
+
+        // Calculate initial group average
+        let completeGradesCount = 0;
+        let groupSum = 0;
+        enrolled.forEach(student => {
+            const gradeRecord = mockData.grades.find(g => g.groupId === groupId && g.studentId === student.id);
+            if (gradeRecord && course) {
+                let complete = true;
+                course.modules.forEach(m => {
+                    const val = gradeRecord.moduleGrades[m.id];
+                    if (val === undefined || val === null || val === '') {
+                        complete = false;
+                    }
+                });
+                if (complete) {
+                    completeGradesCount++;
+                    const avg = DataManager.calculateAverage(gradeRecord.moduleGrades, course);
+                    groupSum += avg;
+                }
+            }
+        });
+        const groupAverage = completeGradesCount > 0 ? (groupSum / completeGradesCount).toFixed(1) : '-';
+
+        const body = document.getElementById('gradesDetailBody');
+        body.innerHTML = `
+            <div class="grades-summary-card" style="margin-bottom: 1.5rem; padding: 1rem; border-radius: var(--radius-md);">
+                <h3 style="margin-top: 0; color: var(--color-primary);">${group.courseName} - ${group.code}</h3>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; font-size: 0.85rem;">
+                    <div><strong>Docente:</strong> ${group.teacherName}</div>
+                    <div><strong>Modalidad:</strong> ${group.modality === 'regular' ? 'Curso regular' : 'Examen de suficiencia'}</div>
+                    <div><strong>Estado Acta:</strong> <span class="badge-status ${status.toLowerCase() === 'cerrada' ? 'badge-closed' : 'badge-pending'}">${status.toUpperCase()}</span></div>
+                    <div><strong>Promedio Grupo:</strong> <strong id="modalGroupAverage">${groupAverage}</strong></div>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead><tr>${headers}</tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+            
+            <div class="modal-actions" style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.5rem;">
+                ${canEdit ? `
+                    <button class="btn btn-primary" onclick="app.saveModalGrades('${groupId}')">&#128190; Guardar Notas</button>
+                    <button class="btn btn-secondary" onclick="app.closeModalGradeSheetFromModal('${groupId}')">&#128274; Cerrar Acta</button>
+                ` : ''}
+                <button class="btn btn-secondary" onclick="app.closeModal()">Cerrar</button>
+            </div>
+        `;
+
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('gradesDetailModal').style.display = 'block';
+    }
+
+    onModalGradeInputChange(input, groupId, studentId) {
+        // Enforce 0-20 limits
+        let val = input.value;
+        if (val !== '') {
+            let num = parseFloat(val);
+            if (num < 0) input.value = 0;
+            if (num > 20) input.value = 20;
+        }
+
+        // Recalculate average and status in the row
+        const row = input.closest('tr');
+        const inputs = row.querySelectorAll('.modal-grade-input');
+        const course = DataManager.getCourseById(DataManager.getGroupById(groupId).courseId);
+        
+        const moduleGrades = {};
+        let isComplete = true;
+
+        inputs.forEach(inp => {
+            const modId = inp.getAttribute('data-module-id');
+            const v = inp.value;
+            if (v === undefined || v === null || v === '') {
+                isComplete = false;
+            } else {
+                moduleGrades[modId] = parseFloat(v);
+            }
+        });
+
+        const averageCell = row.querySelector('.modal-row-average');
+        const statusBadge = row.querySelector('.modal-row-status');
+
+        if (isComplete) {
+            const avg = DataManager.calculateAverage(moduleGrades, course);
+            const isApproved = avg >= 11;
+            averageCell.textContent = avg.toFixed(1);
+            statusBadge.textContent = isApproved ? 'Aprobado' : 'Desaprobado';
+            statusBadge.className = `badge-status modal-row-status ${isApproved ? 'badge-approved' : 'badge-rejected'}`;
+        } else {
+            averageCell.textContent = '-';
+            statusBadge.textContent = 'Pendiente';
+            statusBadge.className = 'badge-status modal-row-status badge-pending';
+        }
+
+        // Recalculate group average in the modal in real-time
+        const tbody = row.parentElement;
+        const allRows = tbody.querySelectorAll('tr');
+        let completeAveragesCount = 0;
+        let groupSum = 0;
+
+        allRows.forEach(r => {
+            const avgCell = r.querySelector('.modal-row-average');
+            if (avgCell && avgCell.textContent !== '-') {
+                const rowAvg = parseFloat(avgCell.textContent);
+                if (!isNaN(rowAvg)) {
+                    groupSum += rowAvg;
+                    completeAveragesCount++;
+                }
+            }
+        });
+
+        const modalGroupAvgEl = document.getElementById('modalGroupAverage');
+        if (modalGroupAvgEl) {
+            modalGroupAvgEl.textContent = completeAveragesCount > 0 ? (groupSum / completeAveragesCount).toFixed(1) : '-';
+        }
+    }
+
+    saveModalGrades(groupId) {
+        const body = document.getElementById('gradesDetailBody');
+        const rows = body.querySelectorAll('tbody tr');
+        const course = DataManager.getCourseById(DataManager.getGroupById(groupId).courseId);
+
+        let hasError = false;
+        rows.forEach(row => {
+            const studentId = row.getAttribute('data-student-id');
+            const inputs = row.querySelectorAll('.modal-grade-input');
             const moduleGrades = {};
 
-            inputs.forEach(input => {
-                const moduleId = input.getAttribute('data-module');
-                const value = parseFloat(input.value);
-                if (value < 0 || value > 20) {
-                    this.showToast('Las notas deben estar entre 0 y 20', 'error');
-                    return;
+            inputs.forEach(inp => {
+                const modId = inp.getAttribute('data-module-id');
+                const val = inp.value;
+                if (val !== '') {
+                    const num = parseFloat(val);
+                    if (num < 0 || num > 20 || isNaN(num)) {
+                        hasError = true;
+                    } else {
+                        moduleGrades[modId] = num;
+                    }
                 }
-                moduleGrades[moduleId] = value || 0;
             });
 
-            DataManager.saveGrade(groupId, student.id, moduleGrades);
+            if (!hasError) {
+                DataManager.saveGrade(groupId, studentId, moduleGrades);
+            }
         });
 
-        this.showToast('Notas guardadas correctamente', 'success');
+        if (hasError) {
+            this.showToast('Algunas notas tienen valores inválidos y no se guardaron. Deben estar entre 0 y 20.', 'error');
+        } else {
+            this.showToast('Calificaciones del acta guardadas correctamente', 'success');
+            
+            // Reload the list table in the background
+            this.renderAdminGradesTable();
+
+            // Refresh modal to show updated values and recalculate status classes
+            this.viewGradeSheetDetail(groupId);
+        }
     }
+
+    closeModalGradeSheetFromModal(groupId) {
+        const body = document.getElementById('gradesDetailBody');
+        const inputs = body.querySelectorAll('.modal-grade-input');
+
+        let isAllComplete = true;
+        inputs.forEach(inp => {
+            if (inp.value === '') {
+                isAllComplete = false;
+            }
+        });
+
+        if (!isAllComplete) {
+            this.showToast('No se puede cerrar el acta porque hay calificaciones pendientes. Complete todas las notas.', 'error');
+            return;
+        }
+
+        if (confirm('¿Cerrar acta de notas? Una vez cerrada no podrá modificar las calificaciones.')) {
+            // First save modal grades
+            this.saveModalGrades(groupId);
+
+            // Then update state
+            DataManager.updateGradeSheetStatus(groupId, 'cerrada');
+            this.showToast('Acta de notas cerrada correctamente. Calificaciones consolidadas.', 'success');
+
+            // Reload the list table in the background
+            this.renderAdminGradesTable();
+
+            // Refresh modal which will now be read-only
+            this.viewGradeSheetDetail(groupId);
+        }
+    }
+
+    reopenGradeSheet(groupId) {
+        if (confirm('¿Está seguro de reabrir esta acta? El docente podrá editar las notas nuevamente.')) {
+            DataManager.updateGradeSheetStatus(groupId, 'borrador');
+            this.showToast('Acta de notas reabierta correctamente', 'success');
+            this.renderAdminGradesTable();
+        }
+    }
+
+    printGradeSheet(groupId) {
+        this.showToast('Vista de impresión de acta abierta. Use Ctrl+P para imprimir.', 'info');
+    }
+
+    exportGradeSheet(groupId) {
+        this.showToast('Acta exportada correctamente en formato XLS (Simulado)', 'success');
+    }
+
+
 
     // ========== CERTIFICATES MODULE ==========
     loadCertificates() {
