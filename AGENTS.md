@@ -1,29 +1,127 @@
-# AGENTS.md — Reglas para la IA (SAII)
+# AGENTS.md — Reglas para agentes de IA en SAII
+
+## Propósito de este documento
+
+Este archivo es la guía principal para cualquier agente de IA que trabaje en el proyecto **SAII** dentro de Antigravity.
+
+El objetivo es que el usuario pueda dar una instrucción corta como:
+
+```text
+Lee README.md y haz la Fase X.
+```
+
+Cuando el agente reciba una instrucción así, **no debe pedir que se le vuelva a explicar la fase**. Debe leer primero `README.md`, obedecer la instrucción inicial de ese archivo, leer la documentación referenciada, ubicar la fase solicitada, ejecutar únicamente esa fase y respetar el alcance definido.
+
+---
+
+## Orden obligatorio de lectura para el agente
+
+El punto de entrada oficial es `README.md`. Antes de modificar código, el agente debe hacer esto:
+
+1. Leer `README.md`.
+2. Obedecer la primera instrucción del `README.md`: leer `SAII_CONTEXTO_CONTINUIDAD.md`, `SAII_BACKLOG.md` y `SAII_ESTADO_Y_PROMPTS.md`.
+3. Leer este `AGENTS.md` si está presente, porque define reglas técnicas obligatorias.
+4. Si la fase tiene un documento específico referenciado, leerlo también. Para la **Fase 5**, leer `SAII_ASISTENCIA_ALUMNOS.md`.
+
+> [!IMPORTANT]
+> El usuario no tiene que volver a escribir todo el prompt de la fase. Si dice **“Lee README.md y haz la Fase X”**, el agente debe buscar la Fase X en `SAII_ESTADO_Y_PROMPTS.md` y ejecutarla.
+
+---
+
+## Regla de ejecución por fase
+
+- Ejecutar **solo la fase indicada** por el usuario.
+- No mezclar varias fases.
+- No avanzar a la siguiente fase sin autorización.
+- No pedir detalles que ya estén definidos en los `.md`.
+- No cambiar el alcance funcional de la fase.
+- No eliminar funcionalidades existentes que ya estén operativas.
+- No trabajar directo sobre `main`; usar rama por fase cuando se vaya a subir a GitHub.
+- Al finalizar una fase, actualizar el resumen correspondiente en la **bitácora de fases** de `SAII_BACKLOG.md`.
+
+Si aparece una contradicción entre documentos, resolver así:
+
+1. Gana primero `AGENTS.md` para reglas generales, límites técnicos y forma de trabajo.
+2. Gana `SAII_CONTEXTO_CONTINUIDAD.md` para estado real del proyecto y continuidad.
+3. Gana `SAII_ESTADO_Y_PROMPTS.md` para tareas concretas de cada fase.
+4. Gana el documento específico de la fase si existe. Para Fase 5, gana `SAII_ASISTENCIA_ALUMNOS.md`.
+5. Si todavía hay contradicción fuerte, hacer la mínima implementación segura y explicar la decisión al final.
+
+---
 
 ## Proyecto
 
 **SAII** — Sistema Administrativo del Instituto de Informática.
 
-## Stack tecnológico obligatorio
+Institución: **Universidad Nacional de Piura — Facultad de Ingeniería Industrial**.
 
-- HTML5
-- CSS3
-- JavaScript puro / Vanilla JS
-- Datos mock en JavaScript (sin backend real)
+---
 
-## Prohibiciones
+## Alcance general del proyecto
 
-- **No** usar React, Vue, Angular ni ningún framework JS.
+SAII tendrá dos etapas principales:
+
+### Etapa actual — Frontend funcional con datos mock
+
+La etapa actual trabaja principalmente el frontend interactivo en:
+
+```text
+public/index.html
+public/css/styles.css
+public/js/data.js
+public/js/app.js
+```
+
+Durante esta etapa se usan datos simulados en JavaScript para poder presentar, probar y validar el flujo académico sin depender todavía del backend.
+
+### Etapa posterior — Backend real
+
+El proyecto **sí tendrá backend real** más adelante.
+
+La etapa posterior debe contemplar:
+
+- PHP con arquitectura Modelo-Vista-Controlador (MVC).
+- Base de datos MySQL.
+- Login real y control de sesiones.
+- API o controladores para CRUD reales.
+- Persistencia de alumnos, docentes, cursos, grupos, matrículas, asistencias, notas, certificados, usuarios, roles y configuración.
+
+> [!NOTE]
+> No implementar backend real dentro de las fases actuales de frontend salvo que el usuario lo pida explícitamente o exista una fase backend definida. La prohibición no significa que el proyecto nunca tendrá backend; significa que el agente no debe improvisarlo durante una fase frontend.
+
+---
+
+## Stack tecnológico obligatorio para las fases actuales de frontend
+
+- HTML5.
+- CSS3.
+- JavaScript puro / Vanilla JS.
+- CSS personalizado propio.
+- Datos mock en JavaScript durante la etapa actual.
+- Sin React, Vue, Angular ni otros frameworks JavaScript.
+- Sin Tailwind, Bootstrap ni frameworks CSS.
+
+---
+
+## Prohibiciones durante fases frontend
+
+- **No** usar React, Vue, Angular ni ningún framework JavaScript.
 - **No** usar Tailwind, Bootstrap ni ningún framework CSS.
-- **No** conectar backend real ni APIs externas.
+- **No** conectar backend real, APIs externas ni base de datos real durante una fase frontend, salvo instrucción explícita.
 - **No** rehacer el proyecto desde cero bajo ninguna circunstancia.
 - **No** reemplazar `app.js` completo salvo que sea estrictamente necesario.
+- **No** modificar `app/`, `components/` ni `lib/`, salvo indicación explícita del usuario.
+- **No** convertir el proyecto a otra arquitectura durante las fases actuales.
+- **No** eliminar funcionalidades existentes que ya estén operativas.
+- **No** trabajar directo en `main` para nuevas fases.
+
+---
 
 ## Estructura del proyecto
 
 El frontend funcional reside en:
 
-```
+```text
 public/
 ├── index.html
 ├── css/
@@ -33,26 +131,178 @@ public/
     └── app.js
 ```
 
-## Arquitectura MVC
+La carpeta raíz puede tener archivos de Next.js, pero para esta etapa el frontend real interactivo está en:
 
-| Capa        | Archivo(s)                                      |
-|-------------|--------------------------------------------------|
-| **Modelo**      | `public/js/data.js`                          |
-| **Vista**       | `public/index.html` y las vistas renderizadas dinámicamente |
-| **Controlador** | `public/js/app.js`                           |
+```text
+http://localhost:3000/index.html
+```
+
+No validar el frontend principal entrando solo a:
+
+```text
+http://localhost:3000/
+```
+
+---
+
+## Arquitectura MVC simulada en frontend
+
+| Capa | Archivo(s) | Regla |
+|---|---|---|
+| **Modelo** | `public/js/data.js` | Datos mock, colecciones, relaciones y funciones `DataManager`. |
+| **Vista** | `public/index.html` y vistas renderizadas dinámicamente | Estructura HTML, contenedores y plantillas visibles. |
+| **Controlador** | `public/js/app.js` | Lógica de módulos, eventos, renderizado, filtros y validaciones. |
+| **Estilos** | `public/css/styles.css` | Diseño institucional, responsive, tablas, modales, badges y tema. |
+
+---
 
 ## Reglas de trabajo
 
-1. **Mantener la estructura actual** del proyecto en todo momento.
-2. **Mantener el login funcional** — no romper el flujo de autenticación.
-3. **Mantener el modo claro/oscuro** — respetar el toggle y los estilos asociados.
-4. **Mantener la identidad visual institucional** — colores, tipografía y logotipo del instituto.
-5. **Trabajar por fases pequeñas** — cambios incrementales y controlados.
-6. **Probar después de cada fase** — verificar que nada se rompe antes de avanzar.
+1. Mantener la estructura actual del proyecto.
+2. Mantener el login funcional.
+3. Mantener el modo claro/oscuro.
+4. Respetar el toggle de tema y la persistencia en `localStorage`.
+5. Mantener la identidad visual institucional.
+6. Trabajar por fases pequeñas e incrementales.
+7. Las pruebas y tests en el navegador son ejecutados manualmente por el usuario. El agente no debe iniciar subagentes de navegación web ni scripts de pruebas automatizadas por su cuenta.
+8. El agente se limitará a estructurar el código y documentar los pasos detallados de prueba.
+9. No avanzar sin que la fase actual sea reportada como estable por el usuario tras su validación manual.
+10. Al terminar, informar archivos modificados, funciones modificadas y pasos de prueba.
+11. Al terminar, pegar el resumen técnico de la fase en `SAII_BACKLOG.md`, dentro de la sección **Bitácora de ejecución de fases**.
+
+---
 
 ## Reglas de UI/UX
 
-- Las acciones CRUD deben usar **iconos compactos** (no botones de texto largo).
-- **No deformar tablas** — respetar anchos y proporciones.
-- Usar **overflow horizontal** (`overflow-x: auto`) en tablas grandes.
-- Los **estados** (activo, inactivo, pendiente, etc.) siempre deben mostrarse **en español**.
+- Las acciones CRUD deben usar **iconos compactos**, no botones largos de texto.
+- No deformar tablas.
+- Usar `overflow-x: auto` en tablas grandes.
+- Los estados deben mostrarse siempre en español.
+- Mantener diseño institucional, limpio, académico y sobrio.
+- Evitar tarjetas o tablas saturadas.
+- Usar modales cuando la acción necesite detalle, edición o confirmación.
+- Mantener responsive en desktop, tablet y móvil.
+- Mantener buen contraste en modo claro y modo oscuro.
+
+---
+
+## Regla especial para la Fase 5
+
+La **Fase 5 es Control de Asistencia de Alumnos**.
+
+El docente es quien registra la asistencia de sus alumnos por grupo, fecha y sesión.
+
+La Fase 5 **no** es control de asistencia docente ni horas dictadas del docente.
+
+Documento obligatorio para la Fase 5:
+
+```text
+SAII_ASISTENCIA_ALUMNOS.md
+```
+
+Nomenclatura técnica recomendada para Fase 5:
+
+- Colección principal: `studentAttendance[]`.
+- Registros de alumnos por sesión: `records[]`.
+- ID de sesión/lista: `ATT001`, `ATT002`, etc.
+- Estado por alumno: `presente`, `tarde`, `falta`, `justificado`.
+- Estado de la lista de asistencia: `borrador`, `registrada`, `cerrada`, `observada`.
+- Relación con grupo: `groupId`.
+- Relación con docente: `teacherId`.
+- Relación con alumno: `studentId`.
+
+No crear estructuras duplicadas con nombres alternativos si ya se está usando la nomenclatura anterior.
+
+---
+
+## Prompt mínimo válido para Antigravity
+
+Para ejecutar cualquier fase, el usuario debe escribir únicamente:
+
+```text
+Lee README.md y haz la Fase X.
+```
+
+El agente debe interpretar `X` como el número de fase, leer el `README.md`, seguir las referencias internas y buscar el prompt operativo correspondiente en `SAII_ESTADO_Y_PROMPTS.md`.
+
+Para la Fase 5, el usuario también usa el mismo prompt mínimo. El agente debe saber por el `README.md` y por estos documentos que debe leer adicionalmente:
+
+```text
+SAII_ASISTENCIA_ALUMNOS.md
+```
+
+---
+
+## Formato obligatorio de respuesta al finalizar una fase
+
+Al terminar, el agente debe responder con este formato:
+
+```text
+Fase aplicada: Fase X — nombre de la fase
+
+Archivos modificados:
+- public/js/app.js
+- public/js/data.js
+- public/css/styles.css
+- public/index.html, si aplica
+- SAII_BACKLOG.md, si se actualizó la bitácora
+
+Funciones modificadas o creadas:
+- nombreFuncion1()
+- nombreFuncion2()
+
+Cómo probar:
+1. Ejecutar npm run dev
+2. Abrir http://localhost:3000/index.html
+3. Iniciar sesión con el rol correspondiente
+4. Ir al módulo modificado
+5. Probar acciones principales
+6. Revisar consola del navegador
+
+Validaciones realizadas:
+- Login no se rompió
+- Sidebar funciona
+- Modo claro/oscuro funciona
+- No hay errores JS visibles en consola
+- La fase solicitada funciona
+
+Comandos Git para subir cambios:
+1. git checkout -b alexis/fase-X-nombre-fase
+2. git add .
+3. git commit -m "feat: fase X descripcion"
+4. git push -u origin alexis/fase-X-nombre-fase
+
+Resumen para pegar en SAII_BACKLOG.md:
+- Fecha:
+- Rama:
+- Commit:
+- Fase:
+- Archivos modificados:
+- Funciones modificadas:
+- Pruebas realizadas:
+- Pendientes o riesgos:
+```
+
+---
+
+## Regla sobre el resumen en el backlog
+
+Al terminar cada fase, el agente debe actualizar `SAII_BACKLOG.md` en la sección:
+
+```text
+## Bitácora de ejecución de fases
+```
+
+Debe agregar un resumen breve pero útil con:
+
+- fecha;
+- fase ejecutada;
+- rama usada;
+- commit o mensaje sugerido;
+- archivos modificados;
+- funciones creadas o modificadas;
+- pruebas manuales realizadas;
+- errores corregidos;
+- pendientes o riesgos.
+
+Si el usuario todavía no quiere que el agente edite el backlog, entonces el agente debe entregar el bloque listo para copiar y pegar.

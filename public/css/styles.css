@@ -1519,6 +1519,154 @@ body {
     max-width: 900px;
 }
 
+.modal.modal-attendance {
+    width: 92vw !important;
+    max-width: 1500px !important;
+    height: 90vh !important;
+    max-height: 90vh !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal.modal-attendance .modal-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal.modal-attendance .modal-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-lg) !important;
+    overflow-y: hidden;
+}
+
+/* Modal matrix wrapper */
+.att-matrix-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 420px;
+    max-height: calc(90vh - 220px);
+    margin-top: var(--spacing-md);
+}
+
+.att-matrix-scroll {
+    flex: 1;
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-primary);
+}
+
+/* For sticky matrix header and student column */
+.att-matrix-scroll table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100% !important;
+    min-width: 100% !important;
+    table-layout: fixed;
+}
+
+.att-matrix-scroll th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--color-bg-secondary);
+    padding: 6px 8px;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.att-matrix-scroll td {
+    padding: 6px 8px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--color-border);
+}
+
+/* Sticky student code and name columns */
+.att-matrix-scroll th.attendance-code-cell,
+.att-matrix-scroll td.attendance-code-cell {
+    position: sticky;
+    left: 0;
+    z-index: 8;
+    background: var(--color-bg-primary);
+    border-right: 1px solid var(--color-border);
+    width: 120px !important;
+    min-width: 120px !important;
+    max-width: 120px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.82rem;
+}
+
+.att-matrix-scroll th.attendance-student-cell,
+.att-matrix-scroll td.attendance-student-cell {
+    position: sticky;
+    left: 120px; /* matches width of column 1 */
+    z-index: 8;
+    background: var(--color-bg-primary);
+    border-right: 2px solid var(--color-border);
+    width: 240px !important;
+    min-width: 220px !important;
+    max-width: 260px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Set higher z-index for intersection of sticky row and sticky cols */
+.att-matrix-scroll th.attendance-code-cell,
+.att-matrix-scroll th.attendance-student-cell {
+    z-index: 11;
+    background: var(--color-bg-secondary);
+}
+
+/* Day/date columns */
+.att-matrix-scroll th.attendance-day-cell,
+.att-matrix-scroll td.attendance-day-cell {
+    min-width: 120px !important;
+    text-align: center;
+}
+
+/* Select controls inside matrix */
+.attendance-status-select {
+    padding: 4px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-size: 0.82rem;
+    cursor: pointer;
+    width: 100% !important;
+    max-width: 130px !important;
+    min-width: 90px !important;
+    margin: 0 auto;
+    display: block;
+}
+
+.attendance-status-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+/* Mode Fullscreen adjustments */
+.modal.modal-attendance.modal-fullscreen {
+    width: 96vw !important;
+    max-width: none !important;
+    height: 94vh !important;
+    max-height: 94vh !important;
+}
+
+.modal.modal-attendance.modal-fullscreen .att-matrix-wrapper {
+    max-height: calc(94vh - 190px);
+}
+
+
 .modal-content {
     background: var(--color-bg-primary);
     border-radius: var(--radius-lg);
@@ -2151,3 +2299,120 @@ body {
         align-items: flex-start;
     }
 }
+
+/* ===== FASE 5 CORREGIDA: Asistencia de Alumnos ===== */
+
+/* Selector row (grupo + fecha en fila) */
+.att-selector-row {
+    display: flex;
+    gap: var(--spacing-lg);
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.att-selector-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.att-selector-item .enrollment-selector-label {
+    white-space: nowrap;
+}
+
+/* Barra de resumen de asistencia */
+.att-summary-bar {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md) var(--spacing-lg);
+    margin: var(--spacing-md) 0;
+}
+
+.att-summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+    gap: 2px;
+}
+
+.att-summary-item strong {
+    font-size: 1.4rem;
+    color: var(--color-primary);
+}
+
+.att-summary-item.att-ok strong { color: #388e3c; }
+.att-summary-item.att-warn strong { color: #f57c00; }
+.att-summary-item.att-bad strong { color: #d32f2f; }
+.att-summary-item.att-info strong { color: #1976d2; }
+
+.att-summary-label {
+    font-size: 0.72rem;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    text-align: center;
+}
+
+/* Select de estado por alumno */
+.att-status-select {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-size: 0.82rem;
+    cursor: pointer;
+    min-width: 120px;
+}
+
+.att-status-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+/* Input de hora de llegada */
+.att-time-input {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-size: 0.82rem;
+    width: 100px;
+}
+
+/* Input de observación por alumno */
+.att-obs-input {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-size: 0.82rem;
+    width: 100%;
+    max-width: 200px;
+}
+
+/* Responsive Fase 5 corregida */
+@media (max-width: 768px) {
+    .att-selector-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .att-summary-bar {
+        gap: var(--spacing-sm);
+    }
+    .att-summary-item {
+        min-width: 60px;
+    }
+    .att-summary-item strong {
+        font-size: 1.1rem;
+    }
+}
+

@@ -179,15 +179,104 @@ const mockData = {
         { id: 'ENR008', groupId: 'GRP003', studentId: 'ALU001', enrollmentDate: '2024-01-15', status: 'active' },
         { id: 'ENR009', groupId: 'GRP003', studentId: 'ALU008', enrollmentDate: '2024-01-15', status: 'active' },
         { id: 'ENR010', groupId: 'GRP003', studentId: 'ALU009', enrollmentDate: '2024-01-16', status: 'active' },
+        { id: 'ENR011', groupId: 'GRP005', studentId: 'ALU001', enrollmentDate: '2024-03-15', status: 'active' },
+        { id: 'ENR012', groupId: 'GRP005', studentId: 'ALU002', enrollmentDate: '2024-03-15', status: 'active' },
     ],
 
-    // Attendance Records
-    attendance: [
-        { id: 'ATD001', groupId: 'GRP001', studentId: 'ALU001', date: '2024-02-05', status: 'present', observation: '' },
-        { id: 'ATD002', groupId: 'GRP001', studentId: 'ALU002', date: '2024-02-05', status: 'present', observation: '' },
-        { id: 'ATD003', groupId: 'GRP001', studentId: 'ALU003', date: '2024-02-05', status: 'late', observation: 'Tráfico' },
-        { id: 'ATD004', groupId: 'GRP001', studentId: 'ALU004', date: '2024-02-05', status: 'absent', observation: '' },
-        { id: 'ATD005', groupId: 'GRP001', studentId: 'ALU007', date: '2024-02-05', status: 'justified', observation: 'Médico' },
+    // Student Attendance — Control de Asistencia de Alumnos (Fase 5 - Enfoque Matriz)
+    studentAttendanceByGroup: [
+        {
+            id: "AST-CB-2024-01",
+            groupId: "GRP001",
+            teacherId: "TCH001",
+            status: "borrador",
+            days: ["2024-01-22", "2024-01-24", "2024-01-26", "2024-01-29"],
+            students: [
+                {
+                    studentId: "ALU001",
+                    attendance: { "2024-01-22": "presente", "2024-01-24": "presente", "2024-01-26": "presente", "2024-01-29": "presente" }
+                },
+                {
+                    studentId: "ALU002",
+                    attendance: { "2024-01-22": "presente", "2024-01-24": "falta", "2024-01-26": "presente", "2024-01-29": "presente" }
+                },
+                {
+                    studentId: "ALU003",
+                    attendance: { "2024-01-22": "presente", "2024-01-24": "presente", "2024-01-26": "justificado", "2024-01-29": "presente" }
+                },
+                {
+                    studentId: "ALU004",
+                    attendance: { "2024-01-22": "falta", "2024-01-24": "presente", "2024-01-26": "presente", "2024-01-29": "presente" }
+                },
+                {
+                    studentId: "ALU007",
+                    attendance: { "2024-01-22": "presente", "2024-01-24": "presente", "2024-01-26": "presente", "2024-01-29": "presente" }
+                }
+            ]
+        },
+        {
+            id: "AST-CB-2024-02",
+            groupId: "GRP002",
+            teacherId: "TCH004",
+            status: "borrador",
+            days: ["2024-02-05", "2024-02-07"],
+            students: [
+                {
+                    studentId: "ALU005",
+                    attendance: { "2024-02-05": "presente", "2024-02-07": "presente" }
+                },
+                {
+                    studentId: "ALU006",
+                    attendance: { "2024-02-05": "falta", "2024-02-07": "presente" }
+                }
+            ]
+        },
+        {
+            id: "AST-MO-2024-01",
+            groupId: "GRP003",
+            teacherId: "TCH001",
+            status: "cerrado",
+            days: ["2024-01-20", "2024-01-27"],
+            students: [
+                {
+                    studentId: "ALU001",
+                    attendance: { "2024-01-20": "presente", "2024-01-27": "presente" }
+                },
+                {
+                    studentId: "ALU008",
+                    attendance: { "2024-01-20": "presente", "2024-01-27": "falta" }
+                },
+                {
+                    studentId: "ALU009",
+                    attendance: { "2024-01-20": "presente", "2024-01-27": "justificado" }
+                }
+            ]
+        },
+        {
+            id: "AST-CI-2024-01",
+            groupId: "GRP004",
+            teacherId: "TCH005",
+            status: "borrador",
+            days: ["2024-02-12", "2024-02-14"],
+            students: []
+        },
+        {
+            id: "AST-CB-2024-SUF",
+            groupId: "GRP005",
+            teacherId: "TCH004",
+            status: "borrador",
+            days: ["2024-03-20"],
+            students: [
+                {
+                    studentId: "ALU001",
+                    attendance: { "2024-03-20": "presente" }
+                },
+                {
+                    studentId: "ALU002",
+                    attendance: { "2024-03-20": "presente" }
+                }
+            ]
+        }
     ],
 
     // Grades
@@ -214,52 +303,6 @@ const mockData = {
         { id: 'USR004', username: 'coordinador', fullName: 'Carlos Coordinador Académico', role: 'coordinator', email: 'coordinador@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-13 14:45' },
     ],
 
-    // Teacher Attendance (Control de Asistencia Docente - Fase 5)
-    teacherAttendance: [
-        {
-            id: 'TAT001',
-            groupId: 'GRP001',
-            teacherId: 'TCH001',
-            status: 'enviado',
-            adminObservation: '',
-            sessions: [
-                { id: 'SES001', date: '2024-01-22', entryTime: '08:00', exitTime: '10:00', totalHours: 2.0, meetLink: 'https://meet.google.com/abc-xyz-123', observation: '' },
-                { id: 'SES002', date: '2024-01-24', entryTime: '08:00', exitTime: '10:00', totalHours: 2.0, meetLink: 'https://meet.google.com/abc-xyz-456', observation: 'Sesión de repaso' },
-                { id: 'SES003', date: '2024-01-29', entryTime: '08:00', exitTime: '10:00', totalHours: 2.0, meetLink: '', observation: '' },
-                { id: 'SES004', date: '2024-01-31', entryTime: '08:00', exitTime: '10:00', totalHours: 2.0, meetLink: '', observation: 'Se revisó práctica calificada' },
-            ],
-            totalHoursDictated: 8.0,
-            createdAt: '2024-01-22',
-            updatedAt: '2024-02-01'
-        },
-        {
-            id: 'TAT002',
-            groupId: 'GRP005',
-            teacherId: 'TCH004',
-            status: 'validado',
-            adminObservation: '',
-            sessions: [
-                { id: 'SES005', date: '2024-03-20', entryTime: '10:00', exitTime: '12:00', totalHours: 2.0, meetLink: '', observation: 'Examen de suficiencia realizado' }
-            ],
-            totalHoursDictated: 2.0,
-            createdAt: '2024-03-20',
-            updatedAt: '2024-03-20'
-        },
-        {
-            id: 'TAT003',
-            groupId: 'GRP003',
-            teacherId: 'TCH001',
-            status: 'borrador',
-            adminObservation: '',
-            sessions: [
-                { id: 'SES006', date: '2024-01-20', entryTime: '08:00', exitTime: '12:00', totalHours: 4.0, meetLink: '', observation: 'Primera sesión' },
-                { id: 'SES007', date: '2024-01-27', entryTime: '08:00', exitTime: '12:00', totalHours: 4.0, meetLink: 'https://meet.google.com/office-001', observation: '' },
-            ],
-            totalHoursDictated: 8.0,
-            createdAt: '2024-01-20',
-            updatedAt: '2024-01-27'
-        }
-    ]
 };
 
 // Utility functions for data management
@@ -416,28 +459,117 @@ const DataManager = {
         return false;
     },
 
-    // Attendance operations
-    getAttendanceByGroupAndDate: function(groupId, date) {
-        return mockData.attendance.filter(a => a.groupId === groupId && a.date === date);
+    // ===== STUDENT ATTENDANCE — Fase 5: Control de Asistencia de Alumnos (Enfoque Matriz) =====
+
+    ensureAllGroupsHaveAttendance: function() {
+        mockData.groups.forEach(g => {
+            const exists = mockData.studentAttendanceByGroup.find(att => att.groupId === g.id);
+            if (!exists) {
+                const attId = `AST-${g.code}`;
+                const enrolled = this.getEnrolledStudentsByGroup(g.id);
+                
+                // Generar fechas por defecto
+                const days = [];
+                if (g.startDate) {
+                    const start = new Date(g.startDate);
+                    for (let i = 0; i < 4; i++) {
+                        const d = new Date(start);
+                        d.setDate(start.getDate() + (i * 2));
+                        days.push(d.toISOString().split('T')[0]);
+                    }
+                } else {
+                    days.push(new Date().toISOString().split('T')[0]);
+                }
+
+                const newAtt = {
+                    id: attId,
+                    groupId: g.id,
+                    teacherId: g.teacherId,
+                    status: 'borrador',
+                    days: days,
+                    students: enrolled.map(student => ({
+                        studentId: student.id,
+                        attendance: {}
+                    }))
+                };
+                mockData.studentAttendanceByGroup.push(newAtt);
+            }
+        });
     },
 
-    addAttendance: function(groupId, studentId, date, status, observation) {
-        const existingRecord = mockData.attendance.find(a => a.groupId === groupId && a.studentId === studentId && a.date === date);
-        if (existingRecord) {
-            existingRecord.status = status;
-            existingRecord.observation = observation;
-            return existingRecord;
+    getStudentAttendanceByGroup: function(groupId) {
+        this.ensureAllGroupsHaveAttendance();
+        return mockData.studentAttendanceByGroup.find(att => att.groupId === groupId) || null;
+    },
+
+    getStudentAttendanceByTeacher: function(teacherId) {
+        this.ensureAllGroupsHaveAttendance();
+        return mockData.studentAttendanceByGroup.filter(att => att.teacherId === teacherId);
+    },
+
+    getAllStudentAttendance: function() {
+        this.ensureAllGroupsHaveAttendance();
+        return mockData.studentAttendanceByGroup;
+    },
+
+    getStudentAttendanceById: function(id) {
+        this.ensureAllGroupsHaveAttendance();
+        const att = mockData.studentAttendanceByGroup.find(att => att.id === id);
+        if (att) {
+            // Sync enrolled students in case they changed
+            const enrolled = this.getEnrolledStudentsByGroup(att.groupId);
+            enrolled.forEach(student => {
+                const hasRecord = att.students.some(s => s.studentId === student.id);
+                if (!hasRecord) {
+                    att.students.push({
+                        studentId: student.id,
+                        attendance: {}
+                    });
+                }
+            });
         }
-        const newRecord = {
-            id: 'ATD' + String(mockData.attendance.length + 1).padStart(3, '0'),
-            groupId: groupId,
-            studentId: studentId,
-            date: date,
-            status: status,
-            observation: observation
-        };
-        mockData.attendance.push(newRecord);
-        return newRecord;
+        return att || null;
+    },
+
+    getEnrolledStudentsByGroup: function(groupId) {
+        const enrollments = mockData.enrollments.filter(e => e.groupId === groupId && e.status === 'active');
+        return enrollments.map(e => mockData.students.find(s => s.id === e.studentId)).filter(s => s);
+    },
+
+    updateStudentAttendanceRecord: function(attendanceId, studentId, date, value) {
+        const attendance = mockData.studentAttendanceByGroup.find(att => att.id === attendanceId);
+        if (!attendance || attendance.status === 'cerrado') return null;
+        
+        let studentRecord = attendance.students.find(s => s.studentId === studentId);
+        if (!studentRecord) {
+            studentRecord = { studentId: studentId, attendance: {} };
+            attendance.students.push(studentRecord);
+        }
+        studentRecord.attendance[date] = value;
+        return studentRecord;
+    },
+
+    updateStudentAttendanceStatus: function(attendanceId, newStatus) {
+        const attendance = mockData.studentAttendanceByGroup.find(att => att.id === attendanceId);
+        if (!attendance) return null;
+        attendance.status = newStatus;
+        return attendance;
+    },
+
+    markAllStudentsPresentForDay: function(attendanceId, date) {
+        const attendance = mockData.studentAttendanceByGroup.find(att => att.id === attendanceId);
+        if (!attendance || attendance.status === 'cerrado') return null;
+        
+        const enrolled = this.getEnrolledStudentsByGroup(attendance.groupId);
+        enrolled.forEach(student => {
+            let studentRecord = attendance.students.find(s => s.studentId === student.id);
+            if (!studentRecord) {
+                studentRecord = { studentId: student.id, attendance: {} };
+                attendance.students.push(studentRecord);
+            }
+            studentRecord.attendance[date] = 'presente';
+        });
+        return attendance;
     },
 
     // Grade operations
@@ -498,79 +630,4 @@ const DataManager = {
         return mockData.certificates.filter(c => c.groupId === groupId);
     },
 
-    // ===== TEACHER ATTENDANCE (Fase 5) =====
-    getTeacherAttendanceByGroup: function(groupId) {
-        return mockData.teacherAttendance.find(ta => ta.groupId === groupId) || null;
-    },
-
-    getTeacherAttendanceByTeacher: function(teacherId) {
-        return mockData.teacherAttendance.filter(ta => ta.teacherId === teacherId);
-    },
-
-    getAllTeacherAttendance: function() {
-        return mockData.teacherAttendance;
-    },
-
-    createTeacherAttendance: function(groupId, teacherId) {
-        const newPlanilla = {
-            id: 'TAT' + String(mockData.teacherAttendance.length + 1).padStart(3, '0'),
-            groupId: groupId,
-            teacherId: teacherId,
-            status: 'borrador',
-            adminObservation: '',
-            sessions: [],
-            totalHoursDictated: 0,
-            createdAt: new Date().toISOString().split('T')[0],
-            updatedAt: new Date().toISOString().split('T')[0]
-        };
-        mockData.teacherAttendance.push(newPlanilla);
-        return newPlanilla;
-    },
-
-    addSessionToAttendance: function(planillaId, sessionData) {
-        const planilla = mockData.teacherAttendance.find(ta => ta.id === planillaId);
-        if (!planilla || planilla.status === 'validado' || planilla.status === 'cerrado') return null;
-        const totalSessions = mockData.teacherAttendance.reduce((acc, ta) => acc + ta.sessions.length, 0);
-        const newSession = {
-            id: 'SES' + String(totalSessions + 1).padStart(3, '0'),
-            ...sessionData
-        };
-        planilla.sessions.push(newSession);
-        planilla.totalHoursDictated = Math.round(planilla.sessions.reduce((sum, s) => sum + (s.totalHours || 0), 0) * 10) / 10;
-        planilla.updatedAt = new Date().toISOString().split('T')[0];
-        return newSession;
-    },
-
-    updateSessionInAttendance: function(planillaId, sessionId, sessionData) {
-        const planilla = mockData.teacherAttendance.find(ta => ta.id === planillaId);
-        if (!planilla || planilla.status === 'validado' || planilla.status === 'cerrado') return null;
-        const session = planilla.sessions.find(s => s.id === sessionId);
-        if (!session) return null;
-        Object.assign(session, sessionData);
-        planilla.totalHoursDictated = Math.round(planilla.sessions.reduce((sum, s) => sum + (s.totalHours || 0), 0) * 10) / 10;
-        planilla.updatedAt = new Date().toISOString().split('T')[0];
-        return session;
-    },
-
-    deleteSessionFromAttendance: function(planillaId, sessionId) {
-        const planilla = mockData.teacherAttendance.find(ta => ta.id === planillaId);
-        if (!planilla || planilla.status === 'validado' || planilla.status === 'cerrado') return false;
-        const idx = planilla.sessions.findIndex(s => s.id === sessionId);
-        if (idx > -1) {
-            planilla.sessions.splice(idx, 1);
-            planilla.totalHoursDictated = Math.round(planilla.sessions.reduce((sum, s) => sum + (s.totalHours || 0), 0) * 10) / 10;
-            planilla.updatedAt = new Date().toISOString().split('T')[0];
-            return true;
-        }
-        return false;
-    },
-
-    updateTeacherAttendanceStatus: function(planillaId, newStatus, adminObservation = '') {
-        const planilla = mockData.teacherAttendance.find(ta => ta.id === planillaId);
-        if (!planilla) return null;
-        planilla.status = newStatus;
-        if (adminObservation) planilla.adminObservation = adminObservation;
-        planilla.updatedAt = new Date().toISOString().split('T')[0];
-        return planilla;
-    }
 };

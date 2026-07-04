@@ -220,6 +220,15 @@ class SAIIApp {
         // Hide all views
         document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
         
+        // Update sidebar active state
+        document.querySelectorAll('.nav-item').forEach(item => {
+            if (item.getAttribute('data-view') === viewName) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+        
         // Show requested view
         const view = document.getElementById(viewName);
         if (view) {
@@ -1485,27 +1494,291 @@ class SAIIApp {
         }
     }
 
-    // ========== ATTENDANCE MODULE — Control de Asistencia Docente (Fase 5) ==========
+    // ========== ATTENDANCE MODULE — Control de Asistencia de Alumnos (Fase 5 CORREGIDA) ==========
     setupAttendance() {
-        const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
-        const isTeacher = role === 'teacher';
-
         const adminView = document.getElementById('attendanceAdminView');
         const teacherView = document.getElementById('attendanceTeacherView');
 
-        if (isTeacher) {
-            adminView.style.display = 'none';
-            teacherView.style.display = 'block';
-            this.setupTeacherAttendanceView();
+        if (adminView) adminView.style.display = 'block';
+        if (teacherView) teacherView.style.display = 'none';
+
+        this.setupAdminAttendanceView();
+    }
+
+    setupAdminAttendanceView() {
+        const teacherFilter = document.getElementById('attFilterTeacher');
+        const groupFilter = document.getElementById('attFilterGroup');
+        const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
+        const teacherId = DataManager.currentUser ? DataManager.currentUser.id : null;
+
+        teacherFilter.innerHTML = '<option value="">Todos los docentes</option>';
+        DataManager.getTeachers().forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.textContent = `${t.firstName} ${t.lastName}`;
+            teacherFilter.appendChild(opt);
+        });
+
+        groupFilter.innerHTML = '<option value="">Todos los grupos</option>';
+        DataManager.getGroups().forEach(g => {
+            if (role === 'teacher' && teacherId && g.teacherId !== teacherId && teacherId !== 'USR999') return;
+            const opt = document.createElement('option');
+            opt.value = g.id;
+            opt.textContent = `${g.code} – ${g.courseName}`;
+            groupFilter.appendChild(opt);
+        });
+
+        // Hide teacher filter for teachers
+        const teacherFilterDiv = teacherFilter.parentElement;
+        if (role === 'teacher') {
+            teacherFilter.value = teacherId;
+            teacherFilter.style.display = 'none';
+            if (teacherFilterDiv && teacherFilterDiv.classList.contains('control-group')) {
+                teacherFilterDiv.style.display = 'none';
+            }
         } else {
-            adminView.style.display = 'block';
-            teacherView.style.display = 'none';
-            this.setupAdminAttendanceView();
+            teacherFilter.style.display = 'inline-block';
+            if (teacherFilterDiv && teacherFilterDiv.classList.contains('control-group')) {
+                teacherFilterDiv.style.display = 'flex';
+            }
+        }
+
+        // Hide date filter (not used in group-level view)
+        const dateFilter = document.getElementById('attFilterDate');
+        if (dateFilter) dateFilter.style.display = 'none';
+
+        this.renderAdminAttendanceTable();
+
+        const apply = () => this.renderAdminAttendanceTable();
+        teacherFilter.onchange = apply;
+        groupFilter.onchange = apply;
+        document.getElementById('attFilterModality').onchange = apply;
+        document.getElementById('attFilterStatus').onchange = apply;
+    }
+
+    renderAdminAttendanceTable() {
+        const tbody = document.getElementById('attendanceAdminBody');
+        tbody.innerHTML = '';
+
+        const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
+        const teacherId = DataManager.currentUser ? DataManager.currentUser.id : null;
+
+        const teacherFilter = document.getElementById('attFilterTeacher').value;
+        const groupFilter = document.getElementById('attFilterGroup').value;
+        const modalityFilter = document.getElementById('attFilterModality').value;
+        const statusFilter = document.getElementById('attFilterStatus').value;
+
+        const statusMap = {
+            borrador:   { label: 'Borrador',   css: 'badge-pending' },
+            cerrado:    { label: 'Cerrado',    css: 'badge-closed' }
+        };
+
+        let listas = DataManager.getAllStudentAttendance();
+
+        // Filtrado por rol del docente
+        if (role === 'teacher' && teacherId && teacherId !== 'USR999') {
+            listas = listas.filter(l => l.teacherId === teacherId);
+        } else if (teacherFilter) {
+            listas = listas.filter(l => l.teacherId === teacherFilter);
+        }
+
+        if (groupFilter)    listas = listas.filter(l => l.groupId === groupFilter);
+        if (statusFilter)   listas = listas.filter(l => l.status === statusFilter);
+        if (modalityFilter) {
+            listas = listas.filter(l => {
+                const g = DataManager.getGroupById(l.groupId);
+                return g && g.modality === modalityFilter;
+            });
+        }
+
+        if (listas.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">No se encontraron asistencias</td></tr>';
+            return;
+        }
+
+        listas.forEach(lista => {
+            const group = DataManager.getGroupById(lista.groupId);
+            if (!group) return;
+            const statusInfo = statusMap[lista.status] || { label: lista.status, css: 'badge-pending' };
+            const modalityLabel = group.modality === 'regular' ? 'Curso regular' : 'Exam. suficiencia';
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${lista.id}</strong></td>
+                <td><strong>${group.code}</strong><br><small>${group.courseName}</small></td>
+                <td>${group.teacherName}</td>
+                <td>${modalityLabel}</td>
+                <td><span class="badge-status ${statusInfo.css}">${statusInfo.label}</span></td>
+                <td>
+                    <div class="action-icons">
+                        <button class="icon-btn icon-view" onclick="app.viewAttendanceDetail('${lista.id}')" title="Ver / editar detalle">&#128269;</button>
+                        ${lista.status !== 'cerrado' && (role === 'admin' || role === 'teacher') ? `<button class="icon-btn icon-save" onclick="app.closeAttendance('${lista.id}')" title="Cerrar asistencia">&#128274;</button>` : ''}
+                        <button class="icon-btn icon-view" onclick="app.printAttendance('${lista.id}')" title="Imprimir">&#128424;</button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    viewAttendanceDetail(attendanceId) {
+        const lista = DataManager.getStudentAttendanceById(attendanceId);
+        if (!lista) return;
+        const group = DataManager.getGroupById(lista.groupId);
+        if (!group) return;
+
+        const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
+        const canEdit = lista.status !== 'cerrado' && (role === 'admin' || role === 'teacher');
+        const statusMap = { borrador: 'Borrador', cerrado: 'Cerrado' };
+        const modalityLabel = group.modality === 'regular' ? 'Curso regular' : 'Examen de suficiencia';
+
+        // Columnas de cabecera (Fechas)
+        let headerCols = '<th class="attendance-code-cell">Código</th><th class="attendance-student-cell">Alumno</th>';
+        lista.days.forEach(d => {
+            headerCols += `<th class="attendance-day-cell">${d}</th>`;
+        });
+
+        // Filas de alumnos
+        let studentRows = '';
+        lista.students.forEach(s => {
+            const student = DataManager.getStudentById(s.studentId);
+            if (!student) return;
+
+            let rowHtml = `<tr>
+                <td class="attendance-code-cell">${student.code}</td>
+                <td class="attendance-student-cell"><strong>${student.firstName} ${student.lastName}</strong></td>
+            `;
+
+            lista.days.forEach(d => {
+                const currentVal = s.attendance[d] || '';
+                
+                const options = [
+                    { value: '', label: '--' },
+                    { value: 'presente', label: 'Presente' },
+                    { value: 'falta', label: 'Falta' },
+                    { value: 'justificado', label: 'Justificado' }
+                ];
+                
+                let selectHtml = `<select class="attendance-status-select" ${!canEdit ? 'disabled' : ''} onchange="app.onMatrixStatusChange('${lista.id}', '${s.studentId}', '${d}', this.value)">`;
+                options.forEach(opt => {
+                    selectHtml += `<option value="${opt.value}" ${currentVal === opt.value ? 'selected' : ''}>${opt.label}</option>`;
+                });
+                selectHtml += `</select>`;
+
+                rowHtml += `<td class="attendance-day-cell">${selectHtml}</td>`;
+            });
+
+            rowHtml += `</tr>`;
+            studentRows += rowHtml;
+        });
+
+        const body = document.getElementById('attendanceDetailBody');
+        body.innerHTML = `
+            <div class="att-planilla-header" style="margin-bottom: 0.5rem; padding: 0.5rem 1rem; background: var(--color-bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+                <div class="att-institution-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding-bottom: 0.3rem; margin-bottom: 0.5rem;">
+                    <div style="text-align: left;">
+                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-primary);">Universidad Nacional de Piura</span>
+                        <span style="font-size: 0.8rem; color: var(--color-text-secondary); margin-left: 0.5rem;">| Facultad de Ingeniería Industrial</span>
+                    </div>
+                    <div style="text-align: right; font-weight: bold; color: var(--color-primary); font-size: 0.85rem;">
+                        Instituto de Informática
+                    </div>
+                </div>
+                <div style="text-align: center; margin-bottom: 0.4rem;">
+                    <h3 style="margin: 0; font-size: 1rem; font-weight: bold; letter-spacing: 0.5px; color: var(--color-text-primary);">CONTROL DE ASISTENCIA DE ALUMNOS</h3>
+                </div>
+                <div class="att-planilla-meta-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; font-size: 0.82rem;">
+                    <div class="att-meta-item"><strong>ID Asistencia:</strong> <span>${lista.id}</span></div>
+                    <div class="att-meta-item"><strong>Grupo:</strong> <span>${group.code}</span></div>
+                    <div class="att-meta-item"><strong>Curso:</strong> <span>${group.courseName}</span></div>
+                    <div class="att-meta-item"><strong>Docente:</strong> <span>${group.teacherName}</span></div>
+                    <div class="att-meta-item"><strong>Modalidad:</strong> <span>${modalityLabel}</span></div>
+                    <div class="att-meta-item"><strong>Estado:</strong> <span class="badge-status ${lista.status === 'cerrado' ? 'badge-closed' : 'badge-pending'}" style="padding: 0.1rem 0.4rem; font-size: 0.75rem;">${statusMap[lista.status] || lista.status}</span></div>
+                </div>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                <span class="enrollment-table-title" style="font-weight:600;">&#128101; Matriz de Asistencia</span>
+                <button class="btn btn-secondary btn-sm" id="btnToggleFullscreen" onclick="app.toggleDetailFullscreen()">
+                    &#128470; Expandir
+                </button>
+            </div>
+
+            <div class="att-matrix-wrapper">
+                <div class="att-matrix-scroll">
+                    <table class="data-table">
+                        <thead>
+                            <tr>${headerCols}</tr>
+                        </thead>
+                        <tbody>
+                            ${studentRows}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="modal-actions" style="margin-top:1rem; display:flex; justify-content:flex-end; gap:0.5rem;">
+                ${canEdit ? `<button class="btn btn-primary" onclick="app.closeModal(); app.showToast('Borrador guardado', 'success');">Guardar</button>` : ''}
+                <button class="btn btn-secondary" onclick="app.closeModal()">Cerrar</button>
+            </div>
+        `;
+
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('attendanceDetailModal').style.display = 'flex';
+    }
+
+    onMatrixStatusChange(attendanceId, studentId, date, value) {
+        DataManager.updateStudentAttendanceRecord(attendanceId, studentId, date, value);
+    }
+
+    toggleDetailFullscreen() {
+        const modal = document.getElementById('attendanceDetailModal');
+        const btn = document.getElementById('btnToggleFullscreen');
+        if (modal) {
+            modal.classList.toggle('modal-fullscreen');
+            if (modal.classList.contains('modal-fullscreen')) {
+                btn.innerHTML = '&#128471; Minimizar';
+            } else {
+                btn.innerHTML = '&#128470; Expandir';
+            }
         }
     }
 
-    // --- VISTA ADMINISTRADOR ---
-    setupAdminAttendanceView() {
+    closeAttendance(attendanceId) {
+        const lista = DataManager.getStudentAttendanceById(attendanceId);
+        if (!lista) return;
+
+        let complete = true;
+        lista.students.forEach(s => {
+            lista.days.forEach(d => {
+                const status = s.attendance[d];
+                if (!status || (status !== 'presente' && status !== 'falta' && status !== 'justificado')) {
+                    complete = false;
+                }
+            });
+        });
+
+        if (!complete) {
+            this.showToast('Complete la asistencia de todos los alumnos en todos los días antes de cerrar', 'error');
+            return;
+        }
+
+        if (confirm('¿Cerrar esta asistencia? Una vez cerrada ya no podrá ser editada.')) {
+            DataManager.updateStudentAttendanceStatus(attendanceId, 'cerrado');
+            this.showToast('Asistencia cerrada correctamente', 'success');
+            this.renderAdminAttendanceTable();
+        }
+    }
+
+    printAttendance(attendanceId) {
+        this.viewAttendanceDetail(attendanceId);
+        this.showToast('Detalle abierto para impresión simulada. Use Ctrl+P para imprimir.', 'info');
+    }
+
+
+
+    // --- VISTA ADMINISTRADOR (DOCENTE) ---
+    setupAdminAttendanceDocenteView() {
         // Populate teacher filter
         const teacherFilter = document.getElementById('attFilterTeacher');
         teacherFilter.innerHTML = '<option value="">Todos los docentes</option>';
@@ -1516,15 +1789,15 @@ class SAIIApp {
             teacherFilter.appendChild(opt);
         });
 
-        this.renderAdminAttendanceTable();
+        this.renderAdminAttendanceDocenteTable();
 
-        const apply = () => this.renderAdminAttendanceTable();
+        const apply = () => this.renderAdminAttendanceDocenteTable();
         teacherFilter.onchange = apply;
         document.getElementById('attFilterModality').onchange = apply;
         document.getElementById('attFilterStatus').onchange = apply;
     }
 
-    renderAdminAttendanceTable() {
+    renderAdminAttendanceDocenteTable() {
         const tbody = document.getElementById('attendanceAdminBody');
         tbody.innerHTML = '';
 
@@ -1642,7 +1915,7 @@ class SAIIApp {
         if (confirm('¿Validar esta planilla de asistencia docente?')) {
             DataManager.updateTeacherAttendanceStatus(planillaId, 'validado');
             this.showToast('Planilla validada correctamente', 'success');
-            this.renderAdminAttendanceTable();
+            this.renderAdminAttendanceDocenteTable();
         }
     }
 
@@ -1654,7 +1927,7 @@ class SAIIApp {
             DataManager.updateTeacherAttendanceStatus(planillaId, 'observado', obs);
             this.showToast('Observación enviada al docente', 'success');
             this.closeModal();
-            this.renderAdminAttendanceTable();
+            this.renderAdminAttendanceDocenteTable();
         };
         document.getElementById('modalOverlay').style.display = 'block';
         document.getElementById('adminObsModal').style.display = 'block';
@@ -1664,12 +1937,12 @@ class SAIIApp {
         if (confirm('¿Cerrar esta planilla? Ya no podrá ser editada.')) {
             DataManager.updateTeacherAttendanceStatus(planillaId, 'cerrado');
             this.showToast('Planilla cerrada', 'success');
-            this.renderAdminAttendanceTable();
+            this.renderAdminAttendanceDocenteTable();
         }
     }
 
-    // --- VISTA DOCENTE ---
-    setupTeacherAttendanceView() {
+    // --- VISTA DOCENTE (DOCENTE) ---
+    setupTeacherAttendanceDocenteView() {
         const teacherId = DataManager.currentUser ? DataManager.currentUser.id : null;
         const groupSelect = document.getElementById('attendanceGroupSelect');
         groupSelect.innerHTML = '<option value="">-- Seleccione --</option>';
@@ -2277,7 +2550,10 @@ class SAIIApp {
     // ========== MODAL MANAGEMENT ==========
     closeModal() {
         document.getElementById('modalOverlay').style.display = 'none';
-        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        document.querySelectorAll('.modal').forEach(m => {
+            m.style.display = 'none';
+            m.classList.remove('modal-fullscreen');
+        });
     }
 
     // ========== UTILITIES ==========
