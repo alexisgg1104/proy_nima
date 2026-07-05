@@ -1519,6 +1519,154 @@ body {
     max-width: 900px;
 }
 
+.modal.modal-attendance {
+    width: 92vw !important;
+    max-width: 1500px !important;
+    height: 90vh !important;
+    max-height: 90vh !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal.modal-attendance .modal-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal.modal-attendance .modal-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-lg) !important;
+    overflow-y: hidden;
+}
+
+/* Modal matrix wrapper */
+.att-matrix-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 420px;
+    max-height: calc(90vh - 220px);
+    margin-top: var(--spacing-md);
+}
+
+.att-matrix-scroll {
+    flex: 1;
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-primary);
+}
+
+/* For sticky matrix header and student column */
+.att-matrix-scroll table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100% !important;
+    min-width: 100% !important;
+    table-layout: fixed;
+}
+
+.att-matrix-scroll th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--color-bg-secondary);
+    padding: 6px 8px;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.att-matrix-scroll td {
+    padding: 6px 8px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--color-border);
+}
+
+/* Sticky student code and name columns */
+.att-matrix-scroll th.attendance-code-cell,
+.att-matrix-scroll td.attendance-code-cell {
+    position: sticky;
+    left: 0;
+    z-index: 8;
+    background: var(--color-bg-primary);
+    border-right: 1px solid var(--color-border);
+    width: 120px !important;
+    min-width: 120px !important;
+    max-width: 120px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.82rem;
+}
+
+.att-matrix-scroll th.attendance-student-cell,
+.att-matrix-scroll td.attendance-student-cell {
+    position: sticky;
+    left: 120px; /* matches width of column 1 */
+    z-index: 8;
+    background: var(--color-bg-primary);
+    border-right: 2px solid var(--color-border);
+    width: 240px !important;
+    min-width: 220px !important;
+    max-width: 260px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Set higher z-index for intersection of sticky row and sticky cols */
+.att-matrix-scroll th.attendance-code-cell,
+.att-matrix-scroll th.attendance-student-cell {
+    z-index: 11;
+    background: var(--color-bg-secondary);
+}
+
+/* Day/date columns */
+.att-matrix-scroll th.attendance-day-cell,
+.att-matrix-scroll td.attendance-day-cell {
+    min-width: 120px !important;
+    text-align: center;
+}
+
+/* Select controls inside matrix */
+.attendance-status-select {
+    padding: 4px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-size: 0.82rem;
+    cursor: pointer;
+    width: 100% !important;
+    max-width: 130px !important;
+    min-width: 90px !important;
+    margin: 0 auto;
+    display: block;
+}
+
+.attendance-status-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+/* Mode Fullscreen adjustments */
+.modal.modal-attendance.modal-fullscreen {
+    width: 96vw !important;
+    max-width: none !important;
+    height: 94vh !important;
+    max-height: 94vh !important;
+}
+
+.modal.modal-attendance.modal-fullscreen .att-matrix-wrapper {
+    max-height: calc(94vh - 190px);
+}
+
+
 .modal-content {
     background: var(--color-bg-primary);
     border-radius: var(--radius-lg);
@@ -2149,5 +2297,460 @@ body {
     .att-selector-bar {
         flex-direction: column;
         align-items: flex-start;
+    }
+}
+
+/* ===== FASE 5 CORREGIDA: Asistencia de Alumnos ===== */
+
+/* Selector row (grupo + fecha en fila) */
+.att-selector-row {
+    display: flex;
+    gap: var(--spacing-lg);
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.att-selector-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.att-selector-item .enrollment-selector-label {
+    white-space: nowrap;
+}
+
+/* Barra de resumen de asistencia */
+.att-summary-bar {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md) var(--spacing-lg);
+    margin: var(--spacing-md) 0;
+}
+
+.att-summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+    gap: 2px;
+}
+
+.att-summary-item strong {
+    font-size: 1.4rem;
+    color: var(--color-primary);
+}
+
+.att-summary-item.att-ok strong { color: #388e3c; }
+.att-summary-item.att-warn strong { color: #f57c00; }
+.att-summary-item.att-bad strong { color: #d32f2f; }
+.att-summary-item.att-info strong { color: #1976d2; }
+
+.att-summary-label {
+    font-size: 0.72rem;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    text-align: center;
+}
+
+/* Select de estado por alumno */
+.att-status-select {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-size: 0.82rem;
+    cursor: pointer;
+    min-width: 120px;
+}
+
+.att-status-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+/* Input de hora de llegada */
+.att-time-input {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-size: 0.82rem;
+    width: 100px;
+}
+
+/* Input de observación por alumno */
+.att-obs-input {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-size: 0.82rem;
+    width: 100%;
+    max-width: 200px;
+}
+
+/* Responsive Fase 5 corregida */
+@media (max-width: 768px) {
+    .att-selector-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .att-summary-bar {
+        gap: var(--spacing-sm);
+    }
+    .att-summary-item {
+        min-width: 60px;
+    }
+    .att-summary-item strong {
+        font-size: 1.1rem;
+    }
+}
+
+/* ============================================
+   GRADES MODULE FASE 6 STYLES
+   ============================================ */
+.grades-summary-card {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.grade-input {
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.grade-input:focus {
+    outline: none;
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px rgba(30, 91, 168, 0.25);
+}
+
+.grade-input:disabled {
+    background: var(--color-bg-secondary) !important;
+    color: var(--color-text-secondary) !important;
+    border-color: var(--color-border) !important;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   FASE 7 - ESTILOS ADICIONALES (CERTIFICADOS, REPORTES, USUARIOS, SIMULADOR)
+   ============================================ */
+
+/* 4.1 Simulador de Rol en Header */
+.role-simulator-wrapper {
+    background: var(--color-bg-tertiary);
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.role-simulator-wrapper:hover {
+    border-color: var(--color-primary-light);
+    box-shadow: var(--shadow-md);
+}
+
+#simulatedRoleSelect {
+    border: none !important;
+    background: transparent !important;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    padding-right: 20px !important;
+    transition: color 0.3s;
+}
+
+#simulatedRoleSelect:focus {
+    outline: none;
+    color: var(--color-primary-light);
+}
+
+/* 4.2 Badges y Estados para Certificados */
+.badge-status.badge-active {
+    background-color: rgba(76, 175, 80, 0.15);
+    color: #2e7d32;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.badge-status.badge-pending {
+    background-color: rgba(255, 152, 0, 0.15);
+    color: #e65100;
+    border: 1px solid rgba(255, 152, 0, 0.3);
+}
+
+.badge-status.badge-inactive,
+.badge-status.badge-not-eligible {
+    background-color: rgba(211, 47, 47, 0.12);
+    color: #c62828;
+    border: 1px solid rgba(211, 47, 47, 0.2);
+}
+
+html.dark-mode .badge-status.badge-active {
+    background-color: rgba(76, 175, 80, 0.25);
+    color: #81c784;
+}
+
+html.dark-mode .badge-status.badge-pending {
+    background-color: rgba(255, 152, 0, 0.25);
+    color: #ffb74d;
+}
+
+html.dark-mode .badge-status.badge-inactive,
+html.dark-mode .badge-status.badge-not-eligible {
+    background-color: rgba(211, 47, 47, 0.2);
+    color: #e57373;
+}
+
+/* 4.3 Estilos de Pestañas para Usuarios / Roles */
+.tabs-container {
+    display: flex;
+    gap: 8px;
+    margin-bottom: var(--spacing-lg);
+    border-bottom: 2px solid var(--color-border);
+    padding-bottom: 0 !important; /* overrides inline */
+}
+
+.tab-btn {
+    padding: 10px 20px !important;
+    border: none !important;
+    background: transparent !important;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--color-text-secondary) !important;
+    border-bottom: 3px solid transparent !important;
+    transition: all 0.3s ease;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.tab-btn:hover {
+    color: var(--color-primary-light) !important;
+    background: var(--color-bg-secondary) !important;
+}
+
+.tab-btn.active {
+    color: var(--color-primary) !important;
+    border-bottom: 3px solid var(--color-primary) !important;
+    background: var(--color-bg-secondary) !important;
+}
+
+html.dark-mode .tab-btn.active {
+    color: var(--color-primary) !important;
+    border-bottom: 3px solid var(--color-primary) !important;
+}
+
+/* 4.4 Vista Previa del Certificado (Look de Diploma Académico Premium) */
+#certificatePreview {
+    padding: var(--spacing-xl);
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-lg);
+}
+
+.certificate-diploma-wrapper {
+    position: relative;
+    padding: var(--spacing-2xl);
+    background: #fbfaf5; /* Classic warm paper tone for certificate */
+    border: 6px double #d4af37; /* Gold borders */
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    color: #2b2b2b; /* Always dark text for high fidelity readability */
+    font-family: 'Georgia', serif;
+    background-image: radial-gradient(circle, rgba(212, 175, 55, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Watermark */
+.certificate-diploma-wrapper::before {
+    content: "UNP";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    font-size: 10rem;
+    font-weight: 900;
+    color: rgba(212, 175, 55, 0.04);
+    pointer-events: none;
+    letter-spacing: 15px;
+    z-index: 0;
+}
+
+.certificate-header, .certificate-content {
+    position: relative;
+    z-index: 1;
+}
+
+.certificate-diploma-wrapper .certificate-institution {
+    font-family: 'Times New Roman', Times, serif;
+    letter-spacing: 2px;
+}
+
+.certificate-diploma-wrapper .certificate-title {
+    font-family: 'Times New Roman', Times, serif;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #996515 !important; /* Gold bronze tone */
+    margin: 25px 0;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.3) !important;
+    padding-bottom: 12px;
+}
+
+.certificate-diploma-wrapper .certificate-student {
+    font-family: 'Georgia', serif;
+    font-size: 1.8rem !important;
+    color: #1a2530 !important;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.1);
+    letter-spacing: 1px;
+    margin: 20px 0 !important;
+}
+
+.certificate-signature-line {
+    border-top: 1px solid #777777;
+    width: 250px;
+    margin-top: 50px;
+    padding-top: 8px;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #444444;
+}
+
+.certificate-valid-code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.8rem;
+    color: #888888;
+    margin-top: 25px;
+}
+
+/* Dark mode adjustment for the certificate modal container itself */
+html.dark-mode #certificatePreview {
+    background: var(--color-bg-primary);
+}
+
+/* Certificate Selection & Signature Styles (Fase 7 Ext) */
+.data-table tbody tr.selected-row {
+    background-color: rgba(30, 91, 168, 0.12) !important;
+    border-left: 4px solid var(--color-primary) !important;
+}
+
+html.dark-mode .data-table tbody tr.selected-row {
+    background-color: rgba(30, 91, 168, 0.25) !important;
+    border-left: 4px solid var(--color-primary-light) !important;
+}
+
+.badge-status.badge-pending-generation {
+    background-color: rgba(103, 58, 183, 0.12);
+    color: #512da8;
+    border: 1px solid rgba(103, 58, 183, 0.2);
+}
+
+html.dark-mode .badge-status.badge-pending-generation {
+    background-color: rgba(103, 58, 183, 0.25);
+    color: #b39ddb;
+}
+
+.certificate-signature {
+    user-select: none;
+    font-family: 'Great Vibes', 'Brush Script MT', cursive;
+}
+
+.modal.modal-cert {
+    max-width: 1050px !important;
+    width: 95% !important;
+}
+/* ============================================
+   SETTINGS VIEW CUSTOM LAYOUT (GRID SYSTEM)
+   ============================================ */
+
+.settings-container {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.settings-container .card {
+    margin-bottom: 0; /* Let grid manage gaps */
+    height: 100%;
+}
+
+.settings-container .card:nth-child(1) {
+    grid-column: span 8;
+}
+
+.settings-container .card:nth-child(2) {
+    grid-column: span 4;
+}
+
+.settings-container .card:nth-child(3) {
+    grid-column: span 12;
+}
+
+.settings-form.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.settings-form.grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
+}
+
+.settings-form .form-group {
+    max-width: 100% !important;
+    margin-bottom: 0;
+}
+
+.settings-form .form-group label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.settings-form input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+/* Responsive configurations for settings layout */
+@media (max-width: 1024px) {
+    .settings-container .card:nth-child(1),
+    .settings-container .card:nth-child(2),
+    .settings-container .card:nth-child(3) {
+        grid-column: span 12;
+    }
+    
+    .settings-form.grid-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .settings-form.grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .settings-form.grid-4 {
+        grid-template-columns: 1fr;
     }
 }

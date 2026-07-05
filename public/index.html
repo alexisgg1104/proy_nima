@@ -31,10 +31,11 @@
                     <label for="role">Seleccione su rol</label>
                     <select id="role" required>
                         <option value="">-- Seleccione un rol --</option>
-                        <option value="admin">Administrador</option>
+                        <option value="admin">Administrador / Director</option>
                         <option value="secretary">Secretaria Académica</option>
                         <option value="teacher">Docente / Instructor</option>
                         <option value="coordinator">Coordinador Académico</option>
+                        <option value="dean">Decano</option>
                     </select>
                 </div>
                 
@@ -142,6 +143,16 @@
                 </div>
                 
                 <div class="header-right">
+                    <div class="role-simulator-wrapper" style="margin-right: 15px; display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-secondary);">Simular Rol:</span>
+                        <select id="simulatedRoleSelect" class="role-selector-header filter-select" style="padding: 4px 10px; font-size: 0.85rem; border-radius: 4px; border: 1px solid var(--color-border); background: var(--color-bg-secondary); color: var(--color-text-primary); cursor: pointer; outline: none;" onchange="app.simulateRoleChange(this.value)">
+                            <option value="admin">Administrador / Director</option>
+                            <option value="secretary">Secretaria</option>
+                            <option value="teacher">Docente</option>
+                            <option value="coordinator">Coordinador</option>
+                            <option value="dean">Decano</option>
+                        </select>
+                    </div>
                     <button class="header-btn notifications-btn" id="notificationsBtn" title="Notificaciones">
                         🔔
                         <span class="badge">3</span>
@@ -567,19 +578,22 @@
                     </div>
                 </div>
 
-                <!-- Attendance View — Control de Asistencia Docente (Fase 5) -->
+                <!-- Attendance View — Control de Asistencia de Alumnos (Fase 5 CORREGIDA) -->
                 <div id="attendance" class="view">
 
-                    <!-- VISTA ADMINISTRADOR -->
+                    <!-- VISTA ADMINISTRADOR / SECRETARIA / COORDINADOR -->
                     <div id="attendanceAdminView">
-                        <div class="module-header">
-                            <h2 class="module-title">Asistencias Docentes Registradas</h2>
+                        <div class="module-header" style="margin-bottom: var(--spacing-lg);">
+                            <h2 class="module-title">Asistencias de Alumnos Registradas</h2>
                         </div>
 
                         <!-- Filtros -->
                         <div class="filters-bar">
                             <select id="attFilterTeacher" class="filter-select">
                                 <option value="">Todos los docentes</option>
+                            </select>
+                            <select id="attFilterGroup" class="filter-select">
+                                <option value="">Todos los grupos</option>
                             </select>
                             <select id="attFilterModality" class="filter-select">
                                 <option value="">Todas las modalidades</option>
@@ -589,23 +603,19 @@
                             <select id="attFilterStatus" class="filter-select">
                                 <option value="">Todos los estados</option>
                                 <option value="borrador">Borrador</option>
-                                <option value="enviado">Enviado</option>
-                                <option value="validado">Validado</option>
-                                <option value="observado">Observado</option>
                                 <option value="cerrado">Cerrado</option>
                             </select>
+                            <input type="date" id="attFilterDate" class="filter-select" title="Filtrar por fecha">
                         </div>
 
                         <div class="table-responsive">
                             <table class="data-table" id="attendanceAdminTable">
                                 <thead>
                                     <tr>
+                                        <th>ID</th>
+                                        <th>Grupo / Curso</th>
                                         <th>Docente</th>
-                                        <th>Curso / Grupo</th>
                                         <th>Modalidad</th>
-                                        <th>Período / Fecha</th>
-                                        <th>Horas dictadas</th>
-                                        <th>Horas prog.</th>
                                         <th>Estado</th>
                                         <th>Acciones</th>
                                     </tr>
@@ -618,63 +628,65 @@
 
                     <!-- VISTA DOCENTE -->
                     <div id="attendanceTeacherView" style="display:none;">
-                        <div class="module-header">
-                            <h2 class="module-title">Control de Asistencia Docente</h2>
+                        <div class="module-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
+                            <h2 class="module-title">Control de Asistencia de Alumnos</h2>
+                            <button class="btn btn-secondary" id="btnBackToAttendanceAdmin" onclick="app.showAdminAttendanceList()">
+                                ⬅ Volver al listado
+                            </button>
                         </div>
 
+                        <!-- Selector de grupo y fecha -->
                         <div class="att-selector-bar">
-                            <label class="enrollment-selector-label">Seleccione su grupo o examen asignado:</label>
-                            <select id="attendanceGroupSelect" class="filter-select enrollment-group-select">
-                                <option value="">-- Seleccione --</option>
-                            </select>
+                            <div class="att-selector-row">
+                                <div class="att-selector-item">
+                                    <label class="enrollment-selector-label">Grupo asignado:</label>
+                                    <select id="attendanceGroupSelect" class="filter-select enrollment-group-select">
+                                        <option value="">-- Seleccione un grupo --</option>
+                                    </select>
+                                </div>
+                                <div class="att-selector-item" id="attendanceDateContainer" style="display:none;">
+                                    <label class="enrollment-selector-label">Fecha de asistencia:</label>
+                                    <input type="date" id="attendanceDateSelect" class="filter-select">
+                                    <button class="btn btn-primary btn-sm" id="attLoadDateBtn" onclick="app.loadAttendanceByDate()">Cargar</button>
+                                </div>
+                            </div>
                         </div>
 
                         <div id="attendanceContent" style="display:none;">
 
                             <!-- Encabezado institucional -->
-                            <div class="att-planilla-header" id="attPlanillaHeader">
-                            </div>
+                            <div class="att-planilla-header" id="attPlanillaHeader"></div>
 
-                            <!-- Barra de estado y horas -->
-                            <div class="att-status-bar" id="attStatusBar">
-                            </div>
+                            <!-- Resumen de asistencia -->
+                            <div class="att-summary-bar" id="attSummaryBar"></div>
 
-                            <!-- Tabla de sesiones -->
+                            <!-- Tabla de alumnos -->
                             <div class="att-sessions-card">
                                 <div class="att-sessions-top">
-                                    <span class="enrollment-table-title">&#128197; Registro de Sesiones</span>
-                                    <button class="btn btn-primary btn-sm" id="attAddSessionBtn" onclick="app.openSessionModal()">&#43; Agregar sesión</button>
+                                    <span class="enrollment-table-title">&#128101; Lista de Asistencia de Alumnos</span>
+                                    <button class="btn btn-secondary btn-sm" id="attMarkAllPresentBtn" onclick="app.markAllPresent()">&#10003; Todos presentes</button>
                                 </div>
                                 <div class="table-responsive">
-                                    <table class="data-table" id="attendanceSessionsTable">
+                                    <table class="data-table" id="attendanceStudentsTable">
                                         <thead>
                                             <tr>
                                                 <th>#</th>
-                                                <th>Fecha</th>
-                                                <th>Hora entrada</th>
-                                                <th>Hora salida</th>
-                                                <th>Total horas</th>
-                                                <th>Enlace Meet</th>
+                                                <th>Código</th>
+                                                <th>Alumno</th>
+                                                <th>DNI</th>
+                                                <th>Estado</th>
+                                                <th>Hora llegada</th>
                                                 <th>Observación</th>
-                                                <th>Acciones</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="attendanceSessionsBody">
+                                        <tbody id="attendanceStudentsBody">
                                         </tbody>
-                                        <tfoot>
-                                            <tr class="att-total-row">
-                                                <td colspan="4"><strong>TOTAL HORAS DICTADAS</strong></td>
-                                                <td id="attTotalHours"><strong>0.0 h</strong></td>
-                                                <td colspan="3"></td>
-                                            </tr>
-                                        </tfoot>
                                     </table>
                                 </div>
                             </div>
 
-                            <!-- Botones de acción de planilla -->
-                            <div class="att-planilla-actions" id="attPlanillaActions">
-                            </div>
+                            <!-- Botones de acción -->
+                            <div class="att-planilla-actions" id="attPlanillaActions"></div>
 
                         </div>
                     </div>
@@ -684,35 +696,55 @@
 
                 <!-- Grades View -->
                 <div id="grades" class="view">
-                    <div class="module-header">
-                        <div class="grades-controls">
-                            <div class="control-group">
-                                <label>Grupo:</label>
-                                <select id="gradesGroupSelect" class="filter-select">
-                                    <option value="">-- Seleccione un grupo --</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div id="gradesContent" style="display: none;">
-                        <div class="grades-header">
-                            <p id="gradesInfo"></p>
+
+                    <!-- VISTA ADMINISTRADOR -->
+                    <div id="gradesAdminView" style="display: none;">
+                        <div class="module-header" style="margin-bottom: var(--spacing-lg);">
+                            <h2 class="module-title">Actas de Notas Registradas</h2>
+                        </div>
+
+                        <!-- Filtros -->
+                        <div class="filters-bar">
+                            <select id="gradesAdminFilterCourse" class="filter-select">
+                                <option value="">Todos los cursos</option>
+                            </select>
+                            <select id="gradesAdminFilterGroup" class="filter-select">
+                                <option value="">Todos los grupos</option>
+                            </select>
+                            <select id="gradesAdminFilterTeacher" class="filter-select">
+                                <option value="">Todos los docentes</option>
+                            </select>
+                            <select id="gradesAdminFilterModality" class="filter-select">
+                                <option value="">Todas las modalidades</option>
+                                <option value="regular">Curso regular</option>
+                                <option value="exam">Examen de suficiencia</option>
+                            </select>
+                            <select id="gradesAdminFilterStatus" class="filter-select">
+                                <option value="">Todos los estados</option>
+                                <option value="borrador">Borrador</option>
+                                <option value="cerrada">Cerrada</option>
+                            </select>
                         </div>
 
                         <div class="table-responsive">
-                            <table class="data-table grades-table" id="gradesTable">
-                                <thead id="gradesTableHead">
+                            <table class="data-table" id="gradesAdminTable">
+                                <thead>
+                                    <tr>
+                                        <th>Grupo</th>
+                                        <th>Curso</th>
+                                        <th>Docente</th>
+                                        <th>Modalidad</th>
+                                        <th>Matriculados</th>
+                                        <th>Notas completas</th>
+                                        <th>Promedio del grupo</th>
+                                        <th>Estado del acta</th>
+                                        <th>Acciones</th>
+                                    </tr>
                                 </thead>
-                                <tbody id="gradesTableBody">
+                                <tbody id="gradesAdminTableBody">
                                 </tbody>
                             </table>
-                        </div>
-
-                        <div class="grades-actions">
-                            <button class="btn btn-primary" id="saveGradesBtn">Guardar Notas</button>
-                            <button class="btn btn-secondary" id="closeGradesBtn">Cerrar Acta</button>
-                            <button class="btn btn-secondary" id="exportGradesBtn">Exportar Acta</button>
                         </div>
                     </div>
                 </div>
@@ -720,8 +752,9 @@
                 <!-- Certificates View -->
                 <div id="certificates" class="view">
                     <div class="module-header">
-                        <div class="module-controls">
-                            <button class="btn btn-primary icon-add-btn" data-action="new-certificate" title="Generar Nueva Constancia">➕ Generar Constancia</button>
+                        <div class="module-controls" style="display: flex; gap: 10px;">
+                            <button class="btn btn-primary icon-add-btn" id="emitCertBtn" disabled>➕ Emitir Documento</button>
+                            <button class="btn btn-secondary" onclick="app.generateBulkCertificates()" title="Generar todos los certificados aptos pendientes">⚙️ Generar Certificados Pendientes</button>
                         </div>
                     </div>
 
@@ -762,13 +795,67 @@
 
                 <!-- Reports View -->
                 <div id="reports" class="view">
+                    <!-- Filters Bar (Interactive Query Dashboard) -->
+                    <div class="filters-bar" style="margin-bottom: var(--spacing-lg); flex-wrap: wrap; gap: 10px; display: flex; align-items: center;">
+                        <select id="reportTypeFilter" class="filter-select" style="min-width: 180px;">
+                            <option value="grades">Notas y Calificaciones</option>
+                            <option value="attendance">Asistencia de Alumnos</option>
+                            <option value="certificates">Certificados y Constancias</option>
+                            <option value="enrollments">Matrículas por Período</option>
+                        </select>
+                        <select id="reportCourseFilter" class="filter-select" style="min-width: 180px;">
+                            <option value="">Todos los cursos</option>
+                        </select>
+                        <select id="reportPromotionFilter" class="filter-select" style="min-width: 160px;">
+                            <option value="">Todas las promociones</option>
+                            <option value="2022">Promoción 2022</option>
+                            <option value="2023">Promoción 2023</option>
+                            <option value="2024">Promoción 2024</option>
+                            <option value="2025">Promoción 2025</option>
+                            <option value="2026">Promoción 2026</option>
+                        </select>
+                        <select id="reportCycleFilter" class="filter-select" style="min-width: 140px;">
+                            <option value="">Todos los ciclos</option>
+                            <option value="I">Ciclo I</option>
+                            <option value="II">Ciclo II</option>
+                            <option value="III">Ciclo III</option>
+                            <option value="IV">Ciclo IV</option>
+                        </select>
+                        <select id="reportStatusFilter" class="filter-select" style="min-width: 180px;">
+                            <option value="">Todos los estados</option>
+                        </select>
+                        <select id="reportMonthFilter" class="filter-select" style="min-width: 140px;">
+                            <option value="">Todos los meses</option>
+                            <option value="01">Enero</option>
+                            <option value="02">Febrero</option>
+                            <option value="03">Marzo</option>
+                            <option value="04">Abril</option>
+                            <option value="05">Mayo</option>
+                            <option value="06">Junio</option>
+                            <option value="07">Julio</option>
+                            <option value="08">Agosto</option>
+                            <option value="09">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                        <select id="reportViewModeFilter" class="filter-select" style="min-width: 150px;">
+                            <option value="detailed">Vista Detallada</option>
+                            <option value="summary">Vista General (Curso/Grupo)</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="app.handleReportFilterSubmit()">🔎 Filtrar</button>
+                        <button class="btn btn-secondary" onclick="app.openSaveQueryModal()">💾 Guardar Consulta</button>
+                        <button class="btn btn-secondary" onclick="app.printCurrentReport()">🖨️ Imprimir</button>
+                        <button class="btn btn-secondary" onclick="app.exportCurrentReportToExcel()">📥 Exportar Excel</button>
+                    </div>
+
                     <div class="reports-grid">
                         <div class="card">
                             <div class="card-header">
-                                <h3>Total Alumnos por Curso</h3>
+                                <h3>Total Alumnos</h3>
                             </div>
                             <div class="card-body">
-                                <div class="stat-value" id="reportTotalStudents">487</div>
+                                <div class="stat-value" id="reportTotalStudents">0</div>
                             </div>
                         </div>
 
@@ -777,7 +864,7 @@
                                 <h3>Aprobados</h3>
                             </div>
                             <div class="card-body">
-                                <div class="stat-value" style="color: #4caf50;" id="reportApproved">365</div>
+                                <div class="stat-value" style="color: #4caf50;" id="reportApproved">0</div>
                             </div>
                         </div>
 
@@ -786,7 +873,7 @@
                                 <h3>Desaprobados</h3>
                             </div>
                             <div class="card-body">
-                                <div class="stat-value" style="color: #f44336;" id="reportDisapproved">122</div>
+                                <div class="stat-value" style="color: #f44336;" id="reportDisapproved">0</div>
                             </div>
                         </div>
 
@@ -795,7 +882,7 @@
                                 <h3>Promedio General</h3>
                             </div>
                             <div class="card-body">
-                                <div class="stat-value" id="reportGeneralAverage">14.5</div>
+                                <div class="stat-value" id="reportGeneralAverage">0</div>
                             </div>
                         </div>
 
@@ -804,7 +891,7 @@
                                 <h3>Certificados Emitidos</h3>
                             </div>
                             <div class="card-body">
-                                <div class="stat-value" id="reportCertificates">156</div>
+                                <div class="stat-value" id="reportCertificates">0</div>
                             </div>
                         </div>
 
@@ -813,31 +900,45 @@
                                 <h3>Asistencia Promedio</h3>
                             </div>
                             <div class="card-body">
-                                <div class="stat-value" id="reportAvgAttendance">87%</div>
+                                <div class="stat-value" id="reportAvgAttendance">0%</div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card" style="margin-top: var(--spacing-lg);">
                         <div class="card-header">
-                            <h3>Reporte Detallado</h3>
+                            <h3>Resultados de Consulta Detallada</h3>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="data-table" id="reportTable">
+                                <table class="data-table" id="reportResultsTable">
+                                    <thead id="reportResultsTableHead">
+                                    </thead>
+                                    <tbody id="reportResultsTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reportes Guardados (Fase 7) -->
+                    <div class="card" style="margin-top: var(--spacing-xl);">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3>Plantillas de Reportes Guardados</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="data-table" id="savedReportsTable">
                                     <thead>
                                         <tr>
-                                            <th>Curso</th>
-                                            <th>Grupo</th>
-                                            <th>Docente</th>
-                                            <th>Matriculados</th>
-                                            <th>Aprobados</th>
-                                            <th>Desaprobados</th>
-                                            <th>Promedio</th>
-                                            <th>Certificados</th>
+                                            <th>Nombre del Reporte</th>
+                                            <th>Tipo de Reporte</th>
+                                            <th>Creado Por</th>
+                                            <th>Fecha Creación</th>
+                                            <th>Acciones</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="reportTableBody">
+                                    <tbody id="savedReportsTableBody">
                                     </tbody>
                                 </table>
                             </div>
@@ -847,79 +948,90 @@
 
                 <!-- Users View -->
                 <div id="users" class="view">
-                    <div class="module-header">
-                        <div class="module-controls">
-                            <button class="btn btn-primary icon-add-btn" data-action="new-user" title="Nuevo Usuario">➕ Nuevo Usuario</button>
+                    <div class="tabs-container" style="display: flex; gap: 10px; margin-bottom: var(--spacing-lg); border-bottom: 2px solid var(--color-border); padding-bottom: 10px;">
+                        <button class="tab-btn active" id="tabUsersBtn" onclick="app.switchUsersTab('users')" style="padding: 8px 16px; border: none; background: none; font-weight: 600; cursor: pointer; border-radius: 4px; color: var(--color-text-primary); border-bottom: 3px solid var(--color-primary);">Usuarios</button>
+                        <button class="tab-btn" id="tabRolesBtn" onclick="app.switchUsersTab('roles')" style="padding: 8px 16px; border: none; background: none; font-weight: 600; cursor: pointer; border-radius: 4px; color: var(--color-text-secondary);">Roles y Permisos</button>
+                    </div>
+
+                    <!-- Panel de Usuarios -->
+                    <div id="usersPanel">
+                        <div class="module-header">
+                            <div class="module-controls">
+                                <button class="btn btn-primary icon-add-btn" onclick="app.openNewUserModal()" title="Nuevo Usuario">➕ Nuevo Usuario</button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="data-table" id="usersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Nombre Completo</th>
+                                        <th>Rol</th>
+                                        <th>Correo</th>
+                                        <th>Estado</th>
+                                        <th>Último Acceso</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
-                    <div class="table-responsive">
-                        <table class="data-table" id="usersTable">
-                            <thead>
-                                <tr>
-                                    <th>Usuario</th>
-                                    <th>Nombre Completo</th>
-                                    <th>Rol</th>
-                                    <th>Correo</th>
-                                    <th>Estado</th>
-                                    <th>Último Acceso</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usersTableBody">
-                            </tbody>
-                        </table>
+                    <!-- Panel de Roles (Fase 7) -->
+                    <div id="rolesPanel" style="display: none;">
+                        <div class="table-responsive">
+                            <table class="data-table" id="rolesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Rol ID</th>
+                                        <th>Nombre Mostrar</th>
+                                        <th>Permisos Asignados</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rolesTableBody">
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Settings View -->
                 <div id="settings" class="view">
                     <div class="settings-container">
+                        <!-- Card 1: Datos del Instituto -->
                         <div class="card">
                             <div class="card-header">
                                 <h3>Datos del Instituto</h3>
                             </div>
-                            <div class="card-body settings-form">
+                            <div class="card-body settings-form grid-2">
+                                <div class="form-group">
+                                    <label>Nombre del Sistema</label>
+                                    <input type="text" id="settingsSystemName">
+                                </div>
                                 <div class="form-group">
                                     <label>Nombre del Instituto</label>
-                                    <input type="text" value="Instituto de Informática" readonly>
+                                    <input type="text" id="settingsInstituteName">
                                 </div>
                                 <div class="form-group">
                                     <label>Universidad</label>
-                                    <input type="text" value="Universidad Nacional de Piura" readonly>
+                                    <input type="text" id="settingsUniversityName">
                                 </div>
                                 <div class="form-group">
                                     <label>Correo Institucional</label>
-                                    <input type="email" value="info@institutoinformatica.edu.pe">
+                                    <input type="email" id="settingsEmail">
                                 </div>
                                 <div class="form-group">
                                     <label>Teléfono</label>
-                                    <input type="text" value="+51 (73) 123-4567">
+                                    <input type="text" id="settingsPhone">
                                 </div>
                             </div>
                         </div>
 
-                        <div class="card">
-                            <div class="card-header">
-                                <h3>Configuración Académica</h3>
-                            </div>
-                            <div class="card-body settings-form">
-                                <div class="form-group">
-                                    <label>Período Académico Actual</label>
-                                    <input type="text" value="2024-I">
-                                </div>
-                                <div class="form-group">
-                                    <label>Nota Mínima Aprobatoria</label>
-                                    <input type="number" value="11" min="0" max="20">
-                                </div>
-                                <div class="form-group">
-                                    <label>Asistencia Mínima Requerida (%)</label>
-                                    <input type="number" value="70" min="0" max="100">
-                                </div>
-                                <button class="btn btn-primary">Guardar Cambios</button>
-                            </div>
-                        </div>
-
+                        <!-- Card 2: Preferencias del Sistema (reordenado) -->
                         <div class="card">
                             <div class="card-header">
                                 <h3>Preferencias del Sistema</h3>
@@ -927,25 +1039,61 @@
                             <div class="card-body settings-form">
                                 <div class="form-group">
                                     <label>
-                                        <input type="checkbox" id="enableNotifications" checked>
+                                        <input type="checkbox" id="settingsEnableNotifications">
                                         Habilitar notificaciones
                                     </label>
                                 </div>
                                 <div class="form-group">
                                     <label>
-                                        <input type="checkbox" id="enableAutoSave" checked>
+                                        <input type="checkbox" id="settingsEnableAutoSave">
                                         Guardado automático
                                     </label>
                                 </div>
                                 <div class="form-group">
+                                    <label>Tema por Defecto</label>
+                                    <select id="settingsDefaultTheme">
+                                        <option value="light">Claro</option>
+                                        <option value="dark">Oscuro</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
                                     <label>Idioma</label>
-                                    <select>
+                                    <select id="settingsLanguage">
                                         <option value="es">Español</option>
                                         <option value="en">English</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Card 3: Configuración Académica -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Configuración Académica</h3>
+                            </div>
+                            <div class="card-body settings-form grid-4">
+                                <div class="form-group">
+                                    <label>Período Académico Actual</label>
+                                    <input type="text" id="settingsAcademicPeriod">
+                                </div>
+                                <div class="form-group">
+                                    <label>Nota Mínima Aprobatoria</label>
+                                    <input type="number" id="settingsMinPassingGrade" min="0" max="20">
+                                </div>
+                                <div class="form-group">
+                                    <label>Asistencia Mínima Requerida (%)</label>
+                                    <input type="number" id="settingsMinAttendanceRequired" min="0" max="100">
+                                </div>
+                                <div class="form-group">
+                                    <label>Responsable Académico / Firma</label>
+                                    <input type="text" id="settingsResponsibleAcademic">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
+                        <button class="btn btn-primary" onclick="app.saveSystemSettings()">Guardar Cambios</button>
+                        <button class="btn btn-secondary" onclick="app.restoreDefaultSettings()">Restaurar valores por defecto</button>
                     </div>
                 </div>
             </div>
@@ -1042,8 +1190,8 @@
         </div>
     </div>
 
-    <div id="certificateModal" class="modal" style="display: none;">
-        <div class="modal-content modal-lg">
+    <div id="certificateModal" class="modal modal-cert" style="display: none;">
+        <div class="modal-content">
             <div class="modal-header">
                 <h2>Certificado / Constancia</h2>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
@@ -1333,45 +1481,139 @@
     </div>
 
 
-    <!-- Modal: Agregar / Editar Sesión de Asistencia Docente -->
-    <div id="sessionModal" class="modal" style="display:none;">
+    <!-- Modal: Detalle de Lista de Asistencia de Alumnos -->
+    <div id="attendanceDetailModal" class="modal modal-attendance" style="display:none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="sessionModalTitle">Agregar Sesión</h2>
+                <h2>Detalle de Asistencia de Alumnos</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="attendanceDetailBody">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Observación administrativa de asistencia -->
+    <div id="adminAttObsModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Observación Administrativa</h2>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="sessionForm" class="form-modal">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Fecha *</label>
-                            <input type="date" id="sessionDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Hora entrada *</label>
-                            <input type="time" id="sessionEntryTime" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Hora salida *</label>
-                            <input type="time" id="sessionExitTime" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Total horas</label>
-                            <input type="text" id="sessionTotalHours" readonly placeholder="Calculado automáticamente" style="background:var(--color-bg-tertiary); cursor:not-allowed;">
-                        </div>
+                <div class="form-group">
+                    <label>Observación para el docente *</label>
+                    <textarea id="adminAttObsText" rows="4" maxlength="500" placeholder="Describa el motivo de la observación..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-primary" id="adminAttObsConfirmBtn">Enviar observación</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Historial de Asistencia por Alumno -->
+    <div id="studentHistoryModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Historial de Asistencia</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="att-summary-bar" style="margin-bottom:1rem; display:flex; flex-direction:column; gap:0.5rem; text-align:left;">
+                    <div><strong>Alumno:</strong> <span id="historyStudentName"></span> (<span id="historyStudentCode"></span>)</div>
+                    <div><strong>Grupo:</strong> <span id="historyGroupName"></span></div>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Grupo / Curso</th>
+                                <th>Estado</th>
+                                <th>Observación</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentHistoryBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-actions" style="margin-top:1rem;">
+                    <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Detalle de Acta de Notas (Administrador) -->
+    <div id="gradesDetailModal" class="modal modal-attendance" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Detalle de Acta de Calificaciones</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="gradesDetailBody">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Detalle de Notas de Alumno (Docente) -->
+    <div id="studentGradesDetailModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Ficha de Calificaciones del Alumno</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="studentGradesDetailBody">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Nuevo / Editar Usuario (Fase 7) -->
+    <div id="userFormModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="userModalTitle">Nuevo Usuario</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm" class="form-modal" onsubmit="app.handleUserSubmit(event)">
+                    <div class="form-group">
+                        <label>Usuario / Login *</label>
+                        <input type="text" id="userUsername" required placeholder="Ej: roberto.silva">
                     </div>
                     <div class="form-group">
-                        <label>Enlace Meet (opcional)</label>
-                        <input type="url" id="sessionMeetLink" placeholder="https://meet.google.com/...">
+                        <label>Nombre Completo *</label>
+                        <input type="text" id="userFullName" required placeholder="Ej: Roberto Silva">
                     </div>
                     <div class="form-group">
-                        <label>Observación (opcional)</label>
-                        <textarea id="sessionObservation" rows="2" maxlength="255" placeholder="Máx. 255 caracteres..."></textarea>
+                        <label>Contraseña *</label>
+                        <input type="password" id="userPassword" required placeholder="Contraseña de acceso">
+                    </div>
+                    <div class="form-group">
+                        <label>Correo Electrónico *</label>
+                        <input type="email" id="userEmail" required placeholder="Ej: roberto.silva@student.edu.pe">
+                    </div>
+                    <div class="form-group">
+                        <label>Rol *</label>
+                        <select id="userRole" required>
+                            <option value="admin">Administrador</option>
+                            <option value="secretary">Secretaria Académica</option>
+                            <option value="teacher">Docente</option>
+                            <option value="coordinator">Coordinador Académico</option>
+                            <option value="dean">Decano</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado *</label>
+                        <select id="userStatus" required>
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
+                        </select>
                     </div>
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Guardar sesión</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
                         <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
                     </div>
                 </form>
@@ -1379,34 +1621,187 @@
         </div>
     </div>
 
-    <!-- Modal: Detalle de Planilla (Vista Admin) -->
-    <div id="planillaDetailModal" class="modal modal-lg" style="display:none;">
+    <!-- Modal: Editar Permisos de Rol (Fase 7) -->
+    <div id="roleModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Planilla de Asistencia Docente</h2>
+                <h2>Editar Permisos de Rol</h2>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
-            <div class="modal-body" id="planillaDetailBody">
+            <div class="modal-body">
+                <form id="roleForm" class="form-modal" onsubmit="app.handleRoleSubmit(event)">
+                    <div class="form-group">
+                        <label>Rol</label>
+                        <input type="text" id="roleNameInput" readonly style="font-weight: bold; background: var(--color-bg-tertiary);">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: bold; margin-bottom: 10px; display: block;">Módulos Permitidos:</label>
+                        <div id="rolePermissionsList" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-bg-secondary);">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar Permisos</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Observación administrativa -->
-    <div id="adminObsModal" class="modal" style="display:none;">
+    <!-- Modal: Nuevo / Editar Reporte Personalizado (Fase 7) -->
+    <div id="reportModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Agregar Observación</h2>
+                <h2 id="reportModalTitle">Nuevo Reporte Personalizado</h2>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label>Observación para el docente *</label>
-                    <textarea id="adminObsText" rows="4" maxlength="500" placeholder="Describa el motivo de la observación..."></textarea>
+                <form id="reportForm" class="form-modal" onsubmit="app.handleReportSubmit(event)">
+                    <div class="form-group">
+                        <label>Nombre del Reporte *</label>
+                        <input type="text" id="reportName" required placeholder="Ej: Reporte de Asistencia Crítica">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Reporte *</label>
+                        <select id="reportType" required onchange="app.onReportTypeChange(this.value)">
+                            <option value="attendance">Asistencia de Alumnos</option>
+                            <option value="grades">Notas y Calificaciones</option>
+                            <option value="certificates">Certificados Emitidos</option>
+                            <option value="enrollments">Matrículas</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="reportConfigContainer">
+                        <label>Parámetros del Filtro</label>
+                        <div style="padding: 10px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-bg-secondary);">
+                            <div class="form-row" id="repFilterRow1">
+                                <div class="form-group">
+                                    <label>Curso</label>
+                                    <select id="reportFilterCourse" class="filter-select" style="width: 100%;">
+                                        <option value="">Todos los cursos</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="repAttMinContainer">
+                                    <label>Asistencia Menor a (%)</label>
+                                    <input type="number" id="reportFilterMinAtt" value="70" min="0" max="100" style="width: 100%;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar Reporte</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Previsualización de Reporte Guardado (Fase 7) -->
+    <div id="reportPreviewModal" class="modal modal-attendance" style="display: none;">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 id="reportPreviewTitle">Previsualización de Reporte</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: var(--spacing-md); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p><strong>Tipo:</strong> <span id="reportPreviewType"></span></p>
+                        <p><strong>Generado el:</strong> <span id="reportPreviewDate"></span></p>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary btn-sm" onclick="app.exportReportSimulated('pdf')">Descargar PDF</button>
+                        <button class="btn btn-secondary btn-sm" onclick="app.exportReportSimulated('excel')">Descargar Excel</button>
+                    </div>
                 </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-primary" id="adminObsConfirmBtn">Enviar observación</button>
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="data-table" id="reportPreviewTable">
+                        <thead id="reportPreviewTableHead">
+                        </thead>
+                        <tbody id="reportPreviewTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-actions" style="margin-top: 15px;">
+                    <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal: Emitir/Preparar Certificado o Constancia (Fase 7 Ext) -->
+    <div id="emitCertModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Emitir Documento Académico</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="emitCertForm" class="form-modal" onsubmit="app.handleEmitCertSubmit(event)">
+                    <input type="hidden" id="emitStudentId">
+                    <input type="hidden" id="emitGroupId">
+                    <div class="form-group">
+                        <label>Alumno</label>
+                        <input type="text" id="emitStudentName" readonly style="background: var(--color-bg-tertiary); font-weight: bold; width: 100%;">
+                    </div>
+                    <div class="form-group">
+                        <label>Curso / Grupo</label>
+                        <input type="text" id="emitGroupName" readonly style="background: var(--color-bg-tertiary); width: 100%;">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Documento *</label>
+                        <select id="emitDocType" required style="width: 100%;">
+                            <option value="certificado">Certificado de Aprobación</option>
+                            <option value="constancia">Constancia de Participación</option>
+                        </select>
+                    </div>
+                    <div class="form-actions" style="margin-top: 15px;">
+                        <button type="submit" class="btn btn-primary">Confirmar y Enviar a Firmar</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Observación de Certificados (Fase 7 Ext) -->
+    <div id="certObsModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Ayuda / Observación de Documento</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="obsCertId">
+                <div class="form-group">
+                    <label>Escriba una observación o indicación de revisión *</label>
+                    <textarea id="certObsText" rows="4" maxlength="500" placeholder="Ej: Corregir nombres del alumno, verificar promedio..." style="width: 100%; box-sizing: border-box;"></textarea>
+                </div>
+                <div class="form-actions" style="margin-top: 15px;">
+                    <button type="button" class="btn btn-primary" onclick="app.submitCertObservation()">Guardar Observación</button>
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Guardar Consulta de Reporte (Fase 7) -->
+    <div id="saveQueryModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Guardar Consulta como Plantilla</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="saveQueryForm" class="form-modal" onsubmit="app.handleSaveQuerySubmit(event)">
+                    <div class="form-group">
+                        <label>Nombre del Reporte *</label>
+                        <input type="text" id="saveQueryName" placeholder="Ej: Alumnos desaprobados Promoción 2026" required style="width: 100%;">
+                    </div>
+                    <div class="form-actions" style="margin-top: 15px;">
+                        <button type="submit" class="btn btn-primary">Guardar Reporte</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
