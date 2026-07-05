@@ -1,0 +1,94 @@
+<?php
+
+// 1. Desviar archivos estáticos si se ejecuta en el servidor de desarrollo CLI de PHP
+if (php_sapi_name() === 'cli-server') {
+    $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    if (file_exists(__DIR__ . $path) && is_file(__DIR__ . $path)) {
+        return false;
+    }
+}
+
+// 2. Cargar variables de entorno (.env)
+function loadEnv($path) {
+    if (!file_exists($path)) return;
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        if (strpos($line, '=') === false) continue;
+        list($name, $value) = explode('=', $line, 2);
+        $_ENV[trim($name)] = trim($value);
+    }
+}
+
+loadEnv(__DIR__ . '/../.env');
+
+// 3. Configuración de Sesiones Seguras (de acuerdo a SAII_BACKEND_SEGURIDAD.md)
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_only_cookies', 1);
+
+$secureCookie = isset($_ENV['SESSION_SECURE']) && $_ENV['SESSION_SECURE'] === 'true';
+if ($secureCookie) {
+    ini_set('session.cookie_secure', 1);
+}
+
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'domain' => '',
+    'secure' => $secureCookie,
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
+
+session_start();
+
+// 4. Registro del cargador de clases (PSR-4 Autoloader Autogestionado)
+spl_autoload_register(function ($class) {
+    // Espacio de nombres App\
+    if (strpos($class, 'App\\') === 0) {
+        $relativeClass = substr($class, 4);
+        $file = __DIR__ . '/../app/' . str_replace('\\', '/', $relativeClass) . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+            return;
+        }
+    }
+    
+    // Espacio de nombres Config\
+    if (strpos($class, 'Config\\') === 0) {
+        $relativeClass = substr($class, 7);
+        $file = __DIR__ . '/../config/' . str_replace('\\', '/', $relativeClass) . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+            return;
+        }
+    }
+});
+
+// 5. Configurar Cabeceras CORS
+header('Access-Control-Allow-Origin: *'); // En producción refinar a orígenes de confianza
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, X-CSRF-TOKEN');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit(0);
+}
+
+// 6. Instanciar enrutador y declarar endpoints base
+use App\Core\Router;
+
+$router = new Router();
+
+// Endpoint de Prueba (Fase B2)
+$router->addRoute('GET', '/api/test', function() {
+    http_response_code(200);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'status' => 'success',
+        'message' => 'Backend SAII de Informática operando con éxito'
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+});
+
+// Despachar la petición
+$router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
