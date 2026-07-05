@@ -795,13 +795,67 @@
 
                 <!-- Reports View -->
                 <div id="reports" class="view">
+                    <!-- Filters Bar (Interactive Query Dashboard) -->
+                    <div class="filters-bar" style="margin-bottom: var(--spacing-lg); flex-wrap: wrap; gap: 10px; display: flex; align-items: center;">
+                        <select id="reportTypeFilter" class="filter-select" style="min-width: 180px;">
+                            <option value="grades">Notas y Calificaciones</option>
+                            <option value="attendance">Asistencia de Alumnos</option>
+                            <option value="certificates">Certificados y Constancias</option>
+                            <option value="enrollments">Matrículas por Período</option>
+                        </select>
+                        <select id="reportCourseFilter" class="filter-select" style="min-width: 180px;">
+                            <option value="">Todos los cursos</option>
+                        </select>
+                        <select id="reportPromotionFilter" class="filter-select" style="min-width: 160px;">
+                            <option value="">Todas las promociones</option>
+                            <option value="2022">Promoción 2022</option>
+                            <option value="2023">Promoción 2023</option>
+                            <option value="2024">Promoción 2024</option>
+                            <option value="2025">Promoción 2025</option>
+                            <option value="2026">Promoción 2026</option>
+                        </select>
+                        <select id="reportCycleFilter" class="filter-select" style="min-width: 140px;">
+                            <option value="">Todos los ciclos</option>
+                            <option value="I">Ciclo I</option>
+                            <option value="II">Ciclo II</option>
+                            <option value="III">Ciclo III</option>
+                            <option value="IV">Ciclo IV</option>
+                        </select>
+                        <select id="reportStatusFilter" class="filter-select" style="min-width: 180px;">
+                            <option value="">Todos los estados</option>
+                        </select>
+                        <select id="reportMonthFilter" class="filter-select" style="min-width: 140px;">
+                            <option value="">Todos los meses</option>
+                            <option value="01">Enero</option>
+                            <option value="02">Febrero</option>
+                            <option value="03">Marzo</option>
+                            <option value="04">Abril</option>
+                            <option value="05">Mayo</option>
+                            <option value="06">Junio</option>
+                            <option value="07">Julio</option>
+                            <option value="08">Agosto</option>
+                            <option value="09">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                        <select id="reportViewModeFilter" class="filter-select" style="min-width: 150px;">
+                            <option value="detailed">Vista Detallada</option>
+                            <option value="summary">Vista General (Curso/Grupo)</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="app.handleReportFilterSubmit()">🔎 Filtrar</button>
+                        <button class="btn btn-secondary" onclick="app.openSaveQueryModal()">💾 Guardar Consulta</button>
+                        <button class="btn btn-secondary" onclick="app.printCurrentReport()">🖨️ Imprimir</button>
+                        <button class="btn btn-secondary" onclick="app.exportCurrentReportToExcel()">📥 Exportar Excel</button>
+                    </div>
+
                     <div class="reports-grid">
                         <div class="card">
                             <div class="card-header">
-                                <h3>Total Alumnos por Curso</h3>
+                                <h3>Total Alumnos</h3>
                             </div>
                             <div class="card-body">
-                                <div class="stat-value" id="reportTotalStudents">487</div>
+                                <div class="stat-value" id="reportTotalStudents">0</div>
                             </div>
                         </div>
 
@@ -810,7 +864,7 @@
                                 <h3>Aprobados</h3>
                             </div>
                             <div class="card-body">
-                                <div class="stat-value" style="color: #4caf50;" id="reportApproved">365</div>
+                                <div class="stat-value" style="color: #4caf50;" id="reportApproved">0</div>
                             </div>
                         </div>
 
@@ -819,7 +873,7 @@
                                 <h3>Desaprobados</h3>
                             </div>
                             <div class="card-body">
-                                <div class="stat-value" style="color: #f44336;" id="reportDisapproved">122</div>
+                                <div class="stat-value" style="color: #f44336;" id="reportDisapproved">0</div>
                             </div>
                         </div>
 
@@ -828,7 +882,7 @@
                                 <h3>Promedio General</h3>
                             </div>
                             <div class="card-body">
-                                <div class="stat-value" id="reportGeneralAverage">14.5</div>
+                                <div class="stat-value" id="reportGeneralAverage">0</div>
                             </div>
                         </div>
 
@@ -837,7 +891,7 @@
                                 <h3>Certificados Emitidos</h3>
                             </div>
                             <div class="card-body">
-                                <div class="stat-value" id="reportCertificates">156</div>
+                                <div class="stat-value" id="reportCertificates">0</div>
                             </div>
                         </div>
 
@@ -846,31 +900,21 @@
                                 <h3>Asistencia Promedio</h3>
                             </div>
                             <div class="card-body">
-                                <div class="stat-value" id="reportAvgAttendance">87%</div>
+                                <div class="stat-value" id="reportAvgAttendance">0%</div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card" style="margin-top: var(--spacing-lg);">
                         <div class="card-header">
-                            <h3>Reporte Detallado</h3>
+                            <h3>Resultados de Consulta Detallada</h3>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="data-table" id="reportTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Curso</th>
-                                            <th>Grupo</th>
-                                            <th>Docente</th>
-                                            <th>Matriculados</th>
-                                            <th>Aprobados</th>
-                                            <th>Desaprobados</th>
-                                            <th>Promedio</th>
-                                            <th>Certificados</th>
-                                        </tr>
+                                <table class="data-table" id="reportResultsTable">
+                                    <thead id="reportResultsTableHead">
                                     </thead>
-                                    <tbody id="reportTableBody">
+                                    <tbody id="reportResultsTableBody">
                                     </tbody>
                                 </table>
                             </div>
@@ -880,8 +924,7 @@
                     <!-- Reportes Guardados (Fase 7) -->
                     <div class="card" style="margin-top: var(--spacing-xl);">
                         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                            <h3>Reportes Guardados / Consultas Personalizadas</h3>
-                            <button class="btn btn-primary btn-sm" onclick="app.openNewReportModal()">➕ Nuevo Reporte</button>
+                            <h3>Plantillas de Reportes Guardados</h3>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -959,11 +1002,12 @@
                 <!-- Settings View -->
                 <div id="settings" class="view">
                     <div class="settings-container">
+                        <!-- Card 1: Datos del Instituto -->
                         <div class="card">
                             <div class="card-header">
                                 <h3>Datos del Instituto</h3>
                             </div>
-                            <div class="card-body settings-form">
+                            <div class="card-body settings-form grid-2">
                                 <div class="form-group">
                                     <label>Nombre del Sistema</label>
                                     <input type="text" id="settingsSystemName">
@@ -987,30 +1031,7 @@
                             </div>
                         </div>
 
-                        <div class="card">
-                            <div class="card-header">
-                                <h3>Configuración Académica</h3>
-                            </div>
-                            <div class="card-body settings-form">
-                                <div class="form-group">
-                                    <label>Período Académico Actual</label>
-                                    <input type="text" id="settingsAcademicPeriod">
-                                </div>
-                                <div class="form-group">
-                                    <label>Nota Mínima Aprobatoria</label>
-                                    <input type="number" id="settingsMinPassingGrade" min="0" max="20">
-                                </div>
-                                <div class="form-group">
-                                    <label>Asistencia Mínima Requerida (%)</label>
-                                    <input type="number" id="settingsMinAttendanceRequired" min="0" max="100">
-                                </div>
-                                <div class="form-group">
-                                    <label>Responsable Académico / Firma</label>
-                                    <input type="text" id="settingsResponsibleAcademic">
-                                </div>
-                            </div>
-                        </div>
-
+                        <!-- Card 2: Preferencias del Sistema (reordenado) -->
                         <div class="card">
                             <div class="card-header">
                                 <h3>Preferencias del Sistema</h3>
@@ -1041,6 +1062,31 @@
                                         <option value="es">Español</option>
                                         <option value="en">English</option>
                                     </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Configuración Académica -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Configuración Académica</h3>
+                            </div>
+                            <div class="card-body settings-form grid-4">
+                                <div class="form-group">
+                                    <label>Período Académico Actual</label>
+                                    <input type="text" id="settingsAcademicPeriod">
+                                </div>
+                                <div class="form-group">
+                                    <label>Nota Mínima Aprobatoria</label>
+                                    <input type="number" id="settingsMinPassingGrade" min="0" max="20">
+                                </div>
+                                <div class="form-group">
+                                    <label>Asistencia Mínima Requerida (%)</label>
+                                    <input type="number" id="settingsMinAttendanceRequired" min="0" max="100">
+                                </div>
+                                <div class="form-group">
+                                    <label>Responsable Académico / Firma</label>
+                                    <input type="text" id="settingsResponsibleAcademic">
                                 </div>
                             </div>
                         </div>
@@ -1556,6 +1602,7 @@
                             <option value="secretary">Secretaria Académica</option>
                             <option value="teacher">Docente</option>
                             <option value="coordinator">Coordinador Académico</option>
+                            <option value="dean">Decano</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -1733,6 +1780,28 @@
                     <button type="button" class="btn btn-primary" onclick="app.submitCertObservation()">Guardar Observación</button>
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Guardar Consulta de Reporte (Fase 7) -->
+    <div id="saveQueryModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Guardar Consulta como Plantilla</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="saveQueryForm" class="form-modal" onsubmit="app.handleSaveQuerySubmit(event)">
+                    <div class="form-group">
+                        <label>Nombre del Reporte *</label>
+                        <input type="text" id="saveQueryName" placeholder="Ej: Alumnos desaprobados Promoción 2026" required style="width: 100%;">
+                    </div>
+                    <div class="form-actions" style="margin-top: 15px;">
+                        <button type="submit" class="btn btn-primary">Guardar Reporte</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

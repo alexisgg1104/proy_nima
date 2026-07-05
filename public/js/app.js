@@ -24,6 +24,8 @@ class SAIIApp {
         this.setupEventListeners();
         this.applyTheme();
         this.setupLoginForm();
+        this.setupTranslationObserver();
+        this.applyLanguage();
         
         // If user is already logged in, skip login screen
         if (DataManager.currentUser) {
@@ -327,7 +329,22 @@ class SAIIApp {
         }
 
         // Update page header
-        const titles = {
+        const lang = mockData.settings.systemLanguage || 'es';
+        const isEn = (lang === 'en');
+        const titles = isEn ? {
+            dashboard: { title: 'Dashboard', desc: 'General summary of the academic system' },
+            students: { title: 'Students Management', desc: 'Manage the students database' },
+            courses: { title: 'Courses & Modules', desc: 'Manage courses and their components' },
+            teachers: { title: 'Teachers Management', desc: 'Manage academic staff' },
+            groups: { title: 'Academic Groups', desc: 'Manage academic groups and sections' },
+            enrollments: { title: 'Enrollments', desc: 'Enroll students in academic groups' },
+            attendance: { title: 'Attendance', desc: 'Record student attendance in class' },
+            grades: { title: 'Grade Sheets', desc: 'Enter and manage student grades' },
+            certificates: { title: 'Certificates & Documents', desc: 'Issue academic documents' },
+            reports: { title: 'Reports', desc: 'Academic analysis and statistics' },
+            users: { title: 'Users & Roles', desc: 'System users administration' },
+            settings: { title: 'Configuration', desc: 'General system settings' }
+        } : {
             dashboard: { title: 'Dashboard', desc: 'Resumen general del sistema académico' },
             students: { title: 'Gestión de Alumnos', desc: 'Administrar base de datos de estudiantes' },
             courses: { title: 'Cursos y Módulos', desc: 'Gestionar cursos y sus componentes' },
@@ -385,27 +402,83 @@ class SAIIApp {
 
         // Update breadcrumb
         this.updateBreadcrumb(viewName);
+
+        // Dashboard specific permission check: if view is dashboard but role lacks dashboard permission, hide normal dashboard elements and show restricted message
+        const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
+        const permissions = mockData.rolePermissions[role] || [];
+        
+        const dashboard = document.getElementById('dashboard');
+        if (dashboard) {
+            let deniedMsg = document.getElementById('dashboardDeniedMessage');
+            if (!deniedMsg) {
+                deniedMsg = document.createElement('div');
+                deniedMsg.id = 'dashboardDeniedMessage';
+                deniedMsg.style.display = 'none';
+                deniedMsg.style.flexDirection = 'column';
+                deniedMsg.style.alignItems = 'center';
+                deniedMsg.style.justifyContent = 'center';
+                deniedMsg.style.padding = 'var(--spacing-xl)';
+                deniedMsg.style.background = 'var(--color-bg-secondary)';
+                deniedMsg.style.borderRadius = 'var(--border-radius)';
+                deniedMsg.style.border = '1px dashed var(--color-border)';
+                deniedMsg.style.textAlign = 'center';
+                deniedMsg.style.marginTop = 'var(--spacing-lg)';
+                deniedMsg.innerHTML = `
+                    <span style="font-size: 3rem; margin-bottom: var(--spacing-md);">🔒</span>
+                    <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xs);">Acceso Restringido</h3>
+                    <p style="color: var(--color-text-secondary); max-width: 400px;">Su rol actual no cuenta con permisos para visualizar la información del panel del Dashboard.</p>
+                `;
+                dashboard.appendChild(deniedMsg);
+            }
+
+            const normalElements = dashboard.querySelectorAll('.dashboard-grid, .dashboard-content');
+
+            if (viewName === 'dashboard' && !permissions.includes('dashboard')) {
+                normalElements.forEach(el => el.style.display = 'none');
+                deniedMsg.style.display = 'flex';
+            } else {
+                normalElements.forEach(el => el.style.display = '');
+                deniedMsg.style.display = 'none';
+            }
+        }
     }
 
     updateBreadcrumb(viewName) {
         const breadcrumbs = document.getElementById('breadcrumbs');
-        breadcrumbs.innerHTML = '<a href="#" class="breadcrumb-item" data-view="dashboard">Inicio</a>';
+        if (!breadcrumbs) return;
+        const lang = mockData.settings.systemLanguage || 'es';
+        const isEn = (lang === 'en');
+        
+        breadcrumbs.innerHTML = `<a href="#" class="breadcrumb-item" data-view="dashboard">${isEn ? 'Home' : 'Inicio'}</a>`;
         
         if (viewName !== 'dashboard') {
-            const titles = {
+            const titles = isEn ? {
+                students: 'Students',
+                courses: 'Courses & Modules',
+                teachers: 'Teachers',
+                groups: 'Academic Groups',
+                enrollments: 'Enrollments',
+                attendance: 'Attendance',
+                grades: 'Grade Sheets',
+                certificates: 'Certificates',
+                reports: 'Reports',
+                users: 'Users & Roles',
+                settings: 'Settings'
+            } : {
                 students: 'Alumnos',
                 courses: 'Cursos y Módulos',
                 teachers: 'Docentes',
                 groups: 'Grupos Académicos',
                 enrollments: 'Matrículas',
                 attendance: 'Asistencia',
-                grades: 'Notas',
+                grades: 'Registro de Notas',
                 certificates: 'Certificados',
                 reports: 'Reportes',
-                users: 'Usuarios',
+                users: 'Usuarios y Roles',
                 settings: 'Configuración'
             };
-            breadcrumbs.innerHTML += ` <span> > </span><span class="breadcrumb-item">${titles[viewName]}</span>`;
+            const label = titles[viewName] || viewName;
+            breadcrumbs.innerHTML += ` <span> > </span><span class="breadcrumb-item">${label}</span>`;
         }
 
         // Attach click handlers to breadcrumb items
@@ -415,6 +488,746 @@ class SAIIApp {
                 this.loadView(item.getAttribute('data-view'));
             });
         });
+    }
+
+    setupTranslationObserver() {
+        const targetNode = document.getElementById('appContainer');
+        if (!targetNode) return;
+
+        const config = { childList: true, subtree: true };
+
+        const callback = (mutationsList, observer) => {
+            // Temporarily disconnect observer to avoid infinite loops during translation
+            observer.disconnect();
+            this.applyLanguage();
+            observer.observe(targetNode, config);
+        };
+
+        const observer = new MutationObserver(callback);
+        observer.observe(targetNode, config);
+    }
+
+    applyLanguage() {
+        const lang = mockData.settings.systemLanguage || 'es';
+        const isEn = (lang === 'en');
+        const sysName = mockData.settings.systemName || 'SAII';
+        const instName = mockData.settings.instituteName || 'Instituto de Informática';
+
+        // Sidebar subtitle and university
+        const logoSubtitle = document.querySelector('.logo-subtitle');
+        if (logoSubtitle) {
+            logoSubtitle.textContent = isEn ? 'Institute of Informatics' : 'Instituto de Informática';
+        }
+        const logoUniv = document.querySelector('.logo-university');
+        if (logoUniv) {
+            logoUniv.textContent = isEn ? 'National University of Piura' : 'Universidad Nacional de Piura';
+        }
+
+        // Header institutional label
+        const instLabel = document.querySelector('.header-institution-label');
+        if (instLabel) {
+            instLabel.textContent = isEn ? 
+                `${sysName} - Administrative System of the ${instName} — UNP` : 
+                `${sysName} - Sistema Administrativo del ${instName} — UNP`;
+        }
+
+        // Simular rol label
+        const simLabel = document.querySelector('.role-simulator-wrapper span');
+        if (simLabel) {
+            simLabel.textContent = isEn ? 'Simulate Role:' : 'Simular Rol:';
+        }
+
+        // Sidebar headers
+        const sidebarHeaders = document.querySelectorAll('.nav-section-title');
+        const headerTranslations = isEn ? 
+            ['Main', 'Academic Management', 'Academic Records', 'Information', 'Administration'] : 
+            ['Principal', 'Gestión Académica', 'Registro Académico', 'Información', 'Administración'];
+        
+        sidebarHeaders.forEach((el, index) => {
+            if (headerTranslations[index]) {
+                el.textContent = headerTranslations[index];
+            }
+        });
+
+        // Sidebar menu labels
+        const menuTranslations = isEn ? {
+            dashboard: 'Dashboard',
+            students: 'Students',
+            courses: 'Courses & Modules',
+            teachers: 'Teachers',
+            groups: 'Academic Groups',
+            enrollments: 'Enrollments',
+            attendance: 'Attendance',
+            grades: 'Grade Sheets',
+            certificates: 'Certificates',
+            reports: 'Reports',
+            users: 'Users & Roles',
+            settings: 'Settings'
+        } : {
+            dashboard: 'Dashboard',
+            students: 'Alumnos',
+            courses: 'Cursos y Módulos',
+            teachers: 'Docentes',
+            groups: 'Grupos Académicos',
+            enrollments: 'Matrículas',
+            attendance: 'Asistencia',
+            grades: 'Registro de Notas',
+            certificates: 'Certificados',
+            reports: 'Reportes',
+            users: 'Usuarios y Roles',
+            settings: 'Configuración'
+        };
+
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            const view = item.getAttribute('data-view');
+            const label = item.querySelector('.nav-label');
+            if (label && menuTranslations[view]) {
+                label.textContent = menuTranslations[view];
+            }
+        });
+
+        // User Dropdown items
+        const dropdownItems = document.querySelectorAll('#userDropdown .dropdown-item');
+        if (dropdownItems.length >= 3) {
+            dropdownItems[0].textContent = isEn ? 'My Profile' : 'Mi Perfil';
+            dropdownItems[1].textContent = isEn ? 'Change Password' : 'Cambiar Contraseña';
+            dropdownItems[2].textContent = isEn ? 'Log Out' : 'Cerrar Sesión';
+        }
+
+        // Define translations dictionary
+        const transMap = isEn ? {
+            // Dashboard & generic cards
+            'Aprobados vs Desaprobados': 'Approved vs Disapproved',
+            'Avance de Notas Registradas': 'Grade Sheets Entry Progress',
+            'Accesos Rápidos': 'Quick Actions',
+            'Actividad Reciente': 'Recent Activity',
+            'Registrar Alumno': 'Register Student',
+            'Abrir Grupo': 'Open Group',
+            'Registrar Notas': 'Register Grades',
+            'Registrar Asistencia': 'Register Attendance',
+            'Generar Constancia': 'Generate Document',
+            'Alumnos Registrados': 'Registered Students',
+            'Cursos Activos': 'Active Courses',
+            'Grupos Abiertos': 'Open Groups',
+            'Docentes Asignados': 'Assigned Teachers',
+            'Matrículas Período': 'Period Enrollments',
+            'Notas Pendientes': 'Pending Grades',
+            'Certificados Generados': 'Generated Certificates',
+            'Asistencias por Revisar': 'Attendances to Review',
+            
+            // Table headers
+            'Código': 'Code',
+            'DNI': 'DNI',
+            'Alumno': 'Student',
+            'Correo': 'Email',
+            'Promoción': 'Promotion',
+            'Estado': 'Status',
+            'Acciones': 'Actions',
+            'Curso / Asignatura': 'Course / Subject',
+            'Módulos': 'Modules',
+            'Horas': 'Hours',
+            'Docente': 'Teacher',
+            'Especialidad': 'Specialty',
+            'Teléfono': 'Phone',
+            'Grupo': 'Group',
+            'Fecha Inicio': 'Start Date',
+            'Horario': 'Schedule',
+            'Aula': 'Room',
+            'Matriculados': 'Enrolled',
+            'Fecha Matrícula': 'Enrollment Date',
+            'Modalidad': 'Modality',
+            
+            // Buttons & filters
+            '🔎 Filtrar': '🔎 Filter',
+            '💾 Guardar Consulta': '💾 Save Query',
+            '🖨️ Imprimir': '🖨️ Print',
+            '📥 Exportar Excel': '📥 Export Excel',
+            '➕ Nuevo Alumno': '➕ New Student',
+            '➕ Nuevo Curso': '➕ New Course',
+            '➕ Nuevo Docente': '➕ New Teacher',
+            '➕ Nuevo Grupo': '➕ New Group',
+            '➕ Nueva Matrícula': '➕ New Enrollment',
+            '➕ Nuevo Usuario': '➕ New User',
+            '➕ Registrar Alumno': '➕ Register Student',
+            '➕ Abrir Grupo': '➕ Open Group',
+            '➕ Registrar Notas': '➕ Register Grades',
+            '➕ Registrar Asistencia': '➕ Register Attendance',
+            '➕ Generar Constancia': '➕ Generate Document',
+            'Guardar Asistencia': 'Save Attendance',
+            'Cerrar Asistencia': 'Close Attendance',
+            'Guardar Borrador': 'Save Draft',
+            'Cerrar Acta de Notas': 'Close Grade Sheet',
+            'Promedio Final': 'Final Average',
+            'Emitir Documento': 'Issue Document',
+            'Código Certificado': 'Certificate Code',
+            'Fecha Emisión': 'Issue Date',
+            'Notas y Calificaciones': 'Grades & Marks',
+            'Asistencia de Alumnos': 'Student Attendance',
+            'Certificados y Constancias': 'Certificates & Documents',
+            'Matrículas por Período': 'Period Enrollments',
+            'Total Alumnos': 'Total Students',
+            'Aprobados': 'Approved',
+            'Desaprobados': 'Disapproved',
+            'Promedio General': 'General Average',
+            'Certificados': 'Certificates',
+            'Asistencia Promedio': 'Average Attendance',
+            'Resultados de Consulta Detallada': 'Detailed Query Results',
+            'Plantillas de Reportes Guardados': 'Saved Report Templates',
+            'Nombre del Reporte': 'Report Name',
+            'Tipo de Reporte': 'Report Type',
+            'Creado Por': 'Created By',
+            'Fecha Creación': 'Creation Date',
+            'Nuevo Usuario': 'New User',
+            'Roles y Permisos': 'Roles & Permissions',
+            'Nombre Mostrar': 'Display Name',
+            'Permisos Asignados': 'Assigned Permissions',
+            'Último Acceso': 'Last Access',
+            'Usuario': 'Username',
+            'Nombre Completo': 'Full Name',
+            'Rol': 'Role',
+            'Datos del Instituto': 'Institute Data',
+            'Nombre del Sistema:': 'System Name:',
+            'Nombre del Instituto:': 'Institute Name:',
+            'Nombre de la Universidad:': 'University Name:',
+            'Correo de Contacto:': 'Contact Email:',
+            'Teléfono de Contacto:': 'Contact Phone:',
+            'Parámetros Académicos': 'Academic Parameters',
+            'Período Académico Activo:': 'Active Academic Period:',
+            'Nota Mínima Aprobatoria:': 'Minimum Passing Grade:',
+            'Porcentaje Asistencia Mínimo:': 'Minimum Attendance Percentage:',
+            'Responsable de Firmas Académicas:': 'Responsible for Academic Signatures:',
+            'Preferencias del Sistema': 'System Preferences',
+            'Tema Visual por Defecto:': 'Default Visual Theme:',
+            'Idioma del Sistema:': 'System Language:',
+            'Habilitar Notificaciones de Sistema': 'Enable System Notifications',
+            'Habilitar Autoguardado en Formularios': 'Enable Form Auto-save',
+            'Guardar Configuración': 'Save Configuration',
+            'Restaurar Valores por Defecto': 'Restore Default Settings',
+            'Mi Perfil': 'My Profile',
+            'Cambiar Contraseña': 'Change Password',
+            'Cerrar Sesión': 'Log Out',
+            'Activo': 'Active',
+            'Inactivo': 'Inactive',
+            'Curso Regular': 'Regular Course',
+            'Examen de Suficiencia': 'Proficiency Exam',
+            'Todos los estados': 'All statuses',
+            'Todos los ciclos': 'All cycles',
+            'Todas las promociones': 'All promotions',
+            'Todos los meses': 'All months',
+            'Todos los cursos': 'All courses',
+            'Vista Detallada': 'Detailed View',
+            'Vista General (Curso/Grupo)': 'General View (Course/Group)',
+
+            // Modals, titles & options missing labels
+            'Asistencias de Alumnos Registradas': 'Registered Student Attendances',
+            'Control de Asistencia de Alumnos': 'Student Attendance Control',
+            'Actas de Notas Registradas': 'Registered Grade Sheets',
+            '⚙️ Generar Certificados Pendientes': '⚙️ Generate Pending Certificates',
+            'Generar todos los certificados aptos pendientes': 'Generate all pending eligible certificates',
+            'Seleccione un grupo académico:': 'Select an academic group:',
+            '-- Seleccione un grupo --': '-- Select a group --',
+            'Todos los docentes': 'All teachers',
+            'Todos los grupos': 'All groups',
+            'Todas las modalidades': 'All modalities',
+            'Curso regular': 'Regular course',
+            'Examen de suficiencia': 'Proficiency exam',
+            'Borrador': 'Draft',
+            'Cerrado': 'Closed',
+            'Cerrada': 'Closed',
+            'Grupo / Curso': 'Group / Course',
+            '⬅ Volver al listado': '⬅ Back to list',
+            'Grupo asignado:': 'Assigned group:',
+            'Fecha de asistencia:': 'Attendance date:',
+            'Cargar': 'Load',
+            'Lista de Asistencia de Alumnos': 'Student Attendance List',
+            '✓ Todos presentes': '✓ All present',
+            'Hora llegada': 'Arrival time',
+            'Observación': 'Observation',
+            'Matriculados': 'Enrolled',
+            'Notas completas': 'Complete grades',
+            'Promedio del grupo': 'Group average',
+            'Estado del acta': 'Sheet status',
+            'Código Alumno': 'Student Code',
+            'Fecha Aprobación': 'Approval Date',
+            'Promedio': 'Average',
+            'Asistencia': 'Attendance',
+            'Certificados Emitidos': 'Issued Certificates',
+            'Buscar y agregar alumno': 'Search & add student',
+            'Busca por código, DNI o nombre': 'Search by code, DNI or name',
+            'Alumnos Matriculados': 'Enrolled Students',
+            'Fecha de matrícula': 'Enrollment Date',
+            'Promoc.': 'Prom.',
+            'Agregar': 'Add',
+            'Enero': 'January',
+            'Febrero': 'February',
+            'Marzo': 'March',
+            'Abril': 'April',
+            'Mayo': 'May',
+            'Junio': 'June',
+            'Julio': 'July',
+            'Agosto': 'August',
+            'Septiembre': 'September',
+            'Octubre': 'October',
+            'Noviembre': 'November',
+            'Diciembre': 'December',
+            'En riesgo académico': 'At academic risk',
+            'Excelente': 'Excellent',
+            'Asistencia crítica (<70%)': 'Critical attendance (<70%)',
+            'Tardanza recurrente': 'Recurrent tardiness',
+            'Asistencia perfecta (100%)': 'Perfect attendance (100%)',
+            'Por firmar / preparar': 'To be signed / prepared',
+            'Pendiente de entrega': 'Pending delivery',
+            'Generado / Emitido': 'Generated / Issued',
+            'Anulado': 'Annulled',
+            'Detalle del Alumno': 'Student Detail',
+            'Detalle del Docente': 'Teacher Detail',
+            'Detalle del Grupo Académico': 'Academic Group Detail',
+            'Detalle de Asistencia de Alumnos': 'Student Attendance Detail',
+            'Observación Administrativa': 'Administrative Observation',
+            'Historial de Asistencia': 'Attendance History',
+            'Detalle de Acta de Calificaciones': 'Grade Sheet Detail',
+            'Ficha de Calificaciones del Alumno': 'Student Grade Sheet',
+            'Editar Permisos de Rol': 'Edit Role Permissions',
+            'Emitir Documento Académico': 'Issue Academic Document',
+            'Ayuda / Observación de Documento': 'Document Help / Observation',
+            'Guardar Consulta como Plantilla': 'Save Query as Template',
+            'Código del Curso *': 'Course Code *',
+            'Total de Horas *': 'Total Hours *',
+            'Nombre del Curso *': 'Course Name *',
+            'Agregar Módulo': 'Add Module',
+            'Guardar Curso': 'Save Course',
+            'Cancelar': 'Cancel',
+            'Código de Grupo *': 'Group Code *',
+            'Modalidad *': 'Modality *',
+            'Curso *': 'Course *',
+            'Docente *': 'Teacher *',
+            'Fecha de inicio *': 'Start Date *',
+            'Fecha de fin *': 'End Date *',
+            'Horas académicas *': 'Academic Hours *',
+            'Cupo máximo *': 'Maximum Capacity *',
+            'Fecha del examen *': 'Exam Date *',
+            'Hora del examen': 'Exam Time',
+            'Duración (horas)': 'Duration (hours)',
+            'Aula / Laboratorio': 'Classroom / Lab',
+            'Estado *': 'Status *',
+            'Guardar Grupo': 'Save Group',
+            'Observación para el docente *': 'Observation for teacher *',
+            'Enviar observación': 'Send observation',
+            'Cerrar': 'Close',
+            'Usuario / Login *': 'Username / Login *',
+            'Nombre Completo *': 'Full Name *',
+            'Contraseña *': 'Password *',
+            'Correo Electrónico *': 'Email *',
+            'Rol *': 'Role *',
+            'Guardar': 'Save',
+            'Módulos Permitidos:': 'Permitted Modules:',
+            'Guardar Permisos': 'Save Permissions',
+            'Nombre del Reporte *': 'Report Name *',
+            'Tipo de Reporte *': 'Report Type *',
+            'Parámetros del Filtro': 'Filter Parameters',
+            'Asistencia Menor a (%)': 'Attendance Less Than (%)',
+            'Guardar Reporte': 'Save Report',
+            'Confirmar y Enviar a Firmar': 'Confirm and Send to Sign',
+            'Escriba una observación o indicación de revisión *': 'Write an observation or review indication *',
+            'Guardar Observación': 'Save Observation'
+        } : {
+            // English back to Spanish mappings
+            'Approved vs Disapproved': 'Aprobados vs Desaprobados',
+            'Grade Sheets Entry Progress': 'Avance de Notas Registradas',
+            'Quick Actions': 'Accesos Rápidos',
+            'Recent Activity': 'Actividad Reciente',
+            'Register Student': 'Registrar Alumno',
+            'Open Group': 'Abrir Grupo',
+            'Register Grades': 'Registrar Notas',
+            'Register Attendance': 'Registrar Asistencia',
+            'Generate Document': 'Generar Constancia',
+            'Registered Students': 'Alumnos Registrados',
+            'Active Courses': 'Cursos Activos',
+            'Open Groups': 'Grupos Abiertos',
+            'Assigned Teachers': 'Docentes Asignados',
+            'Period Enrollments': 'Matrículas Período',
+            'Pending Grades': 'Notas Pendientes',
+            'Generated Certificates': 'Certificados Generados',
+            'Attendances to Review': 'Asistencias por Revisar',
+            'Code': 'Código',
+            'DNI': 'DNI',
+            'Student': 'Alumno',
+            'Email': 'Correo',
+            'Promotion': 'Promoción',
+            'Status': 'Estado',
+            'Actions': 'Acciones',
+            'Course / Subject': 'Curso / Asignatura',
+            'Modules': 'Módulos',
+            'Hours': 'Horas',
+            'Teacher': 'Docente',
+            'Specialty': 'Especialidad',
+            'Phone': 'Teléfono',
+            'Group': 'Grupo',
+            'Start Date': 'Fecha Inicio',
+            'Schedule': 'Horario',
+            'Room': 'Aula',
+            'Enrolled': 'Matriculados',
+            'Enrollment Date': 'Fecha Matrícula',
+            'Modality': 'Modalidad',
+            '🔎 Filter': '🔎 Filtrar',
+            '💾 Save Query': '💾 Guardar Consulta',
+            '🖨️ Print': '🖨️ Imprimir',
+            '📥 Export Excel': '📥 Exportar Excel',
+            '➕ New Student': '➕ Nuevo Alumno',
+            '➕ New Course': '➕ Nuevo Curso',
+            '➕ New Teacher': '➕ Nuevo Docente',
+            '➕ New Group': '➕ Nuevo Grupo',
+            '➕ New Enrollment': '➕ Nueva Matrícula',
+            '➕ New User': '➕ Nuevo Usuario',
+            '➕ Register Student': '➕ Registrar Alumno',
+            '➕ Open Group': '➕ Abrir Grupo',
+            '➕ Register Grades': '➕ Registrar Notas',
+            '➕ Register Attendance': '➕ Registrar Asistencia',
+            '➕ Generate Document': '➕ Generar Constancia',
+            'Save Attendance': 'Guardar Asistencia',
+            'Close Attendance': 'Cerrar Asistencia',
+            'Save Draft': 'Guardar Borrador',
+            'Close Grade Sheet': 'Cerrar Acta de Notas',
+            'Final Average': 'Promedio Final',
+            'Issue Document': 'Emitir Documento',
+            'Certificate Code': 'Código Certificado',
+            'Issue Date': 'Fecha Emisión',
+            'Grades & Marks': 'Notas y Calificaciones',
+            'Student Attendance': 'Asistencia de Alumnos',
+            'Certificates & Documents': 'Certificados y Constancias',
+            'Period Enrollments': 'Matrículas por Período',
+            'Total Students': 'Total Alumnos',
+            'Approved': 'Aprobados',
+            'Disapproved': 'Desaprobados',
+            'General Average': 'Promedio General',
+            'Certificates': 'Certificados',
+            'Average Attendance': 'Asistencia Promedio',
+            'Detailed Query Results': 'Resultados de Consulta Detallada',
+            'Saved Report Templates': 'Plantillas de Reportes Guardados',
+            'Report Name': 'Nombre del Reporte',
+            'Report Type': 'Tipo de Reporte',
+            'Created By': 'Creado Por',
+            'Creation Date': 'Fecha Creación',
+            'New User': 'Nuevo Usuario',
+            'Roles & Permissions': 'Roles y Permisos',
+            'Display Name': 'Nombre Mostrar',
+            'Assigned Permissions': 'Permisos Asignados',
+            'Last Access': 'Último Acceso',
+            'Username': 'Usuario',
+            'Full Name': 'Nombre Completo',
+            'Role': 'Rol',
+            'Institute Data': 'Datos del Instituto',
+            'System Name:': 'Nombre del Sistema:',
+            'Institute Name:': 'Nombre del Instituto:',
+            'University Name:': 'Nombre de la Universidad:',
+            'Contact Email:': 'Correo de Contacto:',
+            'Contact Phone:': 'Teléfono de Contacto:',
+            'Academic Parameters': 'Parámetros Académicos',
+            'Active Academic Period:': 'Período Académico Activo:',
+            'Minimum Passing Grade:': 'Nota Mínima Aprobatoria:',
+            'Minimum Attendance Percentage:': 'Porcentaje Asistencia Mínimo:',
+            'Responsible for Academic Signatures:': 'Responsable de Firmas Académicas:',
+            'System Preferences': 'Preferencias del Sistema',
+            'Default Visual Theme:': 'Tema Visual por Defecto:',
+            'System Language:': 'Idioma del Sistema:',
+            'Enable System Notifications': 'Habilitar Notificaciones de Sistema',
+            'Enable Form Auto-save': 'Habilitar Autoguardado en Formularios',
+            'Save Configuration': 'Guardar Configuración',
+            'Restore Default Settings': 'Restaurar Valores por Defecto',
+            'My Profile': 'Mi Perfil',
+            'Change Password': 'Cambiar Contraseña',
+            'Log Out': 'Cerrar Sesión',
+            'Active': 'Activo',
+            'Inactive': 'Inactivo',
+            'Regular Course': 'Curso Regular',
+            'Proficiency Exam': 'Examen de Suficiencia',
+            'All statuses': 'Todos los estados',
+            'All cycles': 'Todos los ciclos',
+            'All promotions': 'Todas las promociones',
+            'All months': 'Todos los meses',
+            'All courses': 'Todos los cursos',
+            'Detailed View': 'Vista Detallada',
+            'General View (Course/Group)': 'Vista General (Curso/Grupo)',
+            
+            // New additions back to Spanish
+            'Registered Student Attendances': 'Asistencias de Alumnos Registradas',
+            'Student Attendance Control': 'Control de Asistencia de Alumnos',
+            'Registered Grade Sheets': 'Actas de Notas Registradas',
+            '⚙️ Generate Pending Certificates': '⚙️ Generar Certificados Pendientes',
+            'Generate all pending eligible certificates': 'Generar todos los certificados aptos pendientes',
+            'Select an academic group:': 'Seleccione un grupo académico:',
+            '-- Select a group --': '-- Seleccione un grupo --',
+            'All teachers': 'Todos los docentes',
+            'All groups': 'Todos los grupos',
+            'All modalities': 'Todas las modalidades',
+            'Regular course': 'Curso regular',
+            'Proficiency exam': 'Examen de suficiencia',
+            'Draft': 'Borrador',
+            'Closed': 'Cerrada',
+            'Group / Course': 'Grupo / Curso',
+            '⬅ Back to list': '⬅ Volver al listado',
+            'Assigned group:': 'Grupo asignado:',
+            'Attendance date:': 'Fecha de asistencia:',
+            'Load': 'Cargar',
+            'Student Attendance List': 'Lista de Asistencia de Alumnos',
+            '✓ All present': '✓ Todos presentes',
+            'Arrival time': 'Hora llegada',
+            'Observation': 'Observación',
+            'Enrolled': 'Matriculados',
+            'Complete grades': 'Notas completas',
+            'Group average': 'Promedio del grupo',
+            'Sheet status': 'Estado del acta',
+            'Student Code': 'Código Alumno',
+            'Approval Date': 'Fecha Aprobación',
+            'Average': 'Promedio',
+            'Attendance': 'Asistencia',
+            'Issued Certificates': 'Certificados Emitidos',
+            'Search & add student': 'Buscar y agregar alumno',
+            'Search by code, DNI or name': 'Busca por código, DNI o nombre',
+            'Enrolled Students': 'Alumnos Matriculados',
+            'Enrollment Date': 'Fecha de matrícula',
+            'Prom.': 'Promoc.',
+            'Add': 'Agregar',
+            'January': 'Enero',
+            'February': 'Febrero',
+            'March': 'Marzo',
+            'April': 'Abril',
+            'May': 'Mayo',
+            'June': 'Junio',
+            'July': 'Julio',
+            'August': 'Agosto',
+            'September': 'Septiembre',
+            'October': 'Octubre',
+            'November': 'Noviembre',
+            'December': 'Diciembre',
+            'At academic risk': 'En riesgo académico',
+            'Excellent': 'Excelente',
+            'Critical attendance (<70%)': 'Asistencia crítica (<70%)',
+            'Recurrent tardiness': 'Tardanza recurrente',
+            'Perfect attendance (100%)': 'Asistencia perfecta (100%)',
+            'To be signed / prepared': 'Por firmar / preparar',
+            'Pending delivery': 'Pendiente de entrega',
+            'Generated / Issued': 'Generado / Emitido',
+            'Annulled': 'Anulado',
+            'Student Detail': 'Detalle del Alumno',
+            'Teacher Detail': 'Detalle del Docente',
+            'Academic Group Detail': 'Detalle del Grupo Académico',
+            'Student Attendance Detail': 'Detalle de Asistencia de Alumnos',
+            'Administrative Observation': 'Observación Administrativa',
+            'Attendance History': 'Historial de Asistencia',
+            'Grade Sheet Detail': 'Detalle de Acta de Calificaciones',
+            'Student Grade Sheet': 'Ficha de Calificaciones del Alumno',
+            'Edit Role Permissions': 'Editar Permisos de Rol',
+            'Issue Academic Document': 'Emitir Documento Académico',
+            'Document Help / Observation': 'Ayuda / Observación de Documento',
+            'Save Query as Template': 'Guardar Consulta como Plantilla',
+            'Course Code *': 'Código del Curso *',
+            'Total Hours *': 'Total de Horas *',
+            'Course Name *': 'Nombre del Curso *',
+            'Add Module': 'Agregar Módulo',
+            'Save Course': 'Guardar Curso',
+            'Cancel': 'Cancelar',
+            'Group Code *': 'Código de Grupo *',
+            'Modality *': 'Modalidad *',
+            'Course *': 'Curso *',
+            'Teacher *': 'Docente *',
+            'Start Date *': 'Fecha de inicio *',
+            'End Date *': 'Fecha de fin *',
+            'Academic Hours *': 'Horas académicas *',
+            'Maximum Capacity *': 'Cupo máximo *',
+            'Exam Date *': 'Exam del examen *',
+            'Exam Time': 'Hora del examen',
+            'Duration (hours)': 'Duración (horas)',
+            'Classroom / Lab': 'Aula / Laboratorio',
+            'Status *': 'Estado *',
+            'Save Group': 'Guardar Grupo',
+            'Observation for teacher *': 'Observación para el docente *',
+            'Send observation': 'Enviar observación',
+            'Close': 'Cerrar',
+            'Username / Login *': 'Usuario / Login *',
+            'Full Name *': 'Nombre Completo *',
+            'Password *': 'Contraseña *',
+            'Email *': 'Correo Electrónico *',
+            'Role *': 'Rol *',
+            'Save': 'Guardar',
+            'Permitted Modules:': 'Módulos Permitidos:',
+            'Save Permissions': 'Guardar Permisos',
+            'Report Name *': 'Nombre del Reporte *',
+            'Report Type *': 'Tipo de Reporte *',
+            'Filter Parameters': 'Parámetros del Filtro',
+            'Attendance Less Than (%)': 'Asistencia Menor a (%)',
+            'Save Report': 'Guardar Reporte',
+            'Confirm and Send to Sign': 'Confirmar y Enviar a Firmar',
+            'Write an observation or review indication *': 'Escriba una observación o indicación de revisión *',
+            'Save Observation': 'Guardar Observación'
+        };
+
+        // Recurse and translate DOM text nodes under appContainer
+        const translatableSelectors = 'h2, h3, th, label, p, button, .kpi-label, .kpi-value, .nav-section-title, .nav-label, a.nav-item, td, span, .breadcrumb-item';
+        document.querySelectorAll(translatableSelectors).forEach(el => {
+            const txt = el.childNodes.length > 0 ? Array.from(el.childNodes)
+                .filter(n => n.nodeType === Node.TEXT_NODE)
+                .map(n => n.textContent.trim())
+                .join(' ') : el.textContent.trim();
+            
+            if (txt && transMap[txt]) {
+                const textNodes = Array.from(el.childNodes).filter(n => n.nodeType === Node.TEXT_NODE);
+                if (textNodes.length > 0) {
+                    textNodes.forEach(node => {
+                        if (node.textContent.trim() === txt) {
+                            node.textContent = node.textContent.replace(txt, transMap[txt]);
+                        }
+                    });
+                } else {
+                    el.textContent = transMap[txt];
+                }
+            }
+        });
+
+        // Substring and text replacements for cycles, promotions, empty lists
+        const textNodes = [];
+        const walk = document.createTreeWalker(document.getElementById('contentArea'), NodeFilter.SHOW_TEXT, null, false);
+        let n;
+        while (n = walk.nextNode()) {
+            textNodes.push(n);
+        }
+        textNodes.forEach(node => {
+            let t = node.textContent;
+            if (isEn) {
+                t = t.replace(/\bPromoción\b/g, 'Promotion')
+                     .replace(/\bCiclo\b/g, 'Cycle')
+                     .replace('No se encontraron alumnos', 'No students found')
+                     .replace('No se encontraron cursos', 'No courses found')
+                     .replace('No se encontraron docentes', 'No teachers found')
+                     .replace('No se encontraron grupos', 'No groups found')
+                     .replace('No se encontraron resultados para la consulta actual.', 'No results found for the current query.')
+                     .replace('No hay reportes personalizados guardados', 'No saved custom reports found')
+                     .replace('No hay datos para exportar', 'No data to export')
+                     .replace('cupos', 'seats');
+            } else {
+                t = t.replace(/\bPromotion\b/g, 'Promoción')
+                     .replace(/\bCycle\b/g, 'Ciclo')
+                     .replace('No students found', 'No se encontraron alumnos')
+                     .replace('No courses found', 'No se encontraron cursos')
+                     .replace('No teachers found', 'No se encontraron docentes')
+                     .replace('No groups found', 'No se encontraron grupos')
+                     .replace('No results found for the current query.', 'No se encontraron resultados para la consulta actual.')
+                     .replace('No saved custom reports found', 'No hay reportes personalizados guardados')
+                     .replace('No data to export', 'No hay datos para exportar')
+                     .replace('seats', 'cupos');
+            }
+            if (node.textContent !== t) {
+                node.textContent = t;
+            }
+        });
+
+        // Translate placeholders
+        const placeholders = isEn ? {
+            'studentSearch': 'Search by code, DNI, name...',
+            'courseSearch': 'Search by code or course name...',
+            'teacherSearch': 'Search by specialty or name...',
+            'groupSearch': 'Search by group or course...',
+            'enrollmentSearch': 'Search enrollments...',
+            'enrollmentStudentSearch': 'Code, DNI or student name...'
+        } : {
+            'studentSearch': 'Buscar por código, DNI, nombre...',
+            'courseSearch': 'Buscar por código o nombre...',
+            'teacherSearch': 'Buscar por docente o especialidad...',
+            'groupSearch': 'Buscar por código o curso...',
+            'enrollmentSearch': 'Buscar matrículas...',
+            'enrollmentStudentSearch': 'Código, DNI o nombre del alumno...'
+        };
+        for (const id in placeholders) {
+            const input = document.getElementById(id);
+            if (input) {
+                input.placeholder = placeholders[id];
+            }
+        }
+
+        // Options replacement
+        const allOptions = document.querySelectorAll('option');
+        allOptions.forEach(opt => {
+            const txt = opt.textContent;
+            if (isEn) {
+                opt.textContent = txt.replace('Ciclo', 'Cycle')
+                                     .replace('Promoción', 'Promotion')
+                                     .replace('Todos los estados', 'All statuses')
+                                     .replace('Todos los ciclos', 'All cycles')
+                                     .replace('Todas las promociones', 'All promotions')
+                                     .replace('Todos los meses', 'All months')
+                                     .replace('Vista Detallada', 'Detailed View')
+                                     .replace('Vista General (Curso/Grupo)', 'General View (Course/Group)')
+                                     .replace('Todos los cursos', 'All courses')
+                                     .replace('Todos los grupos', 'All groups')
+                                     .replace('Todos los docentes', 'All teachers')
+                                     .replace('Todas las modalidades', 'All modalities')
+                                     .replace('Curso regular', 'Regular course')
+                                     .replace('Examen de suficiencia', 'Proficiency exam')
+                                     .replace('Todas las calificaciones', 'All grades')
+                                     .replace('-- Seleccione un grupo --', '-- Select a group --')
+                                     .replace('Borrador', 'Draft')
+                                     .replace('Cerrado', 'Closed')
+                                     .replace('Cerrada', 'Closed');
+            } else {
+                opt.textContent = txt.replace('Cycle', 'Ciclo')
+                                     .replace('Promotion', 'Promoción')
+                                     .replace('All statuses', 'Todos los estados')
+                                     .replace('All cycles', 'Todos los ciclos')
+                                     .replace('All promotions', 'Todas las promociones')
+                                     .replace('All months', 'Todos los meses')
+                                     .replace('Detailed View', 'Vista Detallada')
+                                     .replace('General View (Course/Group)', 'Vista General (Curso/Grupo)')
+                                     .replace('All courses', 'Todos los cursos')
+                                     .replace('All groups', 'Todos los grupos')
+                                     .replace('All teachers', 'Todos los docentes')
+                                     .replace('All modalities', 'Todas las modalidades')
+                                     .replace('Regular course', 'Curso regular')
+                                     .replace('Proficiency exam', 'Examen de suficiencia')
+                                     .replace('All grades', 'Todas las calificaciones')
+                                     .replace('-- Select a group --', '-- Seleccione un grupo --')
+                                     .replace('Draft', 'Borrador')
+                                     .replace('Closed', 'Cerrado');
+            }
+        });
+
+        // Activity feed replacements
+        if (isEn) {
+            document.querySelectorAll('.activity-item p').forEach(p => {
+                let text = p.textContent;
+                text = text.replace('Alumno', 'Student')
+                           .replace('matriculado en', 'enrolled in')
+                           .replace('Notas registradas en grupo', 'Grades registered in group')
+                           .replace('Certificado generado para', 'Certificate generated for')
+                           .replace('Asistencia registrada en grupo', 'Attendance registered in group');
+                p.textContent = text;
+            });
+            document.querySelectorAll('.activity-time').forEach(span => {
+                let text = span.textContent;
+                text = text.replace('Hace', '')
+                           .replace('horas', 'hours ago')
+                           .replace('Ayer', 'Yesterday');
+                span.textContent = text;
+            });
+        } else {
+            document.querySelectorAll('.activity-item p').forEach(p => {
+                let text = p.textContent;
+                text = text.replace('Student', 'Alumno')
+                           .replace('enrolled in', 'matriculado en')
+                           .replace('Grades registered in group', 'Notas registradas en grupo')
+                           .replace('Certificate generated for', 'Certificado generado para')
+                           .replace('Attendance registered in group', 'Asistencia registrada en grupo');
+                p.textContent = text;
+            });
+            document.querySelectorAll('.activity-time').forEach(span => {
+                let text = span.textContent;
+                if (text.includes('hours ago')) {
+                    span.textContent = 'Hace ' + text.replace('hours ago', 'horas');
+                } else if (text.trim() === 'Yesterday') {
+                    span.textContent = 'Ayer';
+                }
+            });
+        }
     }
 
     // ========== STUDENTS MODULE ==========
@@ -3603,110 +4416,563 @@ class SAIIApp {
 
     // ========== REPORTS MODULE ==========
     loadReports() {
-        const reportTableBody = document.getElementById('reportTableBody');
-        if (reportTableBody) {
-            reportTableBody.innerHTML = '';
-            const groups = DataManager.getGroups();
+        // Setup listener for type selection and all other filters if not already bound
+        const selectors = [
+            'reportTypeFilter', 
+            'reportCourseFilter', 
+            'reportPromotionFilter', 
+            'reportCycleFilter', 
+            'reportStatusFilter', 
+            'reportMonthFilter', 
+            'reportViewModeFilter'
+        ];
 
-            groups.forEach(group => {
-                const students = DataManager.getStudentsByGroup(group.id);
-                const enrolledCount = students.length;
-                
-                let approved = 0, disapproved = 0, totalAverage = 0;
-
-                students.forEach(student => {
-                    const gradeRecord = mockData.grades.find(g => g.groupId === group.id && g.studentId === student.id);
-                    const course = DataManager.getCourseById(group.courseId);
-                    if (gradeRecord && course) {
-                        const average = DataManager.calculateAverage(gradeRecord.moduleGrades, course);
-                        totalAverage += average;
-                        if (average >= mockData.settings.minPassingGrade) {
-                            approved++;
-                        } else {
-                            disapproved++;
-                        }
+        selectors.forEach(id => {
+            const el = document.getElementById(id);
+            if (el && !el.dataset.listenerBound) {
+                el.addEventListener('change', () => {
+                    if (id === 'reportTypeFilter') {
+                        this.updateReportStatusFilterOptions();
                     }
+                    this.filterReportResults();
                 });
-
-                totalAverage = enrolledCount > 0 ? (totalAverage / enrolledCount).toFixed(2) : 0;
-                const certCount = mockData.certificates.filter(c => c.groupId === group.id).length;
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${group.courseName}</td>
-                    <td>${group.code}</td>
-                    <td>${group.teacherName}</td>
-                    <td>${enrolledCount}</td>
-                    <td><span style="color: #4caf50; font-weight: bold;">${approved}</span></td>
-                    <td><span style="color: #f44336; font-weight: bold;">${disapproved}</span></td>
-                    <td>${totalAverage}</td>
-                    <td>${certCount}</td>
-                `;
-                reportTableBody.appendChild(row);
-            });
-        }
-
-        // Calculate and display top KPI stats
-        this.updateReportKPIs();
-
-        // Load saved reports
-        this.loadSavedReportsTable();
-    }
-
-    updateReportKPIs() {
-        const totalStudents = mockData.students.length;
-        let approvedCount = 0;
-        let disapprovedCount = 0;
-        let sumAverage = 0;
-        let gradeCount = 0;
-
-        mockData.enrollments.forEach(enr => {
-            const group = DataManager.getGroupById(enr.groupId);
-            if (!group) return;
-            const course = DataManager.getCourseById(group.courseId);
-            if (!course) return;
-
-            const gradeRecord = mockData.grades.find(g => g.groupId === enr.groupId && g.studentId === enr.studentId);
-            if (gradeRecord) {
-                const average = DataManager.calculateAverage(gradeRecord.moduleGrades, course);
-                sumAverage += average;
-                gradeCount++;
-                if (average >= mockData.settings.minPassingGrade) {
-                    approvedCount++;
-                } else {
-                    disapprovedCount++;
-                }
+                el.dataset.listenerBound = 'true';
             }
         });
 
-        const generalAverage = gradeCount > 0 ? (sumAverage / gradeCount).toFixed(1) : '0';
-        const certCount = mockData.certificates.length;
+        // Dynamic course loading
+        const courseFilter = document.getElementById('reportCourseFilter');
+        if (courseFilter && !courseFilter.dataset.populated) {
+            courseFilter.innerHTML = '<option value="">Todos los cursos</option>';
+            DataManager.getCourses().forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                courseFilter.appendChild(opt);
+            });
+            courseFilter.dataset.populated = 'true';
+        }
 
-        // Calculate average attendance
-        let totalAttDays = 0;
+        // Initialize status options
+        this.updateReportStatusFilterOptions();
+        
+        // Run initial filtering
+        this.filterReportResults();
+
+        // Load saved reports list (plantillas)
+        this.loadSavedReportsTable();
+    }
+
+    updateReportStatusFilterOptions() {
+        const typeSelect = document.getElementById('reportTypeFilter');
+        const statusSelect = document.getElementById('reportStatusFilter');
+        if (!typeSelect || !statusSelect) return;
+
+        const type = typeSelect.value;
+        statusSelect.innerHTML = '';
+
+        let options = [];
+        if (type === 'grades') {
+            options = [
+                { value: '', text: 'Todas las calificaciones' },
+                { value: 'approved', text: 'Alumnos Aprobados' },
+                { value: 'disapproved', text: 'Alumnos Desaprobados' }
+            ];
+        } else if (type === 'attendance') {
+            options = [
+                { value: '', text: 'Todos los registros' },
+                { value: 'atRisk', text: 'En Riesgo (< 70%)' },
+                { value: 'satisfactory', text: 'Satisfactorio (>= 70%)' }
+            ];
+        } else if (type === 'certificates') {
+            options = [
+                { value: '', text: 'Todos los estados' },
+                { value: 'toBeSigned', text: 'Por Firmar / Preparar' },
+                { value: 'pending', text: 'Pendiente de Entrega' },
+                { value: 'generated', text: 'Generado / Emitido' },
+                { value: 'annulled', text: 'Anulado' }
+            ];
+        } else if (type === 'enrollments') {
+            options = [
+                { value: '', text: 'Todas las modalidades' },
+                { value: 'regular', text: 'Curso Regular' },
+                { value: 'exam', text: 'Examen de Suficiencia' }
+            ];
+        }
+
+        options.forEach(opt => {
+            const el = document.createElement('option');
+            el.value = opt.value;
+            el.textContent = opt.text;
+            statusSelect.appendChild(el);
+        });
+    }
+
+    filterReportResults() {
+        const type = document.getElementById('reportTypeFilter').value;
+        const courseId = document.getElementById('reportCourseFilter').value;
+        const promotion = document.getElementById('reportPromotionFilter').value;
+        const cycle = document.getElementById('reportCycleFilter').value;
+        const status = document.getElementById('reportStatusFilter').value;
+        const month = document.getElementById('reportMonthFilter').value;
+        const viewMode = document.getElementById('reportViewModeFilter').value;
+
+        const tableHead = document.getElementById('reportResultsTableHead');
+        const tableBody = document.getElementById('reportResultsTableBody');
+        if (!tableHead || !tableBody) return;
+
+        tableHead.innerHTML = '';
+        tableBody.innerHTML = '';
+
+        let results = [];
+        let totalSt = 0;
+        let approved = 0;
+        let disapproved = 0;
+        let totalAvg = 0;
+        let totalAvgCount = 0;
+        let certsCount = 0;
         let totalPresentDays = 0;
-        mockData.studentAttendanceByGroup.forEach(att => {
-            const enrolled = DataManager.getEnrolledStudentsByGroup(att.groupId).length;
-            const daysCount = att.days.length;
-            totalAttDays += enrolled * daysCount;
+        let totalAttDays = 0;
 
-            att.students.forEach(st => {
-                att.days.forEach(d => {
-                    const status = st.attendance[d];
-                    if (status === 'presente' || status === 'tarde') {
-                        totalPresentDays++;
+        if (viewMode === 'summary') {
+            // General view (by Course/Group)
+            tableHead.innerHTML = `
+                <tr>
+                    <th>Curso</th>
+                    <th>Grupo</th>
+                    <th>Docente</th>
+                    <th>Modalidad</th>
+                    <th>Matriculados</th>
+                    <th>Aprobados</th>
+                    <th>Desaprobados</th>
+                    <th>Promedio Grupo</th>
+                    <th>Asistencia Promedio</th>
+                    <th>Certificados</th>
+                </tr>
+            `;
+
+            mockData.groups.forEach(group => {
+                if (courseId && group.courseId !== courseId) return;
+
+                if (month && group.startDate.split('-')[1] !== month) return;
+
+                if (type === 'enrollments' && status && group.modality !== status) return;
+
+                // Enrolled students filtered by promotion and cycle
+                const students = DataManager.getStudentsByGroup(group.id).filter(student => {
+                    if (promotion && student.promotion !== promotion) return false;
+                    if (cycle && student.cycle !== cycle) return false;
+                    return true;
+                });
+
+                const enrolledCount = students.length;
+                if (enrolledCount === 0 && (promotion || cycle)) return;
+
+                let groupApproved = 0;
+                let groupDisapproved = 0;
+                let groupSumAverage = 0;
+                let groupAverageCount = 0;
+                let groupCertCount = 0;
+                let groupPresentDays = 0;
+                let groupAttDays = 0;
+
+                students.forEach(student => {
+                    const course = DataManager.getCourseById(group.courseId);
+                    const gradeRecord = mockData.grades.find(g => g.groupId === group.id && g.studentId === student.id);
+                    const avg = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
+                    
+                    if (avg > 0) {
+                        groupSumAverage += avg;
+                        groupAverageCount++;
+                        if (avg >= mockData.settings.minPassingGrade) groupApproved++;
+                        else groupDisapproved++;
                     }
+
+                    const cert = mockData.certificates.find(c => c.studentId === student.id && c.groupId === group.id);
+                    if (cert && cert.status === 'generated') {
+                        groupCertCount++;
+                    }
+
+                    const attPct = DataManager.calculateAttendancePercentage(student.id, group.id);
+                    groupAttDays += 100;
+                    groupPresentDays += attPct;
+                });
+
+                if (type === 'grades' && status) {
+                    if (status === 'approved' && groupApproved === 0) return;
+                    if (status === 'disapproved' && groupDisapproved === 0) return;
+                }
+                if (type === 'certificates' && status) {
+                    const groupCerts = mockData.certificates.filter(c => c.groupId === group.id && c.status === status);
+                    if (groupCerts.length === 0) return;
+                }
+
+                const finalAvgText = groupAverageCount > 0 ? (groupSumAverage / groupAverageCount).toFixed(1) : '-';
+                const finalAttText = groupAttDays > 0 ? Math.round((groupPresentDays / groupAttDays) * 100) + '%' : '0%';
+
+                results.push({
+                    group,
+                    enrolledCount,
+                    approved: groupApproved,
+                    disapproved: groupDisapproved,
+                    averageText: finalAvgText,
+                    attendanceText: finalAttText,
+                    certCount: groupCertCount
                 });
             });
-        });
-        const avgAttendance = totalAttDays > 0 ? Math.round((totalPresentDays / totalAttDays) * 100) + '%' : '100%';
 
-        if (document.getElementById('reportTotalStudents')) document.getElementById('reportTotalStudents').textContent = totalStudents;
-        if (document.getElementById('reportApproved')) document.getElementById('reportApproved').textContent = approvedCount;
-        if (document.getElementById('reportDisapproved')) document.getElementById('reportDisapproved').textContent = disapprovedCount;
-        if (document.getElementById('reportGeneralAverage')) document.getElementById('reportGeneralAverage').textContent = generalAverage;
-        if (document.getElementById('reportCertificates')) document.getElementById('reportCertificates').textContent = certCount;
-        if (document.getElementById('reportAvgAttendance')) document.getElementById('reportAvgAttendance').textContent = avgAttendance;
+            totalSt = results.reduce((acc, r) => acc + r.enrolledCount, 0);
+            approved = results.reduce((acc, r) => acc + r.approved, 0);
+            disapproved = results.reduce((acc, r) => acc + r.disapproved, 0);
+            certsCount = results.reduce((acc, r) => acc + r.certCount, 0);
+
+            let overallSumAvg = 0;
+            let overallAvgCount = 0;
+            let overallPresentPct = 0;
+            let overallAttPctCount = 0;
+
+            results.forEach(r => {
+                if (r.averageText !== '-') {
+                    overallSumAvg += parseFloat(r.averageText);
+                    overallAvgCount++;
+                }
+                overallPresentPct += parseInt(r.attendanceText);
+                overallAttPctCount++;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${r.group.courseName}</strong></td>
+                    <td>${r.group.code}</td>
+                    <td>${r.group.teacherName}</td>
+                    <td><span class="badge-status ${r.group.modality === 'regular' ? 'badge-active' : 'badge-pending'}">${r.group.modality === 'regular' ? 'REGULAR' : 'EXAMEN'}</span></td>
+                    <td>${r.enrolledCount}</td>
+                    <td><span style="color: #4caf50; font-weight: bold;">${r.approved}</span></td>
+                    <td><span style="color: #f44336; font-weight: bold;">${r.disapproved}</span></td>
+                    <td><strong>${r.averageText}</strong></td>
+                    <td>${r.attendanceText}</td>
+                    <td>${r.certCount}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            totalAvg = overallSumAvg;
+            totalAvgCount = overallAvgCount;
+            totalPresentDays = overallPresentPct;
+            totalAttDays = overallAttPctCount * 100;
+
+        } else {
+            // Detailed View (by Student)
+            if (type === 'grades') {
+                tableHead.innerHTML = `
+                    <tr>
+                        <th>Alumno</th>
+                        <th>Código</th>
+                        <th>Curso</th>
+                        <th>Grupo</th>
+                        <th>Promedio</th>
+                        <th>Estado</th>
+                    </tr>
+                `;
+
+                mockData.enrollments.forEach(enr => {
+                    const student = DataManager.getStudentById(enr.studentId);
+                    const group = DataManager.getGroupById(enr.groupId);
+                    if (!student || !group) return;
+
+                    if (courseId && group.courseId !== courseId) return;
+                    if (promotion && student.promotion !== promotion) return;
+                    if (cycle && student.cycle !== cycle) return;
+
+                    if (month) {
+                        const groupMonth = group.startDate.split('-')[1];
+                        if (groupMonth !== month) return;
+                    }
+
+                    const course = DataManager.getCourseById(group.courseId);
+                    const gradeRecord = mockData.grades.find(g => g.groupId === enr.groupId && g.studentId === enr.studentId);
+                    const average = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
+                    const isApproved = average >= mockData.settings.minPassingGrade;
+
+                    if (status === 'approved' && !isApproved) return;
+                    if (status === 'disapproved' && isApproved) return;
+
+                    results.push({ student, group, course, average, isApproved });
+                });
+
+                totalSt = results.length;
+                results.forEach(r => {
+                    if (r.average > 0) {
+                        totalAvg += r.average;
+                        totalAvgCount++;
+                    }
+                    if (r.isApproved) {
+                        approved++;
+                    } else {
+                        disapproved++;
+                    }
+                    const hasCert = mockData.certificates.some(c => c.studentId === r.student.id && c.groupId === r.group.id && c.status === 'generated');
+                    if (hasCert) certsCount++;
+
+                    const attData = mockData.studentAttendanceByGroup.find(a => a.groupId === r.group.id);
+                    if (attData) {
+                        const studentAtt = attData.students.find(s => s.studentId === r.student.id);
+                        if (studentAtt) {
+                            attData.days.forEach(d => {
+                                totalAttDays++;
+                                const sVal = studentAtt.attendance[d];
+                                if (sVal === 'presente' || sVal === 'tarde') {
+                                    totalPresentDays++;
+                                }
+                            });
+                        }
+                    }
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>${r.student.firstName} ${r.student.lastName}</strong></td>
+                        <td>${r.student.code}</td>
+                        <td>${r.course.name}</td>
+                        <td>${r.group.code}</td>
+                        <td><strong>${r.average > 0 ? r.average.toFixed(1) : '-'}</strong></td>
+                        <td><span class="badge-status ${r.isApproved ? 'badge-active' : 'badge-inactive'}">${r.isApproved ? 'APROBADO' : 'DESAPROBADO'}</span></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+            } else if (type === 'attendance') {
+                tableHead.innerHTML = `
+                    <tr>
+                        <th>Alumno</th>
+                        <th>Código</th>
+                        <th>Curso</th>
+                        <th>Grupo</th>
+                        <th>% Asistencia</th>
+                        <th>Estado</th>
+                    </tr>
+                `;
+
+                mockData.enrollments.forEach(enr => {
+                    const student = DataManager.getStudentById(enr.studentId);
+                    const group = DataManager.getGroupById(enr.groupId);
+                    if (!student || !group) return;
+
+                    if (courseId && group.courseId !== courseId) return;
+                    if (promotion && student.promotion !== promotion) return;
+                    if (cycle && student.cycle !== cycle) return;
+
+                    if (month) {
+                        const groupMonth = group.startDate.split('-')[1];
+                        if (groupMonth !== month) return;
+                    }
+
+                    const attPct = DataManager.calculateAttendancePercentage(student.id, group.id);
+                    const isSatisfactory = attPct >= mockData.settings.minAttendanceRequired;
+
+                    if (status === 'satisfactory' && !isSatisfactory) return;
+                    if (status === 'atRisk' && isSatisfactory) return;
+
+                    results.push({ student, group, attPct, isSatisfactory });
+                });
+
+                totalSt = results.length;
+                results.forEach(r => {
+                    const course = DataManager.getCourseById(r.group.courseId);
+                    const gradeRecord = mockData.grades.find(g => g.groupId === r.group.id && g.studentId === r.student.id);
+                    const average = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
+                    if (average > 0) {
+                        totalAvg += average;
+                        totalAvgCount++;
+                        if (average >= mockData.settings.minPassingGrade) approved++;
+                        else disapproved++;
+                    }
+                    const hasCert = mockData.certificates.some(c => c.studentId === r.student.id && c.groupId === r.group.id && c.status === 'generated');
+                    if (hasCert) certsCount++;
+
+                    totalAttDays += 100;
+                    totalPresentDays += r.attPct;
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>${r.student.firstName} ${r.student.lastName}</strong></td>
+                        <td>${r.student.code}</td>
+                        <td>${r.group.courseName}</td>
+                        <td>${r.group.code}</td>
+                        <td><strong>${r.attPct}%</strong></td>
+                        <td><span class="badge-status ${r.isSatisfactory ? 'badge-active' : 'badge-inactive'}">${r.isSatisfactory ? 'SATISFACTORIO' : 'EN RIESGO'}</span></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+            } else if (type === 'certificates') {
+                tableHead.innerHTML = `
+                    <tr>
+                        <th>Alumno</th>
+                        <th>Código Alumno</th>
+                        <th>Curso</th>
+                        <th>Tipo</th>
+                        <th>Código Certificado</th>
+                        <th>Fecha Emisión</th>
+                        <th>Estado</th>
+                    </tr>
+                `;
+
+                mockData.certificates.forEach(cert => {
+                    const student = DataManager.getStudentById(cert.studentId);
+                    const group = DataManager.getGroupById(cert.groupId);
+                    if (!student || !group) return;
+
+                    if (courseId && group.courseId !== courseId) return;
+                    if (promotion && student.promotion !== promotion) return;
+                    if (cycle && student.cycle !== cycle) return;
+
+                    if (month) {
+                        const certMonth = cert.issueDate.split('-')[1];
+                        if (certMonth !== month) return;
+                    }
+
+                    if (status && cert.status !== status) return;
+
+                    results.push({ cert, student, group });
+                });
+
+                totalSt = results.length;
+                results.forEach(r => {
+                    const course = DataManager.getCourseById(r.group.courseId);
+                    const gradeRecord = mockData.grades.find(g => g.groupId === r.group.id && g.studentId === r.student.id);
+                    const average = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
+                    if (average > 0) {
+                        totalAvg += average;
+                        totalAvgCount++;
+                        if (average >= mockData.settings.minPassingGrade) approved++;
+                        else disapproved++;
+                    }
+
+                    if (r.cert.status === 'generated') certsCount++;
+
+                    const attPct = DataManager.calculateAttendancePercentage(r.student.id, r.group.id);
+                    totalAttDays += 100;
+                    totalPresentDays += attPct;
+
+                    const statusLabel = {
+                        toBeSigned: 'POR FIRMAR',
+                        pending: 'PENDIENTE',
+                        generated: 'GENERADO',
+                        annulled: 'ANULADO'
+                    }[r.cert.status] || r.cert.status.toUpperCase();
+
+                    const statusBadgeClass = {
+                        toBeSigned: 'badge-pending',
+                        pending: 'badge-pending',
+                        generated: 'badge-active',
+                        annulled: 'badge-inactive'
+                    }[r.cert.status] || 'badge-pending';
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>${r.student.firstName} ${r.student.lastName}</strong></td>
+                        <td>${r.student.code}</td>
+                        <td>${r.group.courseName}</td>
+                        <td>${r.cert.type.toUpperCase()}</td>
+                        <td><strong>${r.cert.code || '-'}</strong></td>
+                        <td>${r.cert.issueDate}</td>
+                        <td><span class="badge-status ${statusBadgeClass}">${statusLabel}</span></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+            } else if (type === 'enrollments') {
+                tableHead.innerHTML = `
+                    <tr>
+                        <th>Alumno</th>
+                        <th>Código</th>
+                        <th>DNI</th>
+                        <th>Curso</th>
+                        <th>Grupo</th>
+                        <th>Fecha Matrícula</th>
+                        <th>Modalidad</th>
+                    </tr>
+                `;
+
+                mockData.enrollments.forEach(enr => {
+                    const student = DataManager.getStudentById(enr.studentId);
+                    const group = DataManager.getGroupById(enr.groupId);
+                    if (!student || !group) return;
+
+                    if (courseId && group.courseId !== courseId) return;
+                    if (promotion && student.promotion !== promotion) return;
+                    if (cycle && student.cycle !== cycle) return;
+
+                    if (month) {
+                        const enrMonth = enr.enrollmentDate.split('-')[1];
+                        if (enrMonth !== month) return;
+                    }
+
+                    if (status && group.modality !== status) return;
+
+                    results.push({ enr, student, group });
+                });
+
+                totalSt = results.length;
+                results.forEach(r => {
+                    const course = DataManager.getCourseById(r.group.courseId);
+                    const gradeRecord = mockData.grades.find(g => g.groupId === r.group.id && g.studentId === r.student.id);
+                    const average = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
+                    if (average > 0) {
+                        totalAvg += average;
+                        totalAvgCount++;
+                        if (average >= mockData.settings.minPassingGrade) approved++;
+                        else disapproved++;
+                    }
+
+                    const hasCert = mockData.certificates.some(c => c.studentId === r.student.id && c.groupId === r.group.id && c.status === 'generated');
+                    if (hasCert) certsCount++;
+
+                    const attPct = DataManager.calculateAttendancePercentage(r.student.id, r.group.id);
+                    totalAttDays += 100;
+                    totalPresentDays += attPct;
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>${r.student.firstName} ${r.student.lastName}</strong></td>
+                        <td>${r.student.code}</td>
+                        <td>${r.student.dni}</td>
+                        <td>${r.group.courseName}</td>
+                        <td>${r.group.code}</td>
+                        <td>${r.enr.enrollmentDate}</td>
+                        <td><span class="badge-status ${r.group.modality === 'regular' ? 'badge-active' : 'badge-pending'}">${r.group.modality === 'regular' ? 'REGULAR' : 'EXAMEN'}</span></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+
+        if (totalSt === 0) {
+            tableBody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">No se encontraron resultados para la consulta actual.</td></tr>`;
+        }
+
+        if (document.getElementById('reportTotalStudents')) {
+            document.getElementById('reportTotalStudents').textContent = totalSt;
+        }
+        if (document.getElementById('reportApproved')) {
+            document.getElementById('reportApproved').textContent = approved;
+        }
+        if (document.getElementById('reportDisapproved')) {
+            document.getElementById('reportDisapproved').textContent = disapproved;
+        }
+        if (document.getElementById('reportGeneralAverage')) {
+            document.getElementById('reportGeneralAverage').textContent = totalAvgCount > 0 ? (totalAvg / totalAvgCount).toFixed(1) : '0.0';
+        }
+        if (document.getElementById('reportCertificates')) {
+            document.getElementById('reportCertificates').textContent = certsCount;
+        }
+        if (document.getElementById('reportAvgAttendance')) {
+            document.getElementById('reportAvgAttendance').textContent = totalAttDays > 0 ? Math.round((totalPresentDays / totalAttDays) * 100) + '%' : '0%';
+        }
+    }
+
+    handleReportFilterSubmit() {
+        this.filterReportResults();
+        this.showToast('Búsqueda de reportes actualizada.', 'success');
     }
 
     loadSavedReportsTable() {
@@ -3737,9 +5003,8 @@ class SAIIApp {
                 <td>${rep.createdAt}</td>
                 <td>
                     <div class="action-icons">
-                        <button class="icon-btn icon-view" onclick="app.viewReportPreview('${rep.id}')" title="Ver Reporte">&#128269;</button>
-                        <button class="icon-btn icon-edit" onclick="app.editReport('${rep.id}')" title="Editar Configuración">&#9998;</button>
-                        <button class="icon-btn icon-delete" onclick="app.deleteReport('${rep.id}')" title="Eliminar">&#128683;</button>
+                        <button class="icon-btn icon-view" onclick="app.loadSavedReport('${rep.id}')" title="Cargar Consulta">&#128269;</button>
+                        <button class="icon-btn icon-delete" onclick="app.deleteReport('${rep.id}')" title="Eliminar Plantilla">&#128683;</button>
                     </div>
                 </td>
             `;
@@ -3747,291 +5012,166 @@ class SAIIApp {
         });
     }
 
-    openNewReportModal() {
-        const form = document.getElementById('reportForm');
-        form.reset();
-        document.getElementById('reportModalTitle').textContent = 'Nuevo Reporte Personalizado';
-        this._editingReportId = null;
+    loadSavedReport(id) {
+        const rep = mockData.savedReports.find(r => r.id === id);
+        if (!rep) return;
 
-        // Populate courses select filter in report modal
-        const courseSelect = document.getElementById('reportFilterCourse');
-        courseSelect.innerHTML = '<option value="">Todos los cursos</option>';
-        DataManager.getCourses().forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id;
-            opt.textContent = c.name;
-            courseSelect.appendChild(opt);
-        });
+        document.getElementById('reportTypeFilter').value = rep.type;
+        this.updateReportStatusFilterOptions();
 
-        this.onReportTypeChange('attendance');
-
-        document.getElementById('modalOverlay').style.display = 'block';
-        document.getElementById('reportModal').style.display = 'block';
-    }
-
-    onReportTypeChange(type) {
-        const minAttContainer = document.getElementById('repAttMinContainer');
-        if (type === 'attendance') {
-            minAttContainer.style.display = 'block';
-        } else {
-            minAttContainer.style.display = 'none';
+        if (rep.queryConfig) {
+            document.getElementById('reportCourseFilter').value = rep.queryConfig.courseId || '';
+            document.getElementById('reportPromotionFilter').value = rep.queryConfig.promotion || '';
+            document.getElementById('reportCycleFilter').value = rep.queryConfig.cycle || '';
+            document.getElementById('reportStatusFilter').value = rep.queryConfig.status || '';
+            document.getElementById('reportMonthFilter').value = rep.queryConfig.month || '';
+            document.getElementById('reportViewModeFilter').value = rep.queryConfig.viewMode || 'detailed';
         }
+
+        this.filterReportResults();
+        this.showToast(`Cargada la plantilla: "${rep.name}"`, 'success');
     }
 
-    handleReportSubmit(e) {
-        e.preventDefault();
-        const name = document.getElementById('reportName').value.trim();
-        const type = document.getElementById('reportType').value;
-        const courseId = document.getElementById('reportFilterCourse').value;
-        const minAtt = document.getElementById('reportFilterMinAtt').value;
+    openSaveQueryModal() {
+        document.getElementById('saveQueryName').value = '';
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('saveQueryModal').style.display = 'block';
+    }
 
-        const reportData = {
+    handleSaveQuerySubmit(e) {
+        e.preventDefault();
+        const name = document.getElementById('saveQueryName').value.trim();
+        if (!name) return;
+
+        const type = document.getElementById('reportTypeFilter').value;
+        const courseId = document.getElementById('reportCourseFilter').value;
+        const promotion = document.getElementById('reportPromotionFilter').value;
+        const cycle = document.getElementById('reportCycleFilter').value;
+        const status = document.getElementById('reportStatusFilter').value;
+        const month = document.getElementById('reportMonthFilter').value;
+        const viewMode = document.getElementById('reportViewModeFilter').value;
+
+        const newReport = {
+            id: 'REP' + String(mockData.savedReports.length + 1).padStart(3, '0'),
             name: name,
             type: type,
             createdBy: DataManager.currentUser ? DataManager.currentUser.fullName : 'Admin',
+            createdAt: new Date().toISOString().split('T')[0],
             queryConfig: {
-                courseId: courseId,
-                minAtt: type === 'attendance' ? Number(minAtt) : null
+                courseId,
+                promotion,
+                cycle,
+                status,
+                month,
+                viewMode
             }
         };
 
-        if (this._editingReportId) {
-            DataManager.updateReport(this._editingReportId, reportData);
-            this.showToast('Reporte actualizado correctamente', 'success');
-        } else {
-            DataManager.createReport(reportData);
-            this.showToast('Reporte guardado correctamente', 'success');
-        }
-
+        mockData.savedReports.push(newReport);
+        this.showToast('Plantilla de consulta guardada correctamente.', 'success');
         this.closeModal();
-        this.loadReports();
-    }
-
-    editReport(id) {
-        this._editingReportId = id;
-        const rep = DataManager.getSavedReports().find(r => r.id === id);
-        if (!rep) return;
-
-        document.getElementById('reportModalTitle').textContent = 'Editar Reporte Personalizado';
-        document.getElementById('reportName').value = rep.name;
-        document.getElementById('reportType').value = rep.type;
-
-        // Populate courses select filter
-        const courseSelect = document.getElementById('reportFilterCourse');
-        courseSelect.innerHTML = '<option value="">Todos los cursos</option>';
-        DataManager.getCourses().forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id;
-            opt.textContent = c.name;
-            if (c.id === rep.queryConfig.courseId) {
-                opt.selected = true;
-            }
-            courseSelect.appendChild(opt);
-        });
-
-        this.onReportTypeChange(rep.type);
-        if (rep.type === 'attendance' && rep.queryConfig.minAtt) {
-            document.getElementById('reportFilterMinAtt').value = rep.queryConfig.minAtt;
-        }
-
-        document.getElementById('modalOverlay').style.display = 'block';
-        document.getElementById('reportModal').style.display = 'block';
+        this.loadSavedReportsTable();
     }
 
     deleteReport(id) {
-        if (confirm('¿Eliminar este reporte guardado?')) {
-            DataManager.deleteReport(id);
-            this.showToast('Reporte eliminado', 'success');
-            this.loadReports();
+        if (confirm('¿Eliminar esta plantilla de reporte guardado?')) {
+            mockData.savedReports = mockData.savedReports.filter(r => r.id !== id);
+            this.showToast('Plantilla de reporte eliminada.', 'success');
+            this.loadSavedReportsTable();
         }
     }
 
-    viewReportPreview(id) {
-        const rep = DataManager.getSavedReports().find(r => r.id === id);
-        if (!rep) return;
-
-        document.getElementById('reportPreviewTitle').textContent = rep.name;
+    printCurrentReport() {
+        const type = document.getElementById('reportTypeFilter').value;
         const typeLabels = {
-            attendance: 'Asistencia de Alumnos',
             grades: 'Notas y Calificaciones',
-            certificates: 'Certificados Emitidos',
-            enrollments: 'Matrículas'
+            attendance: 'Asistencia de Alumnos',
+            certificates: 'Certificados y Constancias',
+            enrollments: 'Matrículas por Período'
         };
-        document.getElementById('reportPreviewType').textContent = typeLabels[rep.type] || rep.type;
-        document.getElementById('reportPreviewDate').textContent = rep.createdAt;
 
-        const tableHead = document.getElementById('reportPreviewTableHead');
-        const tableBody = document.getElementById('reportPreviewTableBody');
-        tableHead.innerHTML = '';
-        tableBody.innerHTML = '';
-
-        const courseId = rep.queryConfig.courseId;
-
-        if (rep.type === 'attendance') {
-            tableHead.innerHTML = `
-                <tr>
-                    <th>Fecha</th>
-                    <th>Alumno</th>
-                    <th>Código</th>
-                    <th>Grupo</th>
-                    <th>Curso</th>
-                    <th>Estado</th>
-                    <th>Detalle</th>
-                </tr>
-            `;
-
-            let rowsCount = 0;
-            mockData.studentAttendanceByGroup.forEach(att => {
-                const group = DataManager.getGroupById(att.groupId);
-                if (courseId && group.courseId !== courseId) return;
-
-                att.students.forEach(st => {
-                    const student = DataManager.getStudentById(st.studentId);
-                    att.days.forEach(d => {
-                        const status = st.attendance[d];
-                        // If it matches risk or just list all
-                        const attPct = DataManager.calculateAttendancePercentage(st.studentId, att.groupId);
-                        if (rep.queryConfig.minAtt && attPct >= rep.queryConfig.minAtt) return;
-
-                        rowsCount++;
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${d}</td>
-                            <td>${student.firstName} ${student.lastName}</td>
-                            <td>${student.code}</td>
-                            <td>${group.code}</td>
-                            <td>${group.courseName}</td>
-                            <td><span class="badge-status ${status === 'presente' ? 'badge-active' : status === 'tarde' ? 'badge-pending' : 'badge-inactive'}">${(status || 'falta').toUpperCase()}</span></td>
-                            <td>Asistencia global: ${attPct}%</td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                });
-            });
-
-            if (rowsCount === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:1.5rem;">No se encontraron registros de inasistencias</td></tr>';
-            }
-
-        } else if (rep.type === 'grades') {
-            tableHead.innerHTML = `
-                <tr>
-                    <th>Alumno</th>
-                    <th>Código</th>
-                    <th>Grupo</th>
-                    <th>Curso</th>
-                    <th>Promedio</th>
-                    <th>Estado</th>
-                </tr>
-            `;
-
-            let rowsCount = 0;
-            mockData.enrollments.forEach(enr => {
-                const group = DataManager.getGroupById(enr.groupId);
-                if (courseId && group.courseId !== courseId) return;
-
-                const student = DataManager.getStudentById(enr.studentId);
-                const course = DataManager.getCourseById(group.courseId);
-                const gradeRecord = mockData.grades.find(g => g.groupId === enr.groupId && g.studentId === enr.studentId);
-                const average = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
-                const status = average >= mockData.settings.minPassingGrade ? 'APROBADO' : 'DESAPROBADO';
-
-                rowsCount++;
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${student.firstName} ${student.lastName}</td>
-                    <td>${student.code}</td>
-                    <td>${group.code}</td>
-                    <td>${group.courseName}</td>
-                    <td><strong>${average > 0 ? average.toFixed(1) : '-'}</strong></td>
-                    <td><span class="badge-status ${average >= mockData.settings.minPassingGrade ? 'badge-active' : 'badge-inactive'}">${status}</span></td>
-                `;
-                tableBody.appendChild(row);
-            });
-
-            if (rowsCount === 0) {
-                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1.5rem;">No se encontraron registros de notas</td></tr>';
-            }
-
-        } else if (rep.type === 'certificates') {
-            tableHead.innerHTML = `
-                <tr>
-                    <th>Alumno</th>
-                    <th>Código</th>
-                    <th>Curso</th>
-                    <th>Modalidad</th>
-                    <th>Certificado Código</th>
-                    <th>Fecha Emisión</th>
-                </tr>
-            `;
-
-            let rowsCount = 0;
-            mockData.certificates.forEach(cert => {
-                const student = DataManager.getStudentById(cert.studentId);
-                const group = DataManager.getGroupById(cert.groupId);
-                if (courseId && group.courseId !== courseId) return;
-
-                rowsCount++;
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${student.firstName} ${student.lastName}</td>
-                    <td>${student.code}</td>
-                    <td>${group.courseName}</td>
-                    <td>${group.modality === 'regular' ? 'Curso regular' : 'Examen'}</td>
-                    <td><strong>${cert.code}</strong></td>
-                    <td>${new Date(cert.issueDate).toLocaleDateString()}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-
-            if (rowsCount === 0) {
-                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1.5rem;">No hay certificados registrados para el filtro seleccionado</td></tr>';
-            }
-
-        } else if (rep.type === 'enrollments') {
-            tableHead.innerHTML = `
-                <tr>
-                    <th>Alumno</th>
-                    <th>Código</th>
-                    <th>DNI</th>
-                    <th>Grupo</th>
-                    <th>Curso</th>
-                    <th>Fecha Matrícula</th>
-                    <th>Estado</th>
-                </tr>
-            `;
-
-            let rowsCount = 0;
-            mockData.enrollments.forEach(enr => {
-                const student = DataManager.getStudentById(enr.studentId);
-                const group = DataManager.getGroupById(enr.groupId);
-                if (courseId && group.courseId !== courseId) return;
-
-                rowsCount++;
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${student.firstName} ${student.lastName}</td>
-                    <td>${student.code}</td>
-                    <td>${student.dni}</td>
-                    <td>${group.code}</td>
-                    <td>${group.courseName}</td>
-                    <td>${enr.enrollmentDate}</td>
-                    <td><span class="badge-status badge-active">Activo</span></td>
-                `;
-                tableBody.appendChild(row);
-            });
-
-            if (rowsCount === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:1.5rem;">No hay matrículas registradas para el filtro seleccionado</td></tr>';
-            }
-        }
-
-        document.getElementById('modalOverlay').style.display = 'block';
-        document.getElementById('reportPreviewModal').style.display = 'block';
+        const title = `Reporte de ${typeLabels[type] || type}`;
+        const tableHtml = document.getElementById('reportResultsTable').outerHTML;
+        
+        const printWindow = window.open('', '_blank', 'width=900,height=700');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>${title}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; color: #222; }
+                        h2 { text-align: center; color: #003d82; margin-bottom: 5px; }
+                        h4 { text-align: center; color: #666; margin-top: 0; margin-bottom: 25px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; font-weight: bold; }
+                        tr:nth-child(even) { background-color: #f9f9f9; }
+                        .badge-status { font-weight: bold; padding: 2px 6px; border-radius: 3px; font-size: 0.85em; }
+                        .badge-active { background-color: #e8f5e9; color: #2e7d32; }
+                        .badge-inactive { background-color: #ffebee; color: #c62828; }
+                        .badge-pending { background-color: #fff8e1; color: #f57f17; }
+                    </style>
+                </head>
+                <body>
+                    <h2>UNIVERSIDAD NACIONAL DE PIURA</h2>
+                    <h4>Facultad de Ingeniería Industrial - Instituto de Informática<br>${title}</h4>
+                    <p style="font-size: 0.9em; color: #555;">Generado el: ${new Date().toLocaleString()}</p>
+                    ${tableHtml}
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                            setTimeout(function() { window.close(); }, 500);
+                        };
+                    </script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
     }
 
-    exportReportSimulated(format) {
-        this.showToast(`Reporte exportado correctamente en formato ${format.toUpperCase()} (Simulado)`, 'success');
+    exportCurrentReportToExcel() {
+        const type = document.getElementById('reportTypeFilter').value;
+        const typeLabels = {
+            grades: 'Notas_y_Calificaciones',
+            attendance: 'Asistencia_de_Alumnos',
+            certificates: 'Certificados_y_Constancias',
+            enrollments: 'Matriculas_por_Periodo'
+        };
+
+        const table = document.getElementById('reportResultsTable');
+        if (!table) return;
+
+        let csvContent = "\uFEFF"; // Add UTF-8 BOM for Spanish characters (accent marks, ñ, etc.)
+        
+        // Headers
+        const headers = Array.from(table.querySelectorAll('thead th')).map(th => `"${th.innerText.replace(/"/g, '""')}"`);
+        csvContent += headers.join(",") + "\n";
+
+        // Rows
+        const rows = table.querySelectorAll('tbody tr');
+        if (rows.length === 0 || (rows.length === 1 && rows[0].innerText.includes("No se encontraron"))) {
+            this.showToast('No hay datos para exportar', 'error');
+            return;
+        }
+
+        rows.forEach(tr => {
+            const cells = Array.from(tr.querySelectorAll('td')).map(td => `"${td.innerText.replace(/"/g, '""')}"`);
+            csvContent += cells.join(",") + "\n";
+        });
+
+        // Download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        const filename = `reporte_${typeLabels[type] || type}_${new Date().toISOString().split('T')[0]}.csv`;
+        link.setAttribute("download", filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        this.showToast(`Archivo CSV exportado con éxito como ${filename}`, 'success');
     }
 
     // ========== USERS AND ROLES MODULE ==========
@@ -4073,7 +5213,8 @@ class SAIIApp {
             'admin': 'Administrador',
             'secretary': 'Secretaria Académica',
             'teacher': 'Docente',
-            'coordinator': 'Coordinador Académico'
+            'coordinator': 'Coordinador Académico',
+            'dean': 'Decano'
         };
 
         mockData.users.forEach(user => {
@@ -4178,9 +5319,18 @@ class SAIIApp {
 
         const roles = DataManager.getRoles();
         roles.forEach(role => {
+            const roleNumericIds = {
+                admin: 1,
+                secretary: 2,
+                teacher: 3,
+                coordinator: 4,
+                dean: 5
+            };
+            const roleNumericId = roleNumericIds[role.id] || role.id;
+
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td><strong>${role.id.toUpperCase()}</strong></td>
+                <td><strong>${roleNumericId}</strong></td>
                 <td>${role.name}</td>
                 <td>
                     <div style="max-width: 450px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${role.permissions.join(', ')}">
@@ -4312,10 +5462,10 @@ class SAIIApp {
         };
 
         DataManager.saveSettings(updatedSettings);
-        this.showToast('Configuración guardada correctamente', 'success');
+        this.showToast(language === 'en' ? 'Settings saved successfully' : 'Configuración guardada correctamente', 'success');
 
         // Apply visual updates immediately
-        document.querySelector('.header-institution-label').textContent = `${systemName} - Sistema Administrativo del ${instituteName} — UNP`;
+        this.applyLanguage();
         
         // Apply theme if requested
         if (defaultTheme === 'dark' && !this.isDarkMode) {
@@ -4328,13 +5478,17 @@ class SAIIApp {
     }
 
     restoreDefaultSettings() {
-        if (confirm('¿Restaurar todos los valores de configuración por defecto?')) {
+        const lang = mockData.settings.systemLanguage || 'es';
+        const isEn = (lang === 'en');
+        const confirmMsg = isEn ? 
+            'Restore all configuration parameters to default?' : 
+            '¿Restaurar todos los valores de configuración por defecto?';
+        
+        if (confirm(confirmMsg)) {
             const defaults = DataManager.restoreDefaultSettings();
+            this.applyLanguage();
             this.loadSettings();
-            this.showToast('Valores restaurados por defecto', 'success');
-            
-            // Reapply system name labels
-            document.querySelector('.header-institution-label').textContent = `${defaults.systemName} - Sistema Administrativo del ${defaults.instituteName} — UNP`;
+            this.showToast(defaults.systemLanguage === 'en' ? 'Default values restored' : 'Valores restaurados por defecto', 'success');
             if (defaults.defaultTheme === 'light' && this.isDarkMode) {
                 this.toggleTheme();
             }

@@ -121,13 +121,18 @@ http://localhost:3000/index.html
 Ya se han realizado con éxito los commits de:
 
 1. Commit inicial.
-2. **Fase 1:** Ajustes globales, header, sidebar institucional, cambio de botones de texto de acciones a iconos compactos, traducción de estados al español y ajustes de paddings generales.
-3. **Fase 2:** CRUD completo y modal de detalle para Alumnos y Docentes, combinando nombres/apellidos y manteniendo filtros de estado, ciclo y promoción. También se trabajó la visualización y edición dinámica de Cursos y Módulos con validación de porcentaje acumulado, que debe sumar exactamente 100%.
+2. **Fase 1:** Ajustes globales y sidebar.
+3. **Fase 2:** Alumnos, Docentes y Cursos/Módulos.
+4. **Fase 3:** Grupos Académicos.
+5. **Fase 4:** Rediseño de Matrículas.
+6. **Fase 5:** Control de Asistencia de Alumnos.
+7. **Fase 6:** Registro de Calificaciones (Actas de Notas).
+8. **Fase 7:** Certificados (Flujo de Firmas), Reportes (Dashboard Dinámico), Usuarios y Roles (Permisos Dashboard y IDs de Rol), y Configuración (Traducción i18n Universal por DOM y CSS Grid).
 
 Próximo paso documentado:
 
 ```text
-Fase 3 — Grupos Académicos
+Revisión final de frontend mock y planificación de la etapa posterior (Backend PHP MVC + MySQL)
 ```
 
 salvo que el usuario indique otra fase.

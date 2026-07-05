@@ -538,6 +538,100 @@ El agente debe actualizar esta sección al terminar cada fase.
   - Renderizado de los dos escudos en la cabecera y sellos con opacidad en el área de firmas.
 - Pendientes o riesgos: ninguno.
 
+#### Fase 7 Ajustes — Módulo de Reportes Interactivo (Dashboard y Plantillas)
+
+- Fecha: 2026-07-05
+- Rama: `alexis/fase-7-certificados`
+- Commit o mensaje sugerido: `feat: reestructurado modulo de reportes con filtros avanzados y visualizacion detallada/general`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `public/js/app.js`
+  - `public/index.html`
+  - `SAII_BACKLOG.md`
+- Funciones creadas o modificadas:
+  - En `public/js/app.js`:
+    - `loadReports()` (modificada: agregados listeners de cambio para actualización en vivo y carga dinámica de cursos)
+    - `updateReportStatusFilterOptions()` (creada: popula opciones de estado según el tipo de reporte)
+    - `filterReportResults()` (creada: filtra colecciones mock y calcula KPIs reactivos y renderiza columnas dinámicas en Vista Detallada o Vista General por Grupo/Curso)
+    - `loadSavedReportsTable()` (creada: dibuja la tabla inferior de plantillas guardadas con botones de emoji compactos)
+    - `loadSavedReport()` (creada: precarga los filtros de una plantilla guardada y ejecuta la búsqueda)
+    - `openSaveQueryModal()` y `handleSaveQuerySubmit()` (creadas: abre modal y añade consultas personalizadas a `savedReports`)
+    - `printCurrentReport()` y `exportCurrentReportToExcel()` (creadas: impresión nativa y descarga de archivos CSV/Excel real)
+- Cambios principales:
+  - **Filtros Avanzados y En Vivo**: Agregados filtros por Curso, Ciclo, Promoción, Mes, Estado y Modo de Visualización (Vista Detallada por alumno vs Vista General agrupada por curso/grupo) que actualizan el listado y los KPIs inmediatamente al cambiar su valor.
+  - **Corrección de Overlap en Acciones**: Eliminados los textos largos "Cargar" y "Eliminar" de las acciones de reportes guardados, dejando iconos emoji compactos de 30px que ya no se superponen.
+- Pruebas realizadas:
+  - Filtro por curso de notas y asistencia detallada.
+  - Cambio a Vista General y constancia de agregación de aprobados/desaprobados/promedio del grupo.
+  - Exportación real de archivos CSV codificados con BOM UTF-8 y visualización de impresión.
+- Pendientes o riesgos: ninguno.
+
+#### Fase 7 Ajustes — Módulo de Usuarios y Roles (Permisos de Dashboard e IDs Numéricos)
+
+- Fecha: 2026-07-05
+- Rama: `alexis/fase-7-certificados`
+- Commit o mensaje sugerido: `feat: corregido ID de rol numerico y seguridad en dashboard sin permisos`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `public/js/app.js`
+  - `public/index.html`
+  - `SAII_BACKLOG.md`
+- Funciones creadas o modificadas:
+  - En `public/js/app.js`:
+    - `loadView()` (modificada: agregada verificación de permisos para el Dashboard; oculta elementos normales y muestra plantilla de Acceso Restringido en vivo)
+    - `loadUsers()` (modificada: añadido mapeo de etiqueta en español de "Decano")
+    - `loadRoles()` (modificada: mapeados los strings de IDs a números enteros correlativos del 1 al 5 en el listado visual)
+- Cambios principales:
+  - **IDs de Rol Numéricos**: Mapeados los identificadores en la columna "Rol ID" de la pestaña Roles y Permisos para mostrar `1`, `2`, `3`, `4`, `5` correspondientes a admin, secretaria, docente, coordinador y decano.
+  - **Acceso Restringido en Dashboard**: Corregido el bug donde deshabilitar el permiso del "Dashboard" a un rol seguía mostrando la información general del panel. Ahora el panel oculta todo su contenido de métricas y gráficos, sustituyéndolo con una elegante tarjeta con candado de acceso restringido si el rol no tiene dicho permiso concedido.
+  - **Opciones de Decano**: Añadida la opción "Decano" en el desplegable de roles del formulario de creación y edición de usuarios.
+- Pruebas realizadas:
+  - Desactivar permiso "dashboard" al rol Decano, simular rol Decano y corroborar que el panel del Dashboard se muestra vacío con el aviso de candado.
+  - Comprobar que en Roles y Permisos los IDs se muestran numéricamente (`1` a `5`).
+  - Crear un nuevo usuario y verificar la opción "Decano" en la lista de selección.
+- Pendientes o riesgos: ninguno.
+
+#### Fase 7 Ajustes — Módulo de Configuración (Traducción Dinámica Inglés/Español en Todo el DOM)
+
+- Fecha: 2026-07-05
+- Rama: `alexis/fase-7-certificados`
+- Commit o mensaje sugerido: `feat: implementado motor i18n dinamico completo con MutationObserver para todo el DOM`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `public/js/app.js`
+  - `SAII_BACKLOG.md`
+- Funciones creadas o modificadas:
+  - En `public/js/app.js`:
+    - `init()` (modificada: inicializa el `setupTranslationObserver()`)
+    - `setupTranslationObserver()` (creada: configura un `MutationObserver` sobre `#appContainer` para interceptar dinámicamente cualquier renderizado o cambio en el DOM y aplicar traducciones)
+    - `applyLanguage()` (modificada: ampliada con un mapeo simétrico bidireccional masivo que traduce tarjetas, cabeceras de tablas, placeholders de búsqueda, selectores de grupo/docente/curso, meses del año y modales de todos los módulos del sistema)
+- Cambios principales:
+  - **Traducción Universal en Tiempo Real**: Resuelto el problema donde componentes cargados de forma asíncrona o reactiva (como el selector de grupos, subcabeceras, inputs de búsqueda y modales) permanecían en español. Mediante un MutationObserver y un diccionario extendido, todo el texto en el DOM se traduce dinámicamente a inglés o español sin importar en qué momento sea renderizado.
+- Pruebas realizadas:
+  - Alternar idioma a "Inglés" y verificar la traducción inmediata de tarjetas, subcabeceras de asistencia/notas/certificados, modales de detalle, selectores de meses, botones con iconos y filtros en todos los módulos.
+  - Comprobar la reversión instantánea al español al restaurar valores de configuración.
+- Pendientes o riesgos: ninguno.
+
+#### Fase 7 Ajustes — Diseño Visual y Distribución de Configuración (CSS Grid)
+
+- Fecha: 2026-07-05
+- Rama: `alexis/fase-7-certificados`
+- Commit o mensaje sugerido: `style: redisenada la distribucion del modulo de configuracion a un diseño CSS grid responsivo`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `public/index.html`
+  - `public/css/styles.css`
+  - `SAII_BACKLOG.md`
+- Funciones creadas o modificadas:
+  - Ninguna (cambios de estructura HTML y estilos CSS puros para distribución).
+- Cambios principales:
+  - **Redistribución en CSS Grid**: Corregido el diseño tosco de la sección de Configuración que ordenaba todos los campos en una lista vertical muy estrecha en la izquierda. Ahora, en pantallas de escritorio, los paneles "Datos del Instituto" (2 columnas de inputs) y "Preferencias del Sistema" se sitúan lado a lado (diseño 8 y 4 columnas), y la sección "Configuración Académica" abarca el ancho completo distribuida en 4 columnas.
+  - **Diseño Responsivo**: Se adaptan automáticamente los grids a 1 o 2 columnas en pantallas medianas y móviles para garantizar la usabilidad.
+- Pruebas realizadas:
+  - Verificar que el módulo de Configuración se visualiza en un formato de rejilla balanceado y ordenado.
+  - Comprobar que los campos conservan sus IDs y que las acciones de Guardar y Restaurar por defecto funcionan correctamente.
+- Pendientes o riesgos: ninguno.
+
 ---
 
 ## Regla final del backlog

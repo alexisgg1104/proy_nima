@@ -2672,6 +2672,85 @@ html.dark-mode .badge-status.badge-pending-generation {
     max-width: 1050px !important;
     width: 95% !important;
 }
+/* ============================================
+   SETTINGS VIEW CUSTOM LAYOUT (GRID SYSTEM)
+   ============================================ */
 
+.settings-container {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
 
+.settings-container .card {
+    margin-bottom: 0; /* Let grid manage gaps */
+    height: 100%;
+}
 
+.settings-container .card:nth-child(1) {
+    grid-column: span 8;
+}
+
+.settings-container .card:nth-child(2) {
+    grid-column: span 4;
+}
+
+.settings-container .card:nth-child(3) {
+    grid-column: span 12;
+}
+
+.settings-form.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.settings-form.grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
+}
+
+.settings-form .form-group {
+    max-width: 100% !important;
+    margin-bottom: 0;
+}
+
+.settings-form .form-group label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.settings-form input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+/* Responsive configurations for settings layout */
+@media (max-width: 1024px) {
+    .settings-container .card:nth-child(1),
+    .settings-container .card:nth-child(2),
+    .settings-container .card:nth-child(3) {
+        grid-column: span 12;
+    }
+    
+    .settings-form.grid-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .settings-form.grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .settings-form.grid-4 {
+        grid-template-columns: 1fr;
+    }
+}

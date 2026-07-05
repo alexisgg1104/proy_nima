@@ -140,29 +140,26 @@ Ya se hizo:
 1. Commit inicial.
 2. Commit de Fase 1.
 3. Commit de Fase 2.
+4. Commit de Fase 3.
+5. Commit de Fase 4.
+6. Commit de Fase 5.
+7. Commit de Fase 6.
+8. Commit de Fase 7.
 
-Fase 1 completada:
+Fases completadas (1 a 7):
 
-- Ajustes globales.
-- Header.
-- Sidebar.
-- Iconos CRUD.
-- Estados en español.
-- Padding y mejoras visuales generales.
-
-Fase 2 completada:
-
-- Alumnos.
-- Docentes.
-- Cursos y Módulos.
-- Acciones con iconos.
-- Mejoras visuales.
-- Validaciones básicas.
+- **Fase 1:** Ajustes globales y sidebar.
+- **Fase 2:** Alumnos, Docentes y Cursos/Módulos.
+- **Fase 3:** Grupos Académicos.
+- **Fase 4:** Rediseño de Matrículas.
+- **Fase 5:** Asistencia de Alumnos.
+- **Fase 6:** Registro de Notas.
+- **Fase 7:** Certificados, Reportes, Usuarios y Configuración.
 
 Pendiente continuar desde:
 
 ```text
-Fase 3 — Grupos Académicos
+Revisión final e inicio de la etapa de Backend real (PHP MVC + MySQL)
 ```
 
 salvo que el usuario indique otra fase.
