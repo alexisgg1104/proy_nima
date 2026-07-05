@@ -15,7 +15,7 @@ Este archivo define el mapa general de fases de desarrollo para la etapa del bac
 | **Fase B4** | CRUD académico base | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B5** | Grupos académicos y matrículas | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B6** | Asistencia de alumnos | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
-| **Fase B7** | Notas, actas y certificados | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
+| **Fase B7** | Notas, actas y certificados | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B8** | Reportes, gráficos y exportaciones | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B9** | Integración frontend-backend | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B10**| Seguridad, pruebas y despliegue | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
@@ -168,18 +168,18 @@ Estado: **Completada**.
 
 ## Fase B7: Notas, actas y certificados
 
-Estado: **Pendiente**.
+Estado: **Completada**.
 
 ### Objetivos
 * Administrar las calificaciones académicas de los módulos de cada curso, el cálculo automático de los promedios ponderados y la expedición de acreditaciones.
 
 ### Tareas
-- [ ] Desarrollar la sábana de notas (`/api/grades`) por grupo para registrar calificaciones de 0 a 20 por módulo.
-- [ ] Calcular promedios ponderados en el servidor basándose en los porcentajes de los módulos del curso.
-- [ ] Implementar el flujo de actas: borrador y actas cerradas.
-- [ ] Desarrollar el módulo de certificados (`/api/certificates`).
-- [ ] Validar que un alumno esté apto para recibir certificado (promedio >= 11 y asistencia acumulada >= asistencia mínima, si la configuración lo exige).
-- [ ] Implementar el flujo de firmas (Director y Decano) y control de estados de certificados (`toBeSigned`, `pending`, `generated`).
+- [x] Desarrollar la sábana de notas (`/api/grades`) por grupo para registrar calificaciones de 0 a 20 por módulo.
+- [x] Calcular promedios ponderados en el servidor basándose en los porcentajes de los módulos del curso.
+- [x] Implementar el flujo de actas: borrador y actas cerradas.
+- [x] Desarrollar el módulo de certificados (`/api/certificates`).
+- [x] Validar que un alumno esté apto para recibir certificado (promedio >= 11 y asistencia acumulada >= asistencia mínima, si la configuración lo exige).
+- [x] Implementar el flujo de firmas (Director y Decano) y control de estados de certificados (`toBeSigned`, `pending`, `generated`).
 
 ### Criterios de Aceptación
 * Las calificaciones se promedian según los pesos definidos en los módulos.
@@ -390,4 +390,25 @@ Estado: **Pendiente**.
   * Lógica de autorización que restringe a los docentes para registrar asistencia únicamente en sus grupos asignados y editar solo en estados editables (`borrador` y `observada`).
   * Endpoint administrativo para cambio de estados (`/api/attendance/{id}/status`) permitiendo a administradores y secretarias observar u oficializar (cerrar) las listas de asistencia con observaciones pertinentes.
 - **Siguiente fase sugerida:** Fase B7 — Notas, actas y certificados.
+
+### Fase B7 — Notas, Actas y Certificados
+- **Fecha:** 2026-07-05
+- **Rama:** `alexis/backend-b7-grades-certificates`
+- **Commit o mensaje sugerido:** `feat: fase B7 registro de calificaciones y generacion de certificados validados`
+- **Estado final:** Completado
+- **Archivos creados:**
+  * `app/Models/Grade.php`
+  * `app/Models/Certificate.php`
+  * `app/Controllers/GradeController.php`
+  * `app/Controllers/CertificateController.php`
+- **Archivos modificados:**
+  * `public/index.php`
+  * `SAII_BACKEND_BACKLOG.md`
+- **Cambios principales:**
+  * CRUD y sábana de calificaciones transaccional (`/api/grades/group/{groupId}`) con restricciones estrictas de notas de 0 a 20.
+  * Lógica académica en el servidor para calcular el promedio ponderado del alumno según la ponderación de los módulos del curso.
+  * Bloqueo de ediciones una vez que el acta de calificaciones cambia al estado `cerrada`.
+  * Generación y firma de certificados y constancias (`/api/certificates`) validando automáticamente la nota final (>= 11) y asistencia efectiva (>= 70%) desde la configuración.
+  * Flujo de doble firma (Director y Decano) que transiciona el estado del certificado a `generated` solo cuando ambas firmas son registradas.
+- **Siguiente fase sugerida:** Fase B8 — Reportes, gráficos y exportaciones.
 

@@ -158,5 +158,18 @@ $router->addRoute('PUT', '/api/attendance/{id}', [AttendanceController::class, '
 $router->addRoute('DELETE', '/api/attendance/{id}', [AttendanceController::class, 'delete']);
 $router->addRoute('POST', '/api/attendance/{id}/status', [AttendanceController::class, 'updateStatus']);
 
+use App\Controllers\GradeController;
+use App\Controllers\CertificateController;
+
+// Rutas de Calificaciones (Fase B7)
+$router->addRoute('GET', '/api/grades/group/{groupId}', [GradeController::class, 'showGroupGrades']);
+$router->addRoute('POST', '/api/grades/group/{groupId}', [GradeController::class, 'saveGroupGrades']);
+
+// Rutas de Certificados y Constancias (Fase B7)
+$router->addRoute('GET', '/api/certificates', [CertificateController::class, 'index']);
+$router->addRoute('GET', '/api/certificates/{id}', [CertificateController::class, 'show']);
+$router->addRoute('POST', '/api/certificates', [CertificateController::class, 'create']);
+$router->addRoute('POST', '/api/certificates/{id}/sign', [CertificateController::class, 'sign']);
+
 // Despachar la petición
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
