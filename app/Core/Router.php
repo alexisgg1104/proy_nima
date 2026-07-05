@@ -21,15 +21,17 @@ class Router {
     public function dispatch($requestMethod, $requestUri) {
         $path = parse_url($requestUri, PHP_URL_PATH);
         
-        // Obtener el directorio base de ejecución (para compatibilidad con subcarpetas en XAMPP htdocs)
-        $scriptName = $_SERVER['SCRIPT_NAME'];
-        $basePath = dirname($scriptName);
-        
-        // Reemplazar diagonales invertidas en Windows
-        $basePath = str_replace('\\', '/', $basePath);
+        // Calcular el directorio base del proyecto relativo a la raíz del servidor
+        $basePath = '';
+        if (php_sapi_name() !== 'cli-server') {
+            $scriptName = $_SERVER['SCRIPT_NAME'];
+            // Obtiene la subcarpeta (ej: /saii-backend) reemplazando la ruta física del index.php
+            $basePath = str_replace('/public/index.php', '', $scriptName);
+            $basePath = str_replace('\\', '/', $basePath);
+        }
         
         // Quitar el directorio base del path si está presente
-        if ($basePath !== '/' && strpos($path, $basePath) === 0) {
+        if ($basePath !== '' && strpos($path, $basePath) === 0) {
             $path = substr($path, strlen($basePath));
         }
 
