@@ -37,12 +37,23 @@ Lee README.md y haz la Fase X.
 
 Con esa instrucción, el agente debe usar este `README.md` como puerta de entrada y, por obligación de este documento, leer los demás archivos de soporte:
 
+*Documentación de la Etapa Frontend:*
 - `SAII_CONTEXTO_CONTINUIDAD.md` — contexto, estado actual, frontend actual, backend futuro y continuidad.
-- `SAII_BACKLOG.md` — mapa general de fases, estado de avance y bitácora donde se pega el resumen final de cada fase.
-- `SAII_ESTADO_Y_PROMPTS.md` — detalle operativo de cada fase y reglas para ejecutar `Haz la Fase X`.
-- `AGENTS.md` — reglas obligatorias para agentes de IA, si está presente en el proyecto.
+- `SAII_BACKLOG.md` — mapa general de fases, estado de avance y bitácora de ejecución de fases frontend.
+- `SAII_ESTADO_Y_PROMPTS.md` — detalle operativo de cada fase y reglas para ejecutar `Haz la Fase X` en frontend.
+- `AGENTS.md` — reglas obligatorias para agentes de IA (frontend y backend).
 - `SAII_ASISTENCIA_ALUMNOS.md` — especificación completa de la Fase 5.
-- `SAII_ASISTENCIA_DOCENTE.md` — documento histórico/no vigente si existe; no usar como fuente para Fase 5.
+
+*Documentación de la Etapa Backend y Base de Datos:*
+- `SAII_BACKEND_CONTEXTO.md` — contexto de la etapa backend, riesgos y estrategia de integración.
+- `SAII_BACKEND_BACKLOG.md` — backlog de fases backend (B0 a B10) y su respectiva bitácora.
+- `SAII_BACKEND_ESTADO_Y_PROMPTS.md` — prompts operativos detallados por cada fase backend.
+- `SAII_BACKEND_DB_SCHEMA.md` — diseño relacional de base de datos MySQL, diccionario de 17 tablas, scripts DDL y DML (seeds).
+- `SAII_BACKEND_API_CONTRATO.md` — contrato de endpoints JSON de la API PHP y mapeo de funciones de DataManager.
+- `SAII_BACKEND_SEGURIDAD.md` — checklist de seguridad, validación de variables, sesiones seguras, CSRF e inyección SQL.
+- `SAII_BACKEND_MIGRACION_MOCK.md` — mapeo, reestructuración y normalización de mockData en JS a registros SQL.
+- `README_BACKEND_SETUP.md` — guía paso a paso de instalación local, phpMyAdmin y ejecución del servidor.
+
 
 El agente debe ejecutar solo la fase solicitada, sin pedir que se le repitan detalles ya documentados.
 
@@ -70,14 +81,12 @@ SAII_ASISTENCIA_ALUMNOS.md
 
 El proyecto final sí tendrá backend real con:
 
-- PHP.
-- Arquitectura Modelo-Vista-Controlador (MVC).
-- MySQL.
-- Login real.
-- Roles y permisos.
-- Persistencia de datos.
-- Validaciones backend.
-- Integración con frontend.
+- PHP 8+ y MySQL/MariaDB bajo arquitectura MVC estructurada por capas.
+- Persistencia de datos reales para todas las entidades en base de datos.
+- Login y sesiones seguras en el servidor, control de roles e integridad de datos.
+- Reemplazo progresivo de DataManager por peticiones fetch a la API PHP.
+- Para ver el plan completo, fases y prompts del backend, leer `SAII_BACKEND_CONTEXTO.md` y `SAII_BACKEND_BACKLOG.md`.
+
 
 ---
 
