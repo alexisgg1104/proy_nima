@@ -9,7 +9,7 @@ CREATE TABLE roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     key_name VARCHAR(30) NOT NULL UNIQUE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 2. Users
 CREATE TABLE users (
@@ -21,8 +21,10 @@ CREATE TABLE users (
     role_id INT NOT NULL,
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
     last_login DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 3. Students
 CREATE TABLE students (
@@ -38,8 +40,10 @@ CREATE TABLE students (
     promotion VARCHAR(4) NOT NULL,
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
     observations TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 4. Teachers
 CREATE TABLE teachers (
@@ -53,8 +57,10 @@ CREATE TABLE teachers (
     phone VARCHAR(15) NULL,
     specialty VARCHAR(100) NOT NULL,
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 5. Courses
 CREATE TABLE courses (
@@ -63,8 +69,10 @@ CREATE TABLE courses (
     name VARCHAR(100) NOT NULL,
     description TEXT NULL,
     total_hours INT NOT NULL,
-    status ENUM('active', 'inactive') NOT NULL DEFAULT 'active'
-) ENGINE=InnoDB;
+    status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 6. Course Modules
 CREATE TABLE course_modules (
@@ -72,8 +80,10 @@ CREATE TABLE course_modules (
     course_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     percentage INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 7. Academic Groups
 CREATE TABLE academic_groups (
@@ -89,9 +99,11 @@ CREATE TABLE academic_groups (
     max_quota INT NOT NULL,
     status ENUM('open', 'inprogress', 'finished', 'closed') NOT NULL DEFAULT 'open',
     observations TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 8. Enrollments
 CREATE TABLE enrollments (
@@ -100,10 +112,12 @@ CREATE TABLE enrollments (
     student_id INT NOT NULL,
     enrollment_date DATE NOT NULL,
     status ENUM('active', 'withdrawn') NOT NULL DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_student_group (group_id, student_id),
     FOREIGN KEY (group_id) REFERENCES academic_groups(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 9. Student Attendance Lists
 CREATE TABLE student_attendance_lists (
@@ -118,7 +132,7 @@ CREATE TABLE student_attendance_lists (
     UNIQUE KEY uq_group_date (group_id, date),
     FOREIGN KEY (group_id) REFERENCES academic_groups(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 10. Student Attendance Records
 CREATE TABLE student_attendance_records (
@@ -128,19 +142,22 @@ CREATE TABLE student_attendance_records (
     status ENUM('presente', 'tarde', 'falta', 'justificado') NOT NULL,
     arrival_time TIME NULL,
     observation VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_list_student (attendance_list_id, student_id),
     FOREIGN KEY (attendance_list_id) REFERENCES student_attendance_lists(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 11. Grade Sheets
 CREATE TABLE grade_sheets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     group_id INT NOT NULL UNIQUE,
     status ENUM('borrador', 'cerrada') NOT NULL DEFAULT 'borrador',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (group_id) REFERENCES academic_groups(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 12. Grade Records
 CREATE TABLE grade_records (
@@ -149,11 +166,13 @@ CREATE TABLE grade_records (
     student_id INT NOT NULL,
     course_module_id INT NOT NULL,
     grade DECIMAL(4,2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_sheet_student_module (grade_sheet_id, student_id, course_module_id),
     FOREIGN KEY (grade_sheet_id) REFERENCES grade_sheets(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (course_module_id) REFERENCES course_modules(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 13. Certificates
 CREATE TABLE certificates (
@@ -165,10 +184,12 @@ CREATE TABLE certificates (
     status ENUM('toBeSigned', 'pending', 'generated') NOT NULL DEFAULT 'toBeSigned',
     issue_date DATE NULL,
     observations TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_student_group_cert (student_id, group_id, type),
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (group_id) REFERENCES academic_groups(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 14. Certificate Signatures
 CREATE TABLE certificate_signatures (
@@ -178,9 +199,11 @@ CREATE TABLE certificate_signatures (
     signer_role VARCHAR(50) NOT NULL,
     signed_at DATETIME NULL,
     is_signed TINYINT(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_cert_role (certificate_id, signer_role),
     FOREIGN KEY (certificate_id) REFERENCES certificates(id) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 15. Settings
 CREATE TABLE settings (
@@ -197,8 +220,10 @@ CREATE TABLE settings (
     enable_notifications TINYINT(1) NOT NULL DEFAULT 1,
     enable_auto_save TINYINT(1) NOT NULL DEFAULT 1,
     system_language VARCHAR(5) NOT NULL DEFAULT 'es',
-    responsible_academic VARCHAR(100) NOT NULL
-) ENGINE=InnoDB;
+    responsible_academic VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 16. Saved Reports
 CREATE TABLE saved_reports (
@@ -206,9 +231,10 @@ CREATE TABLE saved_reports (
     name VARCHAR(150) NOT NULL,
     type VARCHAR(30) NOT NULL,
     created_by VARCHAR(50) NOT NULL,
-    created_at DATE NOT NULL,
-    query_config TEXT NOT NULL
-) ENGINE=InnoDB;
+    query_config TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 17. Audit Logs
 CREATE TABLE audit_logs (
@@ -220,4 +246,4 @@ CREATE TABLE audit_logs (
     description TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
