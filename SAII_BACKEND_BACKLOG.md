@@ -13,7 +13,7 @@ Este archivo define el mapa general de fases de desarrollo para la etapa del bac
 | **Fase B2** | Estructura PHP MVC | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B3** | Autenticación, sesiones, usuarios y roles | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B4** | CRUD académico base | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
-| **Fase B5** | Grupos académicos y matrículas | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
+| **Fase B5** | Grupos académicos y matrículas | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B6** | Asistencia de alumnos | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B7** | Notas, actas y certificados | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B8** | Reportes, gráficos y exportaciones | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
@@ -129,17 +129,17 @@ Estado: **Completada**.
 
 ## Fase B5: Grupos académicos y matrículas
 
-Estado: **Pendiente**.
+Estado: **Completada**.
 
 ### Objetivos
 * Crear la lógica para abrir periodos, horarios, asignar docentes a cursos y gestionar los cupos de alumnos.
 
 ### Tareas
-- [ ] Implementar el CRUD de Grupos Académicos (`/api/groups`), permitiendo diferenciar modalidad regular y examen de suficiencia.
-- [ ] Validar que un docente asignado a un grupo esté activo.
-- [ ] Implementar el CRUD de Matrículas (`/api/enrollments`).
-- [ ] Validar en el servidor que no se exceda el cupo máximo del grupo al matricular un alumno.
-- [ ] Evitar que un alumno se matricule dos veces en el mismo grupo.
+- [x] Implementar el CRUD de Grupos Académicos (`/api/groups`), permitiendo diferenciar modalidad regular y examen de suficiencia.
+- [x] Validar que un docente asignado a un grupo esté activo.
+- [x] Implementar el CRUD de Matrículas (`/api/enrollments`).
+- [x] Validar en el servidor que no se exceda el cupo máximo del grupo al matricular un alumno.
+- [x] Evitar que un alumno se matricule dos veces en el mismo grupo.
 
 ### Criterios de Aceptación
 * Registrar una matrícula descuenta automáticamente los cupos disponibles en el grupo correspondiente.
@@ -352,4 +352,23 @@ Estado: **Pendiente**.
   * CRUD completo para Cursos y Módulos asociados (`/api/courses`) de forma transaccional (Begin/Commit/Rollback).
   * Validación estricta para asegurar que los módulos del curso sumen exactamente el 100% en total.
 - **Siguiente fase sugerida:** Fase B5 — Grupos académicos y matrículas.
+
+### Fase B5 — Grupos Académicos y Matrículas
+- **Fecha:** 2026-07-05
+- **Rama:** `alexis/backend-b5-groups-matriculas`
+- **Commit o mensaje sugerido:** `feat: fase B5 gestion de grupos y matriculas con limites de cupo`
+- **Estado final:** Completado
+- **Archivos creados:**
+  * `app/Models/Group.php`
+  * `app/Models/Enrollment.php`
+  * `app/Controllers/GroupController.php`
+  * `app/Controllers/EnrollmentController.php`
+- **Archivos modificados:**
+  * `public/index.php`
+  * `SAII_BACKEND_BACKLOG.md`
+- **Cambios principales:**
+  * CRUD completo para Grupos Académicos (`/api/groups`) que calcula dinámicamente los inscritos y valida el estado activo del Docente y del Curso al crearlo.
+  * CRUD completo para Matrículas (`/api/enrollments`) con control estricto de cupos disponibles (`max_quota`) en tiempo real.
+  * Validación que impide la matriculación de alumnos duplicados en un mismo grupo académico.
+- **Siguiente fase sugerida:** Fase B6 — Asistencia de alumnos.
 

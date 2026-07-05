@@ -130,5 +130,22 @@ $router->addRoute('POST', '/api/courses', [CourseController::class, 'create']);
 $router->addRoute('PUT', '/api/courses/{id}', [CourseController::class, 'update']);
 $router->addRoute('DELETE', '/api/courses/{id}', [CourseController::class, 'delete']);
 
+use App\Controllers\GroupController;
+use App\Controllers\EnrollmentController;
+
+// Rutas de Grupos Académicos - CRUD (Fase B5)
+$router->addRoute('GET', '/api/groups', [GroupController::class, 'index']);
+$router->addRoute('GET', '/api/groups/{id}', [GroupController::class, 'show']);
+$router->addRoute('POST', '/api/groups', [GroupController::class, 'create']);
+$router->addRoute('PUT', '/api/groups/{id}', [GroupController::class, 'update']);
+$router->addRoute('DELETE', '/api/groups/{id}', [GroupController::class, 'delete']);
+
+// Rutas de Matrículas - CRUD (Fase B5)
+$router->addRoute('GET', '/api/enrollments', [EnrollmentController::class, 'index']);
+$router->addRoute('GET', '/api/enrollments/{id}', [EnrollmentController::class, 'show']);
+$router->addRoute('POST', '/api/enrollments', [EnrollmentController::class, 'create']);
+$router->addRoute('PUT', '/api/enrollments/{id}', [EnrollmentController::class, 'update']);
+$router->addRoute('DELETE', '/api/enrollments/{id}', [EnrollmentController::class, 'delete']);
+
 // Despachar la petición
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
