@@ -44,7 +44,7 @@ El detalle operativo completo de cada fase está en `SAII_ESTADO_Y_PROMPTS.md`.
 | Fase 4 | Rediseño de Matrículas | Pendiente | `SAII_ESTADO_Y_PROMPTS.md` |
 | Fase 5 | Control de Asistencia de Alumnos | **Completada (corregida)** | `SAII_ESTADO_Y_PROMPTS.md` + `SAII_ASISTENCIA_ALUMNOS.md` |
 | Fase 6 | Registro de Notas | **Completada** | `SAII_ESTADO_Y_PROMPTS.md` |
-| Fase 7 | Certificados, Reportes, Usuarios, Roles y Configuración | Pendiente | `SAII_ESTADO_Y_PROMPTS.md` |
+| Fase 7 | Certificados, Reportes, Usuarios, Roles y Configuración | **Completada** | `SAII_ESTADO_Y_PROMPTS.md` |
 | Etapa posterior | Backend PHP MVC + MySQL | Pendiente futuro | Documento backend por definir |
 
 ---
@@ -198,21 +198,21 @@ Referencia operativa: ver sección **Fase 6 — Registro de Notas** en `SAII_EST
 
 ## Fase 7: Certificados, Reportes, Usuarios, Roles y Configuración
 
-Estado: **Pendiente**.
+Estado: **Completada**.
 
-- [ ] Módulo de Certificados.
-- [ ] Generación de certificados pendientes.
-- [ ] Vista previa formal de certificado.
-- [ ] Considerar nota final y requisitos académicos.
-- [ ] Considerar asistencia mínima de alumnos si aplica por configuración.
-- [ ] Módulo de Reportes.
-- [ ] Reportes guardados y CRUD simulado.
-- [ ] Reportes de asistencia de alumnos.
-- [ ] Módulo de Usuarios.
-- [ ] Módulo de Roles.
-- [ ] Selector de rol simulado para probar vistas.
-- [ ] Módulo de Configuración.
-- [ ] Configuración editable de parámetros académicos.
+- [x] Módulo de Certificados.
+- [x] Generación de certificados pendientes.
+- [x] Vista previa formal de certificado.
+- [x] Considerar nota final y requisitos académicos.
+- [x] Considerar asistencia mínima de alumnos si aplica por configuración.
+- [x] Módulo de Reportes.
+- [x] Reportes guardados y CRUD simulado.
+- [x] Reportes de asistencia de alumnos.
+- [x] Módulo de Usuarios.
+- [x] Módulo de Roles.
+- [x] Selector de rol simulado para probar vistas.
+- [x] Módulo de Configuración.
+- [x] Configuración editable de parámetros académicos.
 
 Referencia operativa: ver sección **Fase 7 pendiente — Certificados, Reportes, Usuarios, Roles y Configuración** en `SAII_ESTADO_Y_PROMPTS.md`.
 
@@ -431,11 +431,112 @@ El agente debe actualizar esta sección al terminar cada fase.
 
 #### Fase 7 — Certificados, Reportes, Usuarios, Roles y Configuración
 
-- Fecha: pendiente.
-- Rama: pendiente.
-- Commit o mensaje sugerido: `feat: fase 7 certificados reportes usuarios configuracion`.
-- Estado final: Pendiente.
-- Resumen del agente: pendiente.
+- Fecha: 2026-07-04
+- Rama: alexis/fase-7-certificados-reportes-usuarios
+- Commit o mensaje sugerido: `feat: fase 7 certificados reportes usuarios configuracion`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `public/js/data.js`
+  - `public/js/app.js`
+  - `public/css/styles.css`
+  - `public/index.html`
+  - `SAII_BACKLOG.md`
+- Funciones creadas o modificadas:
+  - En `public/js/data.js`:
+    - `DataManager.calculateAttendancePercentage()`
+    - `DataManager.getUsers()`, `DataManager.createUser()`, `DataManager.updateUser()`
+    - `DataManager.getRoles()`, `DataManager.updateRolePermissions()`
+    - `DataManager.getSettings()`, `DataManager.saveSettings()`, `DataManager.restoreDefaultSettings()`
+    - `DataManager.annulCertificate()`, `DataManager.generateBulkCertificates()`
+    - `DataManager.getSavedReports()`, `DataManager.createReport()`, `DataManager.updateReport()`, `DataManager.deleteReport()`
+  - En `public/js/app.js`:
+    - `SAIIApp.simulateRoleChange()`, `SAIIApp.setRolePermissions()`
+    - `SAIIApp.loadCertificates()`, `SAIIApp.generateCertificate()`, `SAIIApp.generateBulkCertificates()`, `SAIIApp.annulCertificate()`, `SAIIApp.viewCertificate()`
+    - `SAIIApp.loadReports()`, `SAIIApp.updateReportKPIs()`, `SAIIApp.loadSavedReportsTable()`, `SAIIApp.openNewReportModal()`, `SAIIApp.onReportTypeChange()`, `SAIIApp.handleReportSubmit()`, `SAIIApp.editReport()`, `SAIIApp.deleteReport()`, `SAIIApp.viewReportPreview()`, `SAIIApp.exportReportSimulated()`
+    - `SAIIApp.switchUsersTab()`, `SAIIApp.loadUsers()`, `SAIIApp.openNewUserModal()`, `SAIIApp.editUser()`, `SAIIApp.handleUserSubmit()`, `SAIIApp.deleteUser()`
+    - `SAIIApp.loadRoles()`, `SAIIApp.editRole()`, `SAIIApp.handleRoleSubmit()`
+    - `SAIIApp.loadSettings()`, `SAIIApp.saveSystemSettings()`, `SAIIApp.restoreDefaultSettings()`
+- Cambios principales:
+  - **Simulador de Rol**: Selector dinámico de roles en la cabecera (`#simulatedRoleSelect`) que re-evalúa y activa dinámicamente los permisos de menú de navegación en tiempo real para simular roles sin cerrar sesión.
+  - **Módulo de Certificados**: Implementación de elegibilidad académica y de asistencia (asistencia mínima y promedio aprobatorio desde configuración), generación masiva de certificados en lote, visualización de certificado con diseño de diploma institucional premium (bordes dobles dorados, fondo cálido de pergamino, marca de agua y firma autorizada) y anulación/emisión individual.
+  - **Módulo de Reportes**: CRUD de reportes personalizados guardados con filtros avanzados de asistencia/notas/certificados y vistas previas tabuladas de datos con descarga simulada en PDF/Excel.
+  - **Módulo de Usuarios y Roles**: Sub-pestañas para gestión de base de usuarios CRUD y matriz de edición de permisos modular checkbox por rol que actualiza la visibilidad de forma inmediata.
+  - **Configuración**: Formulario de parámetros del sistema reactivo (tema, período académico, notas mínimas y porcentajes de asistencia requerida) con guardado persistente en `localStorage` y botón de restauración por defecto.
+- Pruebas realizadas:
+  - Selector de roles en cabecera modifica permisos en el menú lateral.
+  - Generación individual y bulk de certificados evaluando nota mínima/asistencia mínima desde la configuración.
+  - Creación, edición, borrado y previsualización de reportes personalizados.
+  - CRUD de usuarios, edición de permisos de rol guardando checkboxes.
+  - Configuración guardada y restaurada con persistencia en localStorage.
+- Pendientes o riesgos: ninguno.
+
+#### Fase 7 Extensión — Flujo de Firmas y Rol Decano (Certificados y Constancias)
+
+- Fecha: 2026-07-05
+- Rama: alexis/fase-7-firmas-y-decano
+- Commit o mensaje sugerido: `feat: implementado flujo de firmas y rol decano en certificados`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `public/js/data.js`
+  - `public/js/app.js`
+  - `public/css/styles.css`
+  - `public/index.html`
+  - `SAII_BACKLOG.md`
+- Funciones creadas o modificadas:
+  - En `public/js/data.js`:
+    - `DataManager.createCertificate()` (creada)
+    - `DataManager.generateBulkCertificates()` (modificada)
+  - En `public/js/app.js`:
+    - `SAIIApp.loadCertificates()` (modificada)
+    - `SAIIApp.renderDeanCertificatesTable()` (creada)
+    - `SAIIApp.finalizeCertificate()` (creada)
+    - `SAIIApp.signDocument()` (creada)
+    - `SAIIApp.openCertObservationModal()` (creada)
+    - `SAIIApp.submitCertObservation()` (creada)
+    - `SAIIApp.openCertificateModal()` (modificada)
+    - `SAIIApp.handleEmitCertSubmit()` (creada)
+    - `SAIIApp.formatDateToSpanish()` (creada)
+- Cambios principales:
+  - **Firma Oficial**: Director (DR. JONATHAN DAVID NIMA RAMOS) y Decano (DR. FRANCISCO JAVIER CRUZ VILCHEZ) agregados como firmantes oficiales.
+  - **Rol Decano**: Creado rol e interfaz para el Decano, permitiéndole ver únicamente documentos con estado "Por firmar" donde falta su firma, firmar de forma interactiva y agregar observaciones.
+  - **Flujo de Firmas**: Transición automática de estados: Por firmar (Secretaria emite) -> Pendiente (ambas firmas listas) -> Generado (Secretaria emite/finaliza).
+  - **Selección de Fila**: Habilitada la selección de fila por clic para alumnos aptos (disponibles para emitir certificado o constancia).
+  - **Formatos de Impresión**: Formato premium formalizado de Certificados y Constancias de acuerdo con las especificaciones de los PDFs.
+- Pruebas realizadas:
+  - Emisión de certificado/constancia desde filas seleccionadas como Secretaria.
+  - Firma del Decano y Director en cascada, verificando transición de estados a "Pendiente".
+  - Generación individual y bulk de documentos en estado "Pendiente".
+  - Previsualización diferenciada de Certificado y Constancia con firmas manuscritas cursivas y sellos.
+- Pendientes o riesgos: ninguno.
+
+#### Fase 7 Ajustes — Corrección del Botón de Emisión y Logos Oficiales (Certificados y Constancias)
+
+- Fecha: 2026-07-05
+- Rama: alexis/fase-7-firmas-y-decano
+- Commit o mensaje sugerido: `feat: corregido boton de emision y agregados logos y sellos oficiales`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `public/js/app.js`
+  - `public/css/styles.css`
+  - `public/index.html`
+  - `SAII_BACKLOG.md`
+- Funciones creadas o modificadas:
+  - En `public/js/app.js`:
+    - `SAIIApp.setupEventListeners()` (modificada: agregado click handler directo para `#emitCertBtn`)
+    - `SAIIApp.viewCertificate()` (modificada: agregada carga de escudo UNP, logotipo FII en SVG y sellos de firma circulares de fondo)
+- Cambios principales:
+  - **Apertura de Modal Garantizada**: Solucionado el problema con el botón "Emitir Documento" que no respondía al desvincularlo del selector general e implementar un listener directo.
+  - **Exposición de closeModal**: Mapeado `window.closeModal` para evitar ReferenceErrors en los handlers inline de HTML.
+  - **Modal Widescreen**: Asignada clase `modal-cert` al contenedor exterior del modal de certificados con ancho de `1050px` (`95vw`) para previsualizar los certificados apaisados correctamente.
+  - **Escudo UNP**: Implementado el Escudo oficial transparente en PNG de la Universidad Nacional de Piura (`logo-unp-transparent.png`).
+  - **Logotipo de la Facultad**: Cargado el Escudo oficial de la Facultad de Ingeniería Industrial (`logo-fii.png`) con modo de mezcla `multiply` para una transparencia impecable.
+  - **Agrandado y Simetría**: Escalados ambos logotipos a un tamaño prominente y simétrico de `110px` con `object-fit: contain`.
+  - **Sellos en Firma**: Añadidos sellos administrativos circulares del Decanato y del Instituto de Informática detrás de las firmas del Decano y Director respectivamente.
+- Pruebas realizadas:
+  - Clic e inicialización del modal de emisión desde la tabla de aptos.
+  - Carga y escalamiento correcto del modal widescreen en pantallas grandes.
+  - Renderizado de los dos escudos en la cabecera y sellos con opacidad en el área de firmas.
+- Pendientes o riesgos: ninguno.
 
 ---
 

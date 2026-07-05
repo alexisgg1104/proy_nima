@@ -69,6 +69,12 @@ class SAIIApp {
         document.getElementById('appContainer').style.display = 'flex';
         document.getElementById('currentUser').textContent = DataManager.currentUser.fullName || DataManager.currentUser.name;
         
+        // Set selector value
+        const simulatedRoleSelect = document.getElementById('simulatedRoleSelect');
+        if (simulatedRoleSelect) {
+            simulatedRoleSelect.value = role;
+        }
+
         // Set role-based access
         this.setRolePermissions(role);
         
@@ -76,16 +82,40 @@ class SAIIApp {
         this.loadView('dashboard');
     }
 
+    simulateRoleChange(role) {
+        const matchingUser = mockData.users.find(u => u.role === role && u.status === 'active') || 
+                             mockData.users.find(u => u.role === role);
+        if (matchingUser) {
+            let teacherId = null;
+            if (role === 'teacher') {
+                const teacher = mockData.teachers.find(t => t.email === matchingUser.email);
+                teacherId = teacher ? teacher.id : null;
+            }
+            DataManager.currentUser = {
+                id: matchingUser.id,
+                username: matchingUser.username,
+                fullName: matchingUser.fullName,
+                role: matchingUser.role,
+                email: matchingUser.email,
+                teacherId: teacherId
+            };
+            mockData.currentUser = DataManager.currentUser;
+            localStorage.setItem('saii_currentUser', JSON.stringify(DataManager.currentUser));
+            
+            document.getElementById('currentUser').textContent = DataManager.currentUser.fullName;
+            this.setRolePermissions(role);
+            
+            // Reload current view or go to dashboard
+            this.loadView('dashboard');
+            this.showToast(`Simulando rol: ${role.toUpperCase()}`, 'success');
+        } else {
+            this.showToast('No se encontró un usuario con ese rol', 'error');
+        }
+    }
+
     setRolePermissions(role) {
         // Set role-based menu visibility
-        const rolePermissions = {
-            admin: ['dashboard', 'students', 'courses', 'teachers', 'groups', 'enrollments', 'attendance', 'grades', 'certificates', 'reports', 'users', 'settings'],
-            secretary: ['dashboard', 'students', 'enrollments', 'certificates', 'reports'],
-            teacher: ['dashboard', 'grades', 'attendance', 'reports'],
-            coordinator: ['dashboard', 'courses', 'groups', 'reports', 'students']
-        };
-
-        const permissions = rolePermissions[role] || [];
+        const permissions = mockData.rolePermissions[role] || [];
         
         // Show/hide nav items based on permissions
         const navItems = document.querySelectorAll('.nav-item');
@@ -196,6 +226,44 @@ class SAIIApp {
 
         // Quick action buttons
         this.setupQuickActions();
+
+        // Certificates Row Selection Handler
+        const certTableBody = document.getElementById('certificatesTableBody');
+        if (certTableBody) {
+            certTableBody.addEventListener('click', (e) => {
+                if (DataManager.currentUser && DataManager.currentUser.role === 'dean') return;
+                
+                const row = e.target.closest('tr');
+                if (!row) return;
+
+                if (e.target.closest('.action-icons') || e.target.closest('button')) return;
+
+                const status = row.getAttribute('data-status');
+                if (status === 'Apto') {
+                    const isSelected = row.classList.contains('selected-row');
+                    
+                    // Remove selection from all other rows
+                    certTableBody.querySelectorAll('tr').forEach(r => r.classList.remove('selected-row'));
+                    
+                    const emitBtn = document.getElementById('emitCertBtn');
+                    if (!isSelected) {
+                        row.classList.add('selected-row');
+                        if (emitBtn) emitBtn.removeAttribute('disabled');
+                    } else {
+                        if (emitBtn) emitBtn.setAttribute('disabled', 'true');
+                    }
+                }
+            });
+        }
+
+        // Direct click handler for emitCertBtn
+        const emitBtn = document.getElementById('emitCertBtn');
+        if (emitBtn) {
+            emitBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.openCertificateModal();
+            });
+        }
     }
 
     setupModuleButtons() {
@@ -309,6 +377,9 @@ class SAIIApp {
                 break;
             case 'users':
                 this.loadUsers();
+                break;
+            case 'settings':
+                this.loadSettings();
                 break;
         }
 
@@ -2684,57 +2755,437 @@ class SAIIApp {
     // ========== CERTIFICATES MODULE ==========
     loadCertificates() {
         const tbody = document.getElementById('certificatesTableBody');
+        if (!tbody) return;
         tbody.innerHTML = '';
 
-        // Get approved students with grades
-        const approvedStudents = [];
-        
-        mockData.grades.forEach(gradeRecord => {
-            const group = DataManager.getGroupById(gradeRecord.groupId);
-            const student = DataManager.getStudentById(gradeRecord.studentId);
-            const course = DataManager.getCourseById(group.courseId);
-            
-            if (!student || !course) return;
+        // Populate course filter if empty
+        const courseFilter = document.getElementById('certCourseFilter');
+        if (courseFilter && courseFilter.options.length <= 1) {
+            DataManager.getCourses().forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                courseFilter.appendChild(opt);
+            });
+            courseFilter.onchange = () => this.loadCertificates();
+        }
 
-            const average = DataManager.calculateAverage(gradeRecord.moduleGrades, course);
-            if (average >= 11) {
-                const existingCert = mockData.certificates.find(c => c.studentId === student.id && c.groupId === gradeRecord.groupId);
-                approvedStudents.push({
-                    student: student,
-                    group: group,
-                    course: course,
-                    average: average,
-                    certificate: existingCert
+        // Populate group filter if empty
+        const groupFilter = document.getElementById('certGroupFilter');
+        if (groupFilter && groupFilter.options.length <= 1) {
+            DataManager.getGroups().forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id;
+                opt.textContent = g.code;
+                groupFilter.appendChild(opt);
+            });
+            groupFilter.onchange = () => this.loadCertificates();
+        }
+
+        const modalityFilter = document.getElementById('certModalityFilter');
+        if (modalityFilter && !modalityFilter.onchange) {
+            modalityFilter.onchange = () => this.loadCertificates();
+        }
+
+        const courseVal = courseFilter ? courseFilter.value : '';
+        const groupVal = document.getElementById('certGroupFilter') ? document.getElementById('certGroupFilter').value : '';
+        const modalityVal = document.getElementById('certModalityFilter') ? document.getElementById('certModalityFilter').value : '';
+
+        const minPassingGrade = mockData.settings.minPassingGrade;
+        const minAttendanceRequired = mockData.settings.minAttendanceRequired;
+
+        const certificateRows = [];
+
+        mockData.enrollments.forEach(enr => {
+            const student = DataManager.getStudentById(enr.studentId);
+            const group = DataManager.getGroupById(enr.groupId);
+            if (!student || !group) return;
+
+            const course = DataManager.getCourseById(group.courseId);
+            if (!course) return;
+
+            // Apply filters
+            if (courseVal && group.courseId !== courseVal) return;
+            if (groupVal && group.id !== groupVal) return;
+            if (modalityVal && group.modality !== modalityVal) return;
+
+            const gradeRecord = mockData.grades.find(g => g.groupId === enr.groupId && g.studentId === enr.studentId);
+            const average = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
+            const attPct = DataManager.calculateAttendancePercentage(enr.studentId, enr.groupId);
+
+            // Find all certificates for this student and group
+            const studentCerts = mockData.certificates.filter(c => c.studentId === enr.studentId && c.groupId === enr.groupId);
+            
+            // Add each certificate as an independent row
+            studentCerts.forEach(cert => {
+                let statusLabel = 'Por firmar';
+                if (cert.status === 'pending') statusLabel = 'Pendiente';
+                if (cert.status === 'generated' || cert.status === 'issued') statusLabel = 'Generado';
+                if (cert.status === 'annulled') statusLabel = 'Anulado';
+
+                certificateRows.push({
+                    student,
+                    group,
+                    course,
+                    average,
+                    attPct,
+                    status: statusLabel,
+                    reason: cert.observations || '',
+                    certificate: cert,
+                    type: cert.type || 'certificado',
+                    id: cert.id
                 });
+            });
+
+            // Check if can emit new document (only if not already created/active)
+            const hasCert = studentCerts.some(c => c.type === 'certificado' && c.status !== 'annulled');
+            const hasConst = studentCerts.some(c => c.type === 'constancia' && c.status !== 'annulled');
+
+            const groupFinished = group.status === 'finished' || group.status === 'closed';
+            let isApt = true;
+            let reason = '';
+            
+            if (!groupFinished) {
+                isApt = false;
+                reason = 'Grupo activo';
+            } else if (average < minPassingGrade) {
+                isApt = false;
+                reason = `Promedio bajo (${average.toFixed(1)} < ${minPassingGrade})`;
+            } else if (group.modality === 'regular' && attPct < minAttendanceRequired) {
+                isApt = false;
+                reason = `Inasistencias (${attPct}% < ${minAttendanceRequired}%)`;
+            }
+
+            if (!isApt && studentCerts.length === 0) {
+                // If not apt and has no documents at all, add a single "No apto" row
+                certificateRows.push({
+                    student,
+                    group,
+                    course,
+                    average,
+                    attPct,
+                    status: 'No apto',
+                    reason: reason,
+                    certificate: null,
+                    type: '',
+                    id: 'NOAPTO-' + enr.id
+                });
+            } else {
+                // If apt, add rows for eligible types if they don't already exist
+                if (isApt && !hasCert) {
+                    certificateRows.push({
+                        student,
+                        group,
+                        course,
+                        average,
+                        attPct,
+                        status: 'Apto',
+                        reason: 'Disponible para emitir Certificado',
+                        certificate: null,
+                        type: 'certificado',
+                        id: 'APTO-CERT-' + enr.id
+                    });
+                }
+                if (isApt && !hasConst) {
+                    certificateRows.push({
+                        student,
+                        group,
+                        course,
+                        average,
+                        attPct,
+                        status: 'Apto',
+                        reason: 'Disponible para emitir Constancia',
+                        certificate: null,
+                        type: 'constancia',
+                        id: 'APTO-CONS-' + enr.id
+                    });
+                }
             }
         });
 
-        approvedStudents.forEach(item => {
+        // Set Table Headers according to Current Logged Role
+        const thead = document.querySelector('#certificatesTable thead');
+        if (thead) {
+            if (DataManager.currentUser && DataManager.currentUser.role === 'dean') {
+                thead.innerHTML = `
+                    <tr>
+                        <th>Código Alumno</th>
+                        <th>Alumno</th>
+                        <th>Curso</th>
+                        <th>Modalidad</th>
+                        <th>Tipo Doc.</th>
+                        <th>Estado</th>
+                        <th>Firma Decano</th>
+                        <th>Firma Director</th>
+                        <th>Fecha Solicitud</th>
+                        <th>Acciones</th>
+                    </tr>
+                `;
+            } else if (DataManager.currentUser && DataManager.currentUser.role === 'admin') {
+                thead.innerHTML = `
+                    <tr>
+                        <th>Código Alumno</th>
+                        <th>Alumno</th>
+                        <th>Curso</th>
+                        <th>Modalidad</th>
+                        <th>Tipo Doc.</th>
+                        <th>Promedio</th>
+                        <th>Asistencia</th>
+                        <th>Estado</th>
+                        <th>Firma Decano</th>
+                        <th>Firma Director</th>
+                        <th>Acciones</th>
+                    </tr>
+                `;
+            } else {
+                thead.innerHTML = `
+                    <tr>
+                        <th>Código Alumno</th>
+                        <th>Alumno</th>
+                        <th>Curso</th>
+                        <th>Modalidad</th>
+                        <th>Tipo Doc.</th>
+                        <th>Promedio</th>
+                        <th>Asistencia</th>
+                        <th>Estado</th>
+                        <th>Fecha Solicitud</th>
+                        <th>Acciones</th>
+                    </tr>
+                `;
+            }
+        }
+
+        // Apply Dean filters
+        if (DataManager.currentUser && DataManager.currentUser.role === 'dean') {
+            const filteredRows = certificateRows.filter(item => 
+                item.certificate && 
+                item.certificate.status === 'toBeSigned' && 
+                !item.certificate.deanSigned
+            );
+            this.renderDeanCertificatesTable(filteredRows);
+            return;
+        }
+
+        if (certificateRows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">No se encontraron alumnos para constancias o certificados</td></tr>';
+            return;
+        }
+
+        certificateRows.forEach(item => {
             const row = document.createElement('tr');
+            row.setAttribute('data-id', item.id);
+            row.setAttribute('data-student-id', item.student.id);
+            row.setAttribute('data-group-id', item.group.id);
+            row.setAttribute('data-status', item.status);
+            row.setAttribute('data-type', item.type || '');
+            if (item.certificate) {
+                row.setAttribute('data-cert-id', item.certificate.id);
+            }
+
+            let statusBadge = '';
+            let actionBtn = '';
+            const docTypeLabel = item.type === 'constancia' ? 'Constancia' : (item.type === 'certificado' ? 'Certificado' : '-');
+            const isDirector = DataManager.currentUser && DataManager.currentUser.role === 'admin';
+            const isSecretary = DataManager.currentUser && DataManager.currentUser.role === 'secretary';
+
+            if (item.status === 'Generado') {
+                statusBadge = '<span class="badge-status badge-active">Generado</span>';
+                actionBtn = `
+                    <div class="action-icons">
+                        <button class="icon-btn icon-view" onclick="app.viewCertificate('${item.certificate.id}')" title="Ver Documento">&#128269;</button>
+                        <button class="icon-btn icon-print" onclick="app.printCertificateSimulated('${item.certificate.id}')" title="Imprimir">&#128424;</button>
+                        <button class="icon-btn icon-export" onclick="app.downloadCertificatePDFSimulated('${item.certificate.id}')" title="Descargar PDF">&#128197;</button>
+                        ${isDirector ? `<button class="icon-btn icon-delete" onclick="app.annulCertificate('${item.certificate.id}')" title="Anular Certificado">&#128683;</button>` : ''}
+                    </div>
+                `;
+            } else if (item.status === 'Por firmar') {
+                statusBadge = '<span class="badge-status badge-pending">Por firmar</span>'; // yellow/orange
+                
+                let signBtn = '';
+                if (isDirector && !item.certificate.directorSigned) {
+                    signBtn = `<button class="icon-btn icon-add" onclick="app.signDocument('${item.certificate.id}', 'director')" title="Firmar como Director" style="color: var(--color-primary); font-weight: bold;">&#10003;</button>`;
+                }
+                
+                actionBtn = `
+                    <div class="action-icons">
+                        <button class="icon-btn icon-view" onclick="app.viewCertificate('${item.certificate.id}')" title="Ver Documento">&#128269;</button>
+                        ${signBtn}
+                        ${item.certificate.observations ? `<button class="icon-btn icon-edit" onclick="alert('Observación del Decano: ${item.certificate.observations}')" title="Ver Observación" style="color:var(--color-accent);">&#128172;</button>` : ''}
+                    </div>
+                `;
+            } else if (item.status === 'Pendiente') {
+                statusBadge = '<span class="badge-status badge-pending-generation">Pendiente</span>'; // purple
+                
+                let genBtn = '';
+                if (isSecretary || isDirector) {
+                    genBtn = `<button class="icon-btn icon-edit" onclick="app.finalizeCertificate('${item.certificate.id}')" style="color: var(--color-accent-green);" title="Generar Documento">&#10003;</button>`;
+                }
+                
+                actionBtn = `
+                    <div class="action-icons">
+                        <button class="icon-btn icon-view" onclick="app.viewCertificate('${item.certificate.id}')" title="Ver Documento">&#128269;</button>
+                        ${genBtn}
+                        ${isDirector ? `<button class="icon-btn icon-delete" onclick="app.annulCertificate('${item.certificate.id}')" title="Anular Documento">&#128683;</button>` : ''}
+                    </div>
+                `;
+            } else if (item.status === 'Anulado') {
+                statusBadge = '<span class="badge-status badge-inactive" style="background-color:rgba(120,120,120,0.12); color:#666; border:1px solid rgba(120,120,120,0.2);">Anulado</span>';
+                actionBtn = `<button class="icon-btn icon-view" onclick="app.viewCertificate('${item.certificate.id}')" title="Ver Documento">&#128269;</button>`;
+            } else if (item.status === 'Apto') {
+                statusBadge = '<span class="badge-status badge-active" style="background-color:rgba(30,91,168,0.12); color:var(--color-primary); border:1px solid rgba(30,91,168,0.2);">Apto</span>';
+                actionBtn = `<span style="font-size:0.8rem; color:var(--color-text-secondary); font-style:italic;">Disponible</span>`;
+            } else {
+                statusBadge = `<span class="badge-status badge-not-eligible" title="Motivo: ${item.reason}" style="cursor:help;">No apto</span>`;
+                actionBtn = `<span style="font-size: 0.8rem; color: var(--color-text-light); font-style:italic;">${item.reason}</span>`;
+            }
+
+            if (isDirector) {
+                const deanSignedBadge = item.certificate && item.certificate.deanSigned 
+                    ? '<span class="badge-status badge-active">Firmado</span>' 
+                    : (item.certificate ? '<span class="badge-status badge-inactive">Pendiente</span>' : '-');
+                
+                const directorSignedBadge = item.certificate && item.certificate.directorSigned 
+                    ? '<span class="badge-status badge-active">Firmado</span>' 
+                    : (item.certificate ? '<span class="badge-status badge-inactive">Pendiente</span>' : '-');
+
+                row.innerHTML = `
+                    <td>${item.student.code}</td>
+                    <td><strong>${item.student.firstName} ${item.student.lastName}</strong></td>
+                    <td>${item.course.name}</td>
+                    <td>${item.group.modality === 'regular' ? 'Curso regular' : 'Examen'}</td>
+                    <td>${docTypeLabel}</td>
+                    <td>${item.average > 0 ? item.average.toFixed(1) : '-'}</td>
+                    <td>${item.group.modality === 'exam' ? '100%' : item.attPct + '%'}</td>
+                    <td>${statusBadge}</td>
+                    <td>${deanSignedBadge}</td>
+                    <td>${directorSignedBadge}</td>
+                    <td>${actionBtn}</td>
+                `;
+            } else {
+                const issueDate = item.certificate ? new Date(item.certificate.issueDate).toLocaleDateString() : '-';
+                row.innerHTML = `
+                    <td>${item.student.code}</td>
+                    <td><strong>${item.student.firstName} ${item.student.lastName}</strong></td>
+                    <td>${item.course.name}</td>
+                    <td>${item.group.modality === 'regular' ? 'Curso regular' : 'Examen'}</td>
+                    <td>${docTypeLabel}</td>
+                    <td>${item.average > 0 ? item.average.toFixed(1) : '-'}</td>
+                    <td>${item.group.modality === 'exam' ? '100%' : item.attPct + '%'}</td>
+                    <td>${statusBadge}</td>
+                    <td>${issueDate}</td>
+                    <td>${actionBtn}</td>
+                `;
+            }
+
+            tbody.appendChild(row);
+        });
+    }
+
+    renderDeanCertificatesTable(rows) {
+        const tbody = document.getElementById('certificatesTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">No hay documentos pendientes de su firma.</td></tr>';
+            return;
+        }
+
+        rows.forEach(item => {
+            const row = document.createElement('tr');
+            row.setAttribute('data-cert-id', item.certificate.id);
+            row.setAttribute('data-status', item.status);
+            row.setAttribute('data-student-id', item.student.id);
+            row.setAttribute('data-group-id', item.group.id);
+
+            const docTypeLabel = item.type === 'constancia' ? 'Constancia' : 'Certificado';
+            
+            const statusBadge = '<span class="badge-status badge-pending">Por firmar</span>'; // yellow/orange
+            
+            const deanSignedBadge = '<span class="badge-status badge-inactive">Pendiente</span>'; // red/orange pending
+            
+            const directorSignedBadge = item.certificate.directorSigned 
+                ? '<span class="badge-status badge-active">Firmado</span>' 
+                : '<span class="badge-status badge-inactive">Pendiente</span>';
+
+            const issueDate = item.certificate.issueDate ? new Date(item.certificate.issueDate).toLocaleDateString() : '-';
+
+            const actionBtn = `
+                <div class="action-icons">
+                    <button class="icon-btn icon-view" onclick="app.viewCertificate('${item.certificate.id}')" title="Ver Documento">&#128269;</button>
+                    <button class="icon-btn icon-add" onclick="app.signDocument('${item.certificate.id}', 'dean')" title="Firmar Documento" style="color: var(--color-primary); font-weight: bold;">&#10003;</button>
+                    <button class="icon-btn icon-edit" onclick="app.openCertObservationModal('${item.certificate.id}')" title="Ayuda / Observación">&#128172;</button>
+                </div>
+            `;
+
             row.innerHTML = `
                 <td>${item.student.code}</td>
-                <td>${item.student.firstName} ${item.student.lastName}</td>
+                <td><strong>${item.student.firstName} ${item.student.lastName}</strong></td>
                 <td>${item.course.name}</td>
                 <td>${item.group.modality === 'regular' ? 'Curso regular' : 'Examen'}</td>
-                <td>${item.average.toFixed(2)}</td>
-                <td>-</td>
-                <td><span class="badge-status badge-approved">Aprobado</span></td>
-                <td>${item.certificate ? new Date(item.certificate.issueDate).toLocaleDateString() : '-'}</td>
-                <td>
-                    ${item.certificate 
-                        ? `<button class="btn btn-sm btn-primary" onclick="app.viewCertificate('${item.certificate.id}')">Ver</button>` 
-                        : `<button class="btn btn-sm btn-primary" onclick="app.generateCertificate('${item.student.id}', '${item.group.id}')">Generar</button>`}
-                </td>
+                <td>${docTypeLabel}</td>
+                <td>${statusBadge}</td>
+                <td>${deanSignedBadge}</td>
+                <td>${directorSignedBadge}</td>
+                <td>${issueDate}</td>
+                <td>${actionBtn}</td>
             `;
             tbody.appendChild(row);
         });
     }
 
     generateCertificate(studentId, groupId) {
+        // Redundancy handler just in case it is called directly
         const certificate = DataManager.generateCertificate(studentId, groupId);
         this.showToast('Certificado generado correctamente', 'success');
         this.viewCertificate(certificate.id);
         this.loadCertificates();
+    }
+
+    finalizeCertificate(certId) {
+        const cert = mockData.certificates.find(c => c.id === certId);
+        if (!cert) return;
+        
+        if (cert.status !== 'pending') {
+            this.showToast('El documento aún requiere firmas del Decano y/o Director.', 'error');
+            return;
+        }
+
+        cert.status = 'generated';
+        cert.issueDate = new Date().toISOString().split('T')[0];
+        
+        this.showToast('Documento generado oficialmente con éxito.', 'success');
+        this.viewCertificate(cert.id);
+        this.loadCertificates();
+    }
+
+    generateBulkCertificates() {
+        const count = DataManager.generateBulkCertificates();
+        if (count > 0) {
+            this.showToast(`${count} documentos generados y emitidos correctamente`, 'success');
+            this.loadCertificates();
+        } else {
+            this.showToast('No hay documentos con firmas completas listos para generar (estado Pendiente)', 'info');
+        }
+    }
+
+    annulCertificate(id) {
+        if (confirm('¿Está seguro de que desea anular este documento?')) {
+            const cert = mockData.certificates.find(c => c.id === id);
+            if (cert) {
+                cert.status = 'annulled';
+                this.showToast('Documento anulado correctamente', 'success');
+                this.loadCertificates();
+            }
+        }
+    }
+
+    printCertificateSimulated(id) {
+        this.showToast('Enviando documento a la impresora (Simulado)', 'success');
+    }
+
+    downloadCertificatePDFSimulated(id) {
+        this.showToast('Descargando archivo PDF (Simulado)', 'success');
     }
 
     viewCertificate(certificateId) {
@@ -2747,101 +3198,882 @@ class SAIIApp {
 
         const gradeRecord = mockData.grades.find(g => g.groupId === group.id && g.studentId === student.id);
         const average = DataManager.calculateAverage(gradeRecord?.moduleGrades || {}, course);
+        const attPct = DataManager.calculateAttendancePercentage(student.id, group.id);
 
         const preview = document.getElementById('certificatePreview');
-        preview.innerHTML = `
-            <div style="text-align: center;">
-                <div class="certificate-header">
-                    <div class="certificate-institution">🎓</div>
-                    <div class="certificate-institution">UNIVERSIDAD NACIONAL DE PIURA</div>
-                    <div class="certificate-institution" style="font-size: 1rem; margin-top: 0.5rem;">Instituto de Informática</div>
+        const issueDateFormatted = this.formatDateToSpanish(cert.issueDate);
+        const docType = cert.type || 'certificado';
+        
+        let htmlContent = '';
+        
+        if (docType === 'certificado') {
+            htmlContent = `
+                <div class="certificate-diploma-wrapper" style="background: #fbfaf5; border: 6px double #d4af37; padding: 40px; color: #222; text-align: center; position: relative; font-family: 'Georgia', serif; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; overflow: hidden;">
+                    
+                    <!-- Logos Header -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #003d82; padding-bottom: 10px; margin-bottom: 25px;">
+                        <img src="logo-unp-transparent.png" style="width: 110px; height: 110px; object-fit: contain; flex-shrink: 0; mix-blend-mode: multiply;" alt="Escudo UNP">
+                        <div style="flex: 1; text-align: center; font-family: 'Arial', sans-serif; padding: 0 10px;">
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #003d82; letter-spacing: 0.5px;">UNIVERSIDAD NACIONAL DE PIURA</div>
+                            <div style="font-size: 0.95rem; font-weight: bold; color: #444; margin-top: 2px;">FACULTAD DE INGENIERÍA INDUSTRIAL</div>
+                            <div style="font-size: 0.85rem; font-weight: 600; color: #666; margin-top: 1px;">INSTITUTO DE INFORMÁTICA</div>
+                        </div>
+                        <img src="logo-fii.png" style="width: 110px; height: 110px; object-fit: contain; mix-blend-mode: multiply; flex-shrink: 0;" alt="Escudo FII">
+                    </div>
+
+                    <!-- Título -->
+                    <h1 style="font-family: 'Times New Roman', serif; font-size: 2.2rem; letter-spacing: 2px; color: #996515; margin: 15px 0 25px 0; font-weight: bold; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 10px;">CERTIFICADO</h1>
+                    
+                    <!-- Cuerpo -->
+                    <div style="font-size: 1.05rem; line-height: 1.8; margin-bottom: 25px;">
+                        <p style="margin: 0; font-size: 0.9rem; text-align: justify; font-style: italic; text-align-last: center;">
+                            EL DIRECTOR DEL INSTITUTO DE INFORMÁTICA DE LA FACULTAD DE INGENIERÍA INDUSTRIAL DE LA UNIVERSIDAD NACIONAL DE PIURA.
+                        </p>
+                        <p style="margin: 20px 0 5px 0; font-weight: bold; text-decoration: underline; font-size: 1rem; text-align: left;">CERTIFICA QUE:</p>
+                        
+                        <div style="font-size: 1.8rem; font-weight: bold; color: #111; text-transform: uppercase; margin: 15px 0; font-family: 'Georgia', serif;">
+                            ${student.firstName} ${student.lastName}
+                        </div>
+                        
+                        <p style="margin: 5px 0;">Identificado con DNI Nº <strong>${student.dni}</strong> y Código de Alumno <strong>${student.code}</strong></p>
+                        <p style="margin: 15px 0 5px 0;">Ha APROBADO el Curso:</p>
+                        
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #003d82; font-style: italic; margin: 10px 0;">
+                            ${course.name}
+                        </div>
+                        
+                        <p style="margin: 10px 0;">
+                            ${group.modality === 'regular'
+                                ? `Desarrollado del <strong>${group.startDate}</strong> al <strong>${group.endDate}</strong> con un total de <strong>${group.hours}</strong> horas.`
+                                : `Aprobado mediante Examen de Suficiencia realizado el <strong>${group.startDate}</strong>.`}
+                        </p>
+                        
+                        <p style="font-size: 0.95rem; margin-top: 20px; color: #555;">
+                            ${issueDateFormatted}
+                        </p>
+                    </div>
+
+                    <!-- Firmas con Sellos Coherentes -->
+                    <div style="margin-top: 40px; display: flex; justify-content: space-around; align-items: flex-end; gap: 20px; position: relative;">
+                        
+                        <!-- Firma Decano -->
+                        <div style="display: flex; flex-direction: column; align-items: center; width: 280px; position: relative;">
+                            <!-- Sello Decanato de fondo -->
+                            <div style="position: absolute; left: 40px; top: -15px; pointer-events: none; z-index: 1;">
+                                ${cert.deanSigned ? `
+                                <svg viewBox="0 0 100 100" style="width: 75px; height: 75px; opacity: 0.28;">
+                                  <circle cx="50" cy="50" r="45" fill="none" stroke="#008080" stroke-width="1.5"/>
+                                  <circle cx="50" cy="50" r="41" fill="none" stroke="#008080" stroke-dasharray="2 1" stroke-width="0.5"/>
+                                  <circle cx="50" cy="50" r="28" fill="none" stroke="#008080" stroke-width="1"/>
+                                  <path id="decTextPathTop" d="M 12 50 A 38 38 0 0 1 88 50" fill="none" stroke="none"/>
+                                  <path id="decTextPathBottom" d="M 88 50 A 38 38 0 0 1 12 50" fill="none" stroke="none"/>
+                                  <text font-family="'Arial', sans-serif" font-size="6" fill="#008080" font-weight="bold">
+                                    <textPath href="#decTextPathTop" startOffset="50%" text-anchor="middle">UNIVERSIDAD NACIONAL DE PIURA</textPath>
+                                  </text>
+                                  <text font-family="'Arial', sans-serif" font-size="5" fill="#008080" font-weight="bold">
+                                    <textPath href="#decTextPathBottom" startOffset="50%" text-anchor="middle">FAC. INGENIERIA INDUSTRIAL</textPath>
+                                  </text>
+                                  <text x="50" y="48" font-family="'Arial', sans-serif" font-size="7" font-weight="bold" fill="#008080" text-anchor="middle">DECANATO</text>
+                                  <text x="50" y="59" font-family="'Arial', sans-serif" font-size="8" fill="#008080" text-anchor="middle">🎓</text>
+                                </svg>
+                                ` : ''}
+                            </div>
+                            <div style="height: 50px; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2;">
+                                ${cert.deanSigned 
+                                    ? `<span style="font-family: 'Brush Script MT', 'Great Vibes', cursive; font-size: 2.2rem; color: #1e5ba8; transform: rotate(-3deg); font-style: italic; user-select: none;">F. Cruz V.</span>` 
+                                    : `<span style="color: #c62828; font-size: 0.8rem; font-style: italic; border: 1px dashed rgba(211,47,47,0.3); padding: 4px 8px; border-radius:4px; background:rgba(211,47,47,0.05);">⚠️ Pendiente de firma</span>`}
+                            </div>
+                            <div style="width: 100%; border-top: 1px solid #777; margin-top: 5px; padding-top: 5px; text-align: center; font-size: 0.75rem; line-height: 1.3; position: relative; z-index: 2;">
+                                <strong>DR. FRANCISCO JAVIER CRUZ VILCHEZ</strong><br>
+                                Decano de la Facultad de Ing. Industrial
+                            </div>
+                        </div>
+
+                        <!-- Firma Director -->
+                        <div style="display: flex; flex-direction: column; align-items: center; width: 280px; position: relative;">
+                            <!-- Sello Instituto de fondo -->
+                            <div style="position: absolute; left: 40px; top: -15px; pointer-events: none; z-index: 1;">
+                                ${cert.directorSigned ? `
+                                <svg viewBox="0 0 100 100" style="width: 75px; height: 75px; opacity: 0.28;">
+                                  <circle cx="50" cy="50" r="45" fill="none" stroke="#003d82" stroke-width="1.5"/>
+                                  <circle cx="50" cy="50" r="41" fill="none" stroke="#003d82" stroke-dasharray="2 1" stroke-width="0.5"/>
+                                  <circle cx="50" cy="50" r="28" fill="none" stroke="#003d82" stroke-width="1"/>
+                                  <path id="dirTextPathTop" d="M 12 50 A 38 38 0 0 1 88 50" fill="none" stroke="none"/>
+                                  <path id="dirTextPathBottom" d="M 88 50 A 38 38 0 0 1 12 50" fill="none" stroke="none"/>
+                                  <text font-family="'Arial', sans-serif" font-size="6" fill="#003d82" font-weight="bold">
+                                    <textPath href="#dirTextPathTop" startOffset="50%" text-anchor="middle">UNIVERSIDAD NACIONAL DE PIURA</textPath>
+                                  </text>
+                                  <text font-family="'Arial', sans-serif" font-size="5" fill="#003d82" font-weight="bold">
+                                    <textPath href="#dirTextPathBottom" startOffset="50%" text-anchor="middle">FAC. INGENIERIA INDUSTRIAL</textPath>
+                                  </text>
+                                  <text x="50" y="46" font-family="'Arial', sans-serif" font-size="5" font-weight="bold" fill="#003d82" text-anchor="middle">INSTITUTO DE</text>
+                                  <text x="50" y="53" font-family="'Arial', sans-serif" font-size="5" font-weight="bold" fill="#003d82" text-anchor="middle">INFORMATICA</text>
+                                  <text x="50" y="62" font-family="'Arial', sans-serif" font-size="7" fill="#003d82" text-anchor="middle">💻</text>
+                                </svg>
+                                ` : ''}
+                            </div>
+                            <div style="height: 50px; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2;">
+                                ${cert.directorSigned 
+                                    ? `<span style="font-family: 'Brush Script MT', 'Great Vibes', cursive; font-size: 2.2rem; color: #003d82; transform: rotate(-3deg); font-style: italic; user-select: none;">J. Nima R.</span>` 
+                                    : `<span style="color: #c62828; font-size: 0.8rem; font-style: italic; border: 1px dashed rgba(211,47,47,0.3); padding: 4px 8px; border-radius:4px; background:rgba(211,47,47,0.05);">⚠️ Pendiente de firma</span>`}
+                            </div>
+                            <div style="width: 100%; border-top: 1px solid #777; margin-top: 5px; padding-top: 5px; text-align: center; font-size: 0.75rem; line-height: 1.3; position: relative; z-index: 2;">
+                                <strong>DR. JONATHAN DAVID NIMA RAMOS</strong><br>
+                                Director del Instituto de Informática
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer / Validación -->
+                    <div style="margin-top: 35px; border-top: 1px solid #ccc; padding-top: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #666;">
+                        <span>CAMPUS UNIVERSITARIO - MIRAFLORES - CASTILLA - PIURA</span>
+                        <strong style="font-family: 'Courier New', monospace;">CERT. Nº ${cert.code}</strong>
+                    </div>
                 </div>
+            `;
+        } else {
+            // Constancia
+            htmlContent = `
+                <div class="certificate-diploma-wrapper" style="background: #fbfaf5; border: 6px double #d4af37; padding: 40px; color: #222; text-align: center; position: relative; font-family: 'Georgia', serif; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; overflow: hidden;">
+                    
+                    <!-- Logos Header -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #003d82; padding-bottom: 10px; margin-bottom: 25px;">
+                        <img src="logo-unp-transparent.png" style="width: 110px; height: 110px; object-fit: contain; flex-shrink: 0; mix-blend-mode: multiply;" alt="Escudo UNP">
+                        <div style="flex: 1; text-align: center; font-family: 'Arial', sans-serif; padding: 0 10px;">
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #003d82; letter-spacing: 0.5px;">UNIVERSIDAD NACIONAL DE PIURA</div>
+                            <div style="font-size: 0.95rem; font-weight: bold; color: #444; margin-top: 2px;">FACULTAD DE INGENIERÍA INDUSTRIAL</div>
+                            <div style="font-size: 0.85rem; font-weight: 600; color: #666; margin-top: 1px;">INSTITUTO DE INFORMÁTICA</div>
+                        </div>
+                        <img src="logo-fii.png" style="width: 110px; height: 110px; object-fit: contain; mix-blend-mode: multiply; flex-shrink: 0;" alt="Escudo FII">
+                    </div>
 
-                <div class="certificate-title">CERTIFICADO DE ${group.modality === 'regular' ? 'APROBACIÓN DE CURSO' : 'EXAMEN DE SUFICIENCIA'}</div>
+                    <!-- Título -->
+                    <h1 style="font-family: 'Times New Roman', serif; font-size: 2.2rem; letter-spacing: 2px; color: #996515; margin: 15px 0 25px 0; font-weight: bold; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 10px;">CONSTANCIA</h1>
+                    
+                    <!-- Cuerpo -->
+                    <div style="font-size: 1.05rem; line-height: 1.8; margin-bottom: 25px;">
+                        <p style="margin: 0; font-size: 0.9rem; text-align: justify; font-style: italic; text-align-last: center;">
+                            EL DIRECTOR DEL INSTITUTO DE INFORMÁTICA DE LA FACULTAD DE INGENIERÍA INDUSTRIAL DE LA UNIVERSIDAD NACIONAL DE PIURA.
+                        </p>
+                        <p style="margin: 20px 0 5px 0; font-weight: bold; text-decoration: underline; font-size: 1rem; text-align: left;">HACE CONSTAR QUE:</p>
+                        
+                        <div style="font-size: 1.8rem; font-weight: bold; color: #111; text-transform: uppercase; margin: 15px 0; font-family: 'Georgia', serif;">
+                            ${student.firstName} ${student.lastName}
+                        </div>
+                        
+                        <p style="margin: 5px 0; text-align: justify;">
+                            Ha participado en el curso <strong>${course.name}</strong>, tal como se detalla a continuación:
+                        </p>
 
-                <div class="certificate-content">
-                    <p style="margin: 1rem 0;">Por este medio se certifica que:</p>
-                    <div class="certificate-student">${student.firstName.toUpperCase()} ${student.lastName.toUpperCase()}</div>
-                    <p style="margin: 1rem 0;">Identificado con DNI Nº ${student.dni}</p>
-                    <p style="margin: 1rem 0;">Ha completado satisfactoriamente el curso de:</p>
-                    <div style="font-size: 1.2rem; font-weight: bold; margin: 1rem 0; color: var(--color-primary);">${course.name}</div>
-                    <p style="margin: 1rem 0;">
-                        ${group.modality === 'regular' 
-                            ? `Realizado desde el ${group.startDate} hasta el ${group.endDate}<br>con un total de ${group.hours} horas académicas` 
-                            : `Modalidad: Examen de Suficiencia`}
-                    </p>
-                    <p style="margin: 1rem 0;">Calificación final: <strong>${average.toFixed(2)}</strong></p>
+                        <div style="margin: 20px auto; max-width: 550px; display: grid; grid-template-columns: 200px 1fr; gap: 8px; text-align: left; font-size: 0.95rem; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 4px; border: 1px solid #eee;">
+                            <div><strong>FECHA DE INICIO:</strong></div><div>${group.startDate}</div>
+                            <div><strong>FECHA DE TÉRMINO:</strong></div><div>${group.endDate}</div>
+                            <div><strong>HORARIO:</strong></div><div>${group.schedule || 'Sábados y Domingos'}</div>
+                            <div><strong>DURACIÓN:</strong></div><div>${group.hours} HORAS</div>
+                            <div><strong>NOTA:</strong></div><div><strong>${average.toFixed(2)}</strong></div>
+                            <div><strong>GRUPO:</strong></div><div>${group.code}</div>
+                        </div>
+                        
+                        <p style="margin: 20px 0; text-align: justify; font-size: 0.95rem; font-style: italic;">
+                            Se expide el presente a solicitud del interesado (a), para los fines que estime conveniente.
+                        </p>
+                        
+                        <p style="font-size: 0.95rem; margin-top: 20px; color: #555; text-align: right;">
+                            ${issueDateFormatted}
+                        </p>
+                    </div>
+
+                    <!-- Firmas con Sellos Coherentes -->
+                    <div style="margin-top: 40px; display: flex; justify-content: space-around; align-items: flex-end; gap: 20px; position: relative;">
+                        
+                        <!-- Firma Decano -->
+                        <div style="display: flex; flex-direction: column; align-items: center; width: 280px; position: relative;">
+                            <!-- Sello Decanato de fondo -->
+                            <div style="position: absolute; left: 40px; top: -15px; pointer-events: none; z-index: 1;">
+                                ${cert.deanSigned ? `
+                                <svg viewBox="0 0 100 100" style="width: 75px; height: 75px; opacity: 0.28;">
+                                  <circle cx="50" cy="50" r="45" fill="none" stroke="#008080" stroke-width="1.5"/>
+                                  <circle cx="50" cy="50" r="41" fill="none" stroke="#008080" stroke-dasharray="2 1" stroke-width="0.5"/>
+                                  <circle cx="50" cy="50" r="28" fill="none" stroke="#008080" stroke-width="1"/>
+                                  <path id="decTextPathTop" d="M 12 50 A 38 38 0 0 1 88 50" fill="none" stroke="none"/>
+                                  <path id="decTextPathBottom" d="M 88 50 A 38 38 0 0 1 12 50" fill="none" stroke="none"/>
+                                  <text font-family="'Arial', sans-serif" font-size="6" fill="#008080" font-weight="bold">
+                                    <textPath href="#decTextPathTop" startOffset="50%" text-anchor="middle">UNIVERSIDAD NACIONAL DE PIURA</textPath>
+                                  </text>
+                                  <text font-family="'Arial', sans-serif" font-size="5" fill="#008080" font-weight="bold">
+                                    <textPath href="#decTextPathBottom" startOffset="50%" text-anchor="middle">FAC. INGENIERIA INDUSTRIAL</textPath>
+                                  </text>
+                                  <text x="50" y="48" font-family="'Arial', sans-serif" font-size="7" font-weight="bold" fill="#008080" text-anchor="middle">DECANATO</text>
+                                  <text x="50" y="59" font-family="'Arial', sans-serif" font-size="8" fill="#008080" text-anchor="middle">🎓</text>
+                                </svg>
+                                ` : ''}
+                            </div>
+                            <div style="height: 50px; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2;">
+                                ${cert.deanSigned 
+                                    ? `<span style="font-family: 'Brush Script MT', 'Great Vibes', cursive; font-size: 2.2rem; color: #1e5ba8; transform: rotate(-3deg); font-style: italic; user-select: none;">F. Cruz V.</span>` 
+                                    : `<span style="color: #c62828; font-size: 0.8rem; font-style: italic; border: 1px dashed rgba(211,47,47,0.3); padding: 4px 8px; border-radius:4px; background:rgba(211,47,47,0.05);">⚠️ Pendiente de firma</span>`}
+                            </div>
+                            <div style="width: 100%; border-top: 1px solid #777; margin-top: 5px; padding-top: 5px; text-align: center; font-size: 0.75rem; line-height: 1.3; position: relative; z-index: 2;">
+                                <strong>DR. FRANCISCO JAVIER CRUZ VILCHEZ</strong><br>
+                                Decano de la Facultad de Ing. Industrial
+                            </div>
+                        </div>
+
+                        <!-- Firma Director -->
+                        <div style="display: flex; flex-direction: column; align-items: center; width: 280px; position: relative;">
+                            <!-- Sello Instituto de fondo -->
+                            <div style="position: absolute; left: 40px; top: -15px; pointer-events: none; z-index: 1;">
+                                ${cert.directorSigned ? `
+                                <svg viewBox="0 0 100 100" style="width: 75px; height: 75px; opacity: 0.28;">
+                                  <circle cx="50" cy="50" r="45" fill="none" stroke="#003d82" stroke-width="1.5"/>
+                                  <circle cx="50" cy="50" r="41" fill="none" stroke="#003d82" stroke-dasharray="2 1" stroke-width="0.5"/>
+                                  <circle cx="50" cy="50" r="28" fill="none" stroke="#003d82" stroke-width="1"/>
+                                  <path id="dirTextPathTop" d="M 12 50 A 38 38 0 0 1 88 50" fill="none" stroke="none"/>
+                                  <path id="dirTextPathBottom" d="M 88 50 A 38 38 0 0 1 12 50" fill="none" stroke="none"/>
+                                  <text font-family="'Arial', sans-serif" font-size="6" fill="#003d82" font-weight="bold">
+                                    <textPath href="#dirTextPathTop" startOffset="50%" text-anchor="middle">UNIVERSIDAD NACIONAL DE PIURA</textPath>
+                                  </text>
+                                  <text font-family="'Arial', sans-serif" font-size="5" fill="#003d82" font-weight="bold">
+                                    <textPath href="#dirTextPathBottom" startOffset="50%" text-anchor="middle">FAC. INGENIERIA INDUSTRIAL</textPath>
+                                  </text>
+                                  <text x="50" y="46" font-family="'Arial', sans-serif" font-size="5" font-weight="bold" fill="#003d82" text-anchor="middle">INSTITUTO DE</text>
+                                  <text x="50" y="53" font-family="'Arial', sans-serif" font-size="5" font-weight="bold" fill="#003d82" text-anchor="middle">INFORMATICA</text>
+                                  <text x="50" y="62" font-family="'Arial', sans-serif" font-size="7" fill="#003d82" text-anchor="middle">💻</text>
+                                </svg>
+                                ` : ''}
+                            </div>
+                            <div style="height: 50px; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2;">
+                                ${cert.directorSigned 
+                                    ? `<span style="font-family: 'Brush Script MT', 'Great Vibes', cursive; font-size: 2.2rem; color: #003d82; transform: rotate(-3deg); font-style: italic; user-select: none;">J. Nima R.</span>` 
+                                    : `<span style="color: #c62828; font-size: 0.8rem; font-style: italic; border: 1px dashed rgba(211,47,47,0.3); padding: 4px 8px; border-radius:4px; background:rgba(211,47,47,0.05);">⚠️ Pendiente de firma</span>`}
+                            </div>
+                            <div style="width: 100%; border-top: 1px solid #777; margin-top: 5px; padding-top: 5px; text-align: center; font-size: 0.75rem; line-height: 1.3; position: relative; z-index: 2;">
+                                <strong>DR. JONATHAN DAVID NIMA RAMOS</strong><br>
+                                Director del Instituto de Informática
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer / Validación -->
+                    <div style="margin-top: 35px; border-top: 1px solid #ccc; padding-top: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #666;">
+                        <span>CAMPUS UNIVERSITARIO - MIRAFLORES - CASTILLA - PIURA</span>
+                        <strong style="font-family: 'Courier New', monospace;">CONS. Nº ${cert.code}</strong>
+                    </div>
                 </div>
-
-                <div class="certificate-line"></div>
-                <p style="margin: 1rem 0; font-size: 0.9rem;">Expedido en Piura, a los ${new Date().getDate()} días del mes de ${['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'][new Date().getMonth()]} de ${new Date().getFullYear()}</p>
-                <p style="margin-top: 2rem; font-size: 0.85rem;">Código de Certificado: ${cert.code}</p>
-            </div>
-        `;
+            `;
+        }
+        
+        preview.innerHTML = htmlContent;
 
         document.getElementById('modalOverlay').style.display = 'block';
         document.getElementById('certificateModal').style.display = 'block';
     }
 
     openCertificateModal() {
-        this.showToast('Seleccione un alumno aprobado en la tabla', 'info');
+        const selectedRow = document.querySelector('#certificatesTableBody tr.selected-row');
+        if (!selectedRow) {
+            this.showToast('Seleccione un alumno aprobado en la tabla', 'error');
+            return;
+        }
+
+        const studentId = selectedRow.getAttribute('data-student-id');
+        const groupId = selectedRow.getAttribute('data-group-id');
+        const type = selectedRow.getAttribute('data-type');
+
+        const student = DataManager.getStudentById(studentId);
+        const group = DataManager.getGroupById(groupId);
+
+        if (student && group) {
+            document.getElementById('emitStudentId').value = studentId;
+            document.getElementById('emitGroupId').value = groupId;
+            document.getElementById('emitStudentName').value = `${student.firstName} ${student.lastName}`;
+            document.getElementById('emitGroupName').value = `${group.courseName} (${group.code})`;
+            document.getElementById('emitDocType').value = type || 'certificado';
+
+            document.getElementById('modalOverlay').style.display = 'block';
+            document.getElementById('emitCertModal').style.display = 'block';
+        }
+    }
+
+    handleEmitCertSubmit(e) {
+        e.preventDefault();
+        const studentId = document.getElementById('emitStudentId').value;
+        const groupId = document.getElementById('emitGroupId').value;
+        const type = document.getElementById('emitDocType').value;
+
+        // Check if certificate/constancia already exists active
+        const exists = mockData.certificates.some(c => 
+            c.studentId === studentId && 
+            c.groupId === groupId && 
+            c.type === type && 
+            c.status !== 'annulled'
+        );
+
+        if (exists) {
+            this.showToast(`Ya se ha emitido o solicitado un(a) ${type} para este alumno en este grupo.`, 'error');
+            this.closeModal();
+            return;
+        }
+
+        // Create new certificate record in status 'toBeSigned'
+        const cert = DataManager.createCertificate({
+            studentId,
+            groupId,
+            type,
+            status: 'toBeSigned',
+            deanSigned: false,
+            directorSigned: false,
+            issueDate: new Date().toISOString().split('T')[0]
+        });
+
+        if (cert) {
+            this.showToast('Documento preparado y enviado a firma del Decano y Director.', 'success');
+            this.closeModal();
+            this.loadCertificates();
+            
+            // Disable emit button
+            const emitBtn = document.getElementById('emitCertBtn');
+            if (emitBtn) emitBtn.setAttribute('disabled', 'true');
+        } else {
+            this.showToast('Error al crear el documento.', 'error');
+        }
+    }
+
+    signDocument(certId, role) {
+        const cert = mockData.certificates.find(c => c.id === certId);
+        if (!cert) return;
+
+        const today = new Date().toISOString().split('T')[0];
+
+        if (role === 'dean') {
+            cert.deanSigned = true;
+            cert.deanSignedAt = today;
+            cert.deanSignerName = 'DR. FRANCISCO JAVIER CRUZ VILCHEZ';
+            this.showToast('Documento firmado por el Decano', 'success');
+        } else if (role === 'director') {
+            cert.directorSigned = true;
+            cert.directorSignedAt = today;
+            cert.directorSignerName = 'DR. JONATHAN DAVID NIMA RAMOS';
+            this.showToast('Documento firmado por el Director', 'success');
+        }
+
+        // Re-evaluate status automatically if both signed
+        if (cert.deanSigned && cert.directorSigned) {
+            cert.status = 'pending';
+            this.showToast('Firma completa. El documento se encuentra en estado Pendiente listo para ser emitido.', 'success');
+        }
+
+        this.loadCertificates();
+    }
+
+    openCertObservationModal(certId) {
+        document.getElementById('obsCertId').value = certId;
+        const cert = mockData.certificates.find(c => c.id === certId);
+        document.getElementById('certObsText').value = cert ? cert.observations || '' : '';
+        
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('certObsModal').style.display = 'block';
+    }
+
+    submitCertObservation() {
+        const certId = document.getElementById('obsCertId').value;
+        const text = document.getElementById('certObsText').value.trim();
+
+        const cert = mockData.certificates.find(c => c.id === certId);
+        if (cert) {
+            cert.observations = text;
+            this.showToast('Observación del Decano guardada correctamente', 'success');
+            this.closeModal();
+            this.loadCertificates();
+        }
+    }
+
+    formatDateToSpanish(dateStr) {
+        if (!dateStr) return '';
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return dateStr;
+        
+        const d = new Date(parts[0], parts[1] - 1, parts[2]);
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        let formatted = d.toLocaleDateString('es-PE', options);
+        // Capitalize first letter of weekday
+        formatted = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+        return 'Piura, ' + formatted;
     }
 
     // ========== REPORTS MODULE ==========
     loadReports() {
         const reportTableBody = document.getElementById('reportTableBody');
-        reportTableBody.innerHTML = '';
+        if (reportTableBody) {
+            reportTableBody.innerHTML = '';
+            const groups = DataManager.getGroups();
 
-        const groups = DataManager.getGroups();
+            groups.forEach(group => {
+                const students = DataManager.getStudentsByGroup(group.id);
+                const enrolledCount = students.length;
+                
+                let approved = 0, disapproved = 0, totalAverage = 0;
 
-        groups.forEach(group => {
-            const students = DataManager.getStudentsByGroup(group.id);
-            const enrolledCount = students.length;
-            
-            let approved = 0, disapproved = 0, totalAverage = 0;
-
-            students.forEach(student => {
-                const gradeRecord = mockData.grades.find(g => g.groupId === group.id && g.studentId === student.id);
-                const course = DataManager.getCourseById(group.courseId);
-                if (gradeRecord && course) {
-                    const average = DataManager.calculateAverage(gradeRecord.moduleGrades, course);
-                    totalAverage += average;
-                    if (average >= 11) {
-                        approved++;
-                    } else {
-                        disapproved++;
+                students.forEach(student => {
+                    const gradeRecord = mockData.grades.find(g => g.groupId === group.id && g.studentId === student.id);
+                    const course = DataManager.getCourseById(group.courseId);
+                    if (gradeRecord && course) {
+                        const average = DataManager.calculateAverage(gradeRecord.moduleGrades, course);
+                        totalAverage += average;
+                        if (average >= mockData.settings.minPassingGrade) {
+                            approved++;
+                        } else {
+                            disapproved++;
+                        }
                     }
-                }
+                });
+
+                totalAverage = enrolledCount > 0 ? (totalAverage / enrolledCount).toFixed(2) : 0;
+                const certCount = mockData.certificates.filter(c => c.groupId === group.id).length;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${group.courseName}</td>
+                    <td>${group.code}</td>
+                    <td>${group.teacherName}</td>
+                    <td>${enrolledCount}</td>
+                    <td><span style="color: #4caf50; font-weight: bold;">${approved}</span></td>
+                    <td><span style="color: #f44336; font-weight: bold;">${disapproved}</span></td>
+                    <td>${totalAverage}</td>
+                    <td>${certCount}</td>
+                `;
+                reportTableBody.appendChild(row);
             });
+        }
 
-            totalAverage = enrolledCount > 0 ? (totalAverage / enrolledCount).toFixed(2) : 0;
-            const certCount = mockData.certificates.filter(c => c.groupId === group.id).length;
+        // Calculate and display top KPI stats
+        this.updateReportKPIs();
 
+        // Load saved reports
+        this.loadSavedReportsTable();
+    }
+
+    updateReportKPIs() {
+        const totalStudents = mockData.students.length;
+        let approvedCount = 0;
+        let disapprovedCount = 0;
+        let sumAverage = 0;
+        let gradeCount = 0;
+
+        mockData.enrollments.forEach(enr => {
+            const group = DataManager.getGroupById(enr.groupId);
+            if (!group) return;
+            const course = DataManager.getCourseById(group.courseId);
+            if (!course) return;
+
+            const gradeRecord = mockData.grades.find(g => g.groupId === enr.groupId && g.studentId === enr.studentId);
+            if (gradeRecord) {
+                const average = DataManager.calculateAverage(gradeRecord.moduleGrades, course);
+                sumAverage += average;
+                gradeCount++;
+                if (average >= mockData.settings.minPassingGrade) {
+                    approvedCount++;
+                } else {
+                    disapprovedCount++;
+                }
+            }
+        });
+
+        const generalAverage = gradeCount > 0 ? (sumAverage / gradeCount).toFixed(1) : '0';
+        const certCount = mockData.certificates.length;
+
+        // Calculate average attendance
+        let totalAttDays = 0;
+        let totalPresentDays = 0;
+        mockData.studentAttendanceByGroup.forEach(att => {
+            const enrolled = DataManager.getEnrolledStudentsByGroup(att.groupId).length;
+            const daysCount = att.days.length;
+            totalAttDays += enrolled * daysCount;
+
+            att.students.forEach(st => {
+                att.days.forEach(d => {
+                    const status = st.attendance[d];
+                    if (status === 'presente' || status === 'tarde') {
+                        totalPresentDays++;
+                    }
+                });
+            });
+        });
+        const avgAttendance = totalAttDays > 0 ? Math.round((totalPresentDays / totalAttDays) * 100) + '%' : '100%';
+
+        if (document.getElementById('reportTotalStudents')) document.getElementById('reportTotalStudents').textContent = totalStudents;
+        if (document.getElementById('reportApproved')) document.getElementById('reportApproved').textContent = approvedCount;
+        if (document.getElementById('reportDisapproved')) document.getElementById('reportDisapproved').textContent = disapprovedCount;
+        if (document.getElementById('reportGeneralAverage')) document.getElementById('reportGeneralAverage').textContent = generalAverage;
+        if (document.getElementById('reportCertificates')) document.getElementById('reportCertificates').textContent = certCount;
+        if (document.getElementById('reportAvgAttendance')) document.getElementById('reportAvgAttendance').textContent = avgAttendance;
+    }
+
+    loadSavedReportsTable() {
+        const tbody = document.getElementById('savedReportsTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        const reports = DataManager.getSavedReports();
+        
+        const typeLabels = {
+            attendance: 'Asistencia de Alumnos',
+            grades: 'Notas y Calificaciones',
+            certificates: 'Certificados Emitidos',
+            enrollments: 'Matrículas'
+        };
+
+        if (reports.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--color-text-secondary);">No hay reportes personalizados guardados</td></tr>';
+            return;
+        }
+
+        reports.forEach(rep => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${group.courseName}</td>
-                <td>${group.code}</td>
-                <td>${group.teacherName}</td>
-                <td>${enrolledCount}</td>
-                <td><span style="color: #4caf50; font-weight: bold;">${approved}</span></td>
-                <td><span style="color: #f44336; font-weight: bold;">${disapproved}</span></td>
-                <td>${totalAverage}</td>
-                <td>${certCount}</td>
+                <td><strong>${rep.name}</strong></td>
+                <td>${typeLabels[rep.type] || rep.type}</td>
+                <td>${rep.createdBy}</td>
+                <td>${rep.createdAt}</td>
+                <td>
+                    <div class="action-icons">
+                        <button class="icon-btn icon-view" onclick="app.viewReportPreview('${rep.id}')" title="Ver Reporte">&#128269;</button>
+                        <button class="icon-btn icon-edit" onclick="app.editReport('${rep.id}')" title="Editar Configuración">&#9998;</button>
+                        <button class="icon-btn icon-delete" onclick="app.deleteReport('${rep.id}')" title="Eliminar">&#128683;</button>
+                    </div>
+                </td>
             `;
-            reportTableBody.appendChild(row);
+            tbody.appendChild(row);
         });
     }
 
-    // ========== USERS MODULE ==========
+    openNewReportModal() {
+        const form = document.getElementById('reportForm');
+        form.reset();
+        document.getElementById('reportModalTitle').textContent = 'Nuevo Reporte Personalizado';
+        this._editingReportId = null;
+
+        // Populate courses select filter in report modal
+        const courseSelect = document.getElementById('reportFilterCourse');
+        courseSelect.innerHTML = '<option value="">Todos los cursos</option>';
+        DataManager.getCourses().forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            courseSelect.appendChild(opt);
+        });
+
+        this.onReportTypeChange('attendance');
+
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('reportModal').style.display = 'block';
+    }
+
+    onReportTypeChange(type) {
+        const minAttContainer = document.getElementById('repAttMinContainer');
+        if (type === 'attendance') {
+            minAttContainer.style.display = 'block';
+        } else {
+            minAttContainer.style.display = 'none';
+        }
+    }
+
+    handleReportSubmit(e) {
+        e.preventDefault();
+        const name = document.getElementById('reportName').value.trim();
+        const type = document.getElementById('reportType').value;
+        const courseId = document.getElementById('reportFilterCourse').value;
+        const minAtt = document.getElementById('reportFilterMinAtt').value;
+
+        const reportData = {
+            name: name,
+            type: type,
+            createdBy: DataManager.currentUser ? DataManager.currentUser.fullName : 'Admin',
+            queryConfig: {
+                courseId: courseId,
+                minAtt: type === 'attendance' ? Number(minAtt) : null
+            }
+        };
+
+        if (this._editingReportId) {
+            DataManager.updateReport(this._editingReportId, reportData);
+            this.showToast('Reporte actualizado correctamente', 'success');
+        } else {
+            DataManager.createReport(reportData);
+            this.showToast('Reporte guardado correctamente', 'success');
+        }
+
+        this.closeModal();
+        this.loadReports();
+    }
+
+    editReport(id) {
+        this._editingReportId = id;
+        const rep = DataManager.getSavedReports().find(r => r.id === id);
+        if (!rep) return;
+
+        document.getElementById('reportModalTitle').textContent = 'Editar Reporte Personalizado';
+        document.getElementById('reportName').value = rep.name;
+        document.getElementById('reportType').value = rep.type;
+
+        // Populate courses select filter
+        const courseSelect = document.getElementById('reportFilterCourse');
+        courseSelect.innerHTML = '<option value="">Todos los cursos</option>';
+        DataManager.getCourses().forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            if (c.id === rep.queryConfig.courseId) {
+                opt.selected = true;
+            }
+            courseSelect.appendChild(opt);
+        });
+
+        this.onReportTypeChange(rep.type);
+        if (rep.type === 'attendance' && rep.queryConfig.minAtt) {
+            document.getElementById('reportFilterMinAtt').value = rep.queryConfig.minAtt;
+        }
+
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('reportModal').style.display = 'block';
+    }
+
+    deleteReport(id) {
+        if (confirm('¿Eliminar este reporte guardado?')) {
+            DataManager.deleteReport(id);
+            this.showToast('Reporte eliminado', 'success');
+            this.loadReports();
+        }
+    }
+
+    viewReportPreview(id) {
+        const rep = DataManager.getSavedReports().find(r => r.id === id);
+        if (!rep) return;
+
+        document.getElementById('reportPreviewTitle').textContent = rep.name;
+        const typeLabels = {
+            attendance: 'Asistencia de Alumnos',
+            grades: 'Notas y Calificaciones',
+            certificates: 'Certificados Emitidos',
+            enrollments: 'Matrículas'
+        };
+        document.getElementById('reportPreviewType').textContent = typeLabels[rep.type] || rep.type;
+        document.getElementById('reportPreviewDate').textContent = rep.createdAt;
+
+        const tableHead = document.getElementById('reportPreviewTableHead');
+        const tableBody = document.getElementById('reportPreviewTableBody');
+        tableHead.innerHTML = '';
+        tableBody.innerHTML = '';
+
+        const courseId = rep.queryConfig.courseId;
+
+        if (rep.type === 'attendance') {
+            tableHead.innerHTML = `
+                <tr>
+                    <th>Fecha</th>
+                    <th>Alumno</th>
+                    <th>Código</th>
+                    <th>Grupo</th>
+                    <th>Curso</th>
+                    <th>Estado</th>
+                    <th>Detalle</th>
+                </tr>
+            `;
+
+            let rowsCount = 0;
+            mockData.studentAttendanceByGroup.forEach(att => {
+                const group = DataManager.getGroupById(att.groupId);
+                if (courseId && group.courseId !== courseId) return;
+
+                att.students.forEach(st => {
+                    const student = DataManager.getStudentById(st.studentId);
+                    att.days.forEach(d => {
+                        const status = st.attendance[d];
+                        // If it matches risk or just list all
+                        const attPct = DataManager.calculateAttendancePercentage(st.studentId, att.groupId);
+                        if (rep.queryConfig.minAtt && attPct >= rep.queryConfig.minAtt) return;
+
+                        rowsCount++;
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${d}</td>
+                            <td>${student.firstName} ${student.lastName}</td>
+                            <td>${student.code}</td>
+                            <td>${group.code}</td>
+                            <td>${group.courseName}</td>
+                            <td><span class="badge-status ${status === 'presente' ? 'badge-active' : status === 'tarde' ? 'badge-pending' : 'badge-inactive'}">${(status || 'falta').toUpperCase()}</span></td>
+                            <td>Asistencia global: ${attPct}%</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                });
+            });
+
+            if (rowsCount === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:1.5rem;">No se encontraron registros de inasistencias</td></tr>';
+            }
+
+        } else if (rep.type === 'grades') {
+            tableHead.innerHTML = `
+                <tr>
+                    <th>Alumno</th>
+                    <th>Código</th>
+                    <th>Grupo</th>
+                    <th>Curso</th>
+                    <th>Promedio</th>
+                    <th>Estado</th>
+                </tr>
+            `;
+
+            let rowsCount = 0;
+            mockData.enrollments.forEach(enr => {
+                const group = DataManager.getGroupById(enr.groupId);
+                if (courseId && group.courseId !== courseId) return;
+
+                const student = DataManager.getStudentById(enr.studentId);
+                const course = DataManager.getCourseById(group.courseId);
+                const gradeRecord = mockData.grades.find(g => g.groupId === enr.groupId && g.studentId === enr.studentId);
+                const average = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
+                const status = average >= mockData.settings.minPassingGrade ? 'APROBADO' : 'DESAPROBADO';
+
+                rowsCount++;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.firstName} ${student.lastName}</td>
+                    <td>${student.code}</td>
+                    <td>${group.code}</td>
+                    <td>${group.courseName}</td>
+                    <td><strong>${average > 0 ? average.toFixed(1) : '-'}</strong></td>
+                    <td><span class="badge-status ${average >= mockData.settings.minPassingGrade ? 'badge-active' : 'badge-inactive'}">${status}</span></td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            if (rowsCount === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1.5rem;">No se encontraron registros de notas</td></tr>';
+            }
+
+        } else if (rep.type === 'certificates') {
+            tableHead.innerHTML = `
+                <tr>
+                    <th>Alumno</th>
+                    <th>Código</th>
+                    <th>Curso</th>
+                    <th>Modalidad</th>
+                    <th>Certificado Código</th>
+                    <th>Fecha Emisión</th>
+                </tr>
+            `;
+
+            let rowsCount = 0;
+            mockData.certificates.forEach(cert => {
+                const student = DataManager.getStudentById(cert.studentId);
+                const group = DataManager.getGroupById(cert.groupId);
+                if (courseId && group.courseId !== courseId) return;
+
+                rowsCount++;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.firstName} ${student.lastName}</td>
+                    <td>${student.code}</td>
+                    <td>${group.courseName}</td>
+                    <td>${group.modality === 'regular' ? 'Curso regular' : 'Examen'}</td>
+                    <td><strong>${cert.code}</strong></td>
+                    <td>${new Date(cert.issueDate).toLocaleDateString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            if (rowsCount === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1.5rem;">No hay certificados registrados para el filtro seleccionado</td></tr>';
+            }
+
+        } else if (rep.type === 'enrollments') {
+            tableHead.innerHTML = `
+                <tr>
+                    <th>Alumno</th>
+                    <th>Código</th>
+                    <th>DNI</th>
+                    <th>Grupo</th>
+                    <th>Curso</th>
+                    <th>Fecha Matrícula</th>
+                    <th>Estado</th>
+                </tr>
+            `;
+
+            let rowsCount = 0;
+            mockData.enrollments.forEach(enr => {
+                const student = DataManager.getStudentById(enr.studentId);
+                const group = DataManager.getGroupById(enr.groupId);
+                if (courseId && group.courseId !== courseId) return;
+
+                rowsCount++;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.firstName} ${student.lastName}</td>
+                    <td>${student.code}</td>
+                    <td>${student.dni}</td>
+                    <td>${group.code}</td>
+                    <td>${group.courseName}</td>
+                    <td>${enr.enrollmentDate}</td>
+                    <td><span class="badge-status badge-active">Activo</span></td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            if (rowsCount === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:1.5rem;">No hay matrículas registradas para el filtro seleccionado</td></tr>';
+            }
+        }
+
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('reportPreviewModal').style.display = 'block';
+    }
+
+    exportReportSimulated(format) {
+        this.showToast(`Reporte exportado correctamente en formato ${format.toUpperCase()} (Simulado)`, 'success');
+    }
+
+    // ========== USERS AND ROLES MODULE ==========
+    switchUsersTab(tab) {
+        const usersPanel = document.getElementById('usersPanel');
+        const rolesPanel = document.getElementById('rolesPanel');
+        const tabUsersBtn = document.getElementById('tabUsersBtn');
+        const tabRolesBtn = document.getElementById('tabRolesBtn');
+
+        if (tab === 'users') {
+            usersPanel.style.display = 'block';
+            rolesPanel.style.display = 'none';
+            tabUsersBtn.classList.add('active');
+            tabRolesBtn.classList.remove('active');
+            tabUsersBtn.style.borderBottom = '3px solid var(--color-primary)';
+            tabRolesBtn.style.borderBottom = 'none';
+            tabUsersBtn.style.color = 'var(--color-text-primary)';
+            tabRolesBtn.style.color = 'var(--color-text-secondary)';
+            this.loadUsers();
+        } else {
+            usersPanel.style.display = 'none';
+            rolesPanel.style.display = 'block';
+            tabUsersBtn.classList.remove('active');
+            tabRolesBtn.classList.add('active');
+            tabUsersBtn.style.borderBottom = 'none';
+            tabRolesBtn.style.borderBottom = '3px solid var(--color-primary)';
+            tabUsersBtn.style.color = 'var(--color-text-secondary)';
+            tabRolesBtn.style.color = 'var(--color-text-primary)';
+            this.loadRoles();
+        }
+    }
+
     loadUsers() {
         const tbody = document.getElementById('usersTableBody');
+        if (!tbody) return;
         tbody.innerHTML = '';
 
         const roleLabels = {
             'admin': 'Administrador',
-            'secretary': 'Secretaria',
+            'secretary': 'Secretaria Académica',
             'teacher': 'Docente',
-            'coordinator': 'Coordinador'
+            'coordinator': 'Coordinador Académico'
         };
 
         mockData.users.forEach(user => {
@@ -2852,7 +4084,7 @@ class SAIIApp {
                 <td>${user.username}</td>
                 <td>${user.fullName}</td>
                 <td>
-                    <span class="badge-status badge-active">
+                    <span class="badge-status badge-active" style="background-color: var(--color-primary-light); color: white;">
                         ${roleLabels[user.role] || user.role}
                     </span>
                 </td>
@@ -2870,8 +4102,62 @@ class SAIIApp {
         });
     }
 
+    openNewUserModal() {
+        const form = document.getElementById('userForm');
+        form.reset();
+        document.getElementById('userModalTitle').textContent = 'Nuevo Usuario';
+        document.getElementById('userUsername').readOnly = false;
+        this._editingUserId = null;
+
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('userFormModal').style.display = 'block';
+    }
+
     editUser(userId) {
-        alert('Editar usuario - ID: ' + userId);
+        this._editingUserId = userId;
+        const user = mockData.users.find(u => u.id === userId);
+        if (!user) return;
+
+        document.getElementById('userModalTitle').textContent = 'Editar Usuario';
+        document.getElementById('userUsername').value = user.username;
+        document.getElementById('userUsername').readOnly = true;
+        document.getElementById('userFullName').value = user.fullName;
+        document.getElementById('userPassword').value = user.password;
+        document.getElementById('userEmail').value = user.email;
+        document.getElementById('userRole').value = user.role;
+        document.getElementById('userStatus').value = user.status;
+
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('userFormModal').style.display = 'block';
+    }
+
+    handleUserSubmit(e) {
+        e.preventDefault();
+        const username = document.getElementById('userUsername').value.trim();
+        const fullName = document.getElementById('userFullName').value.trim();
+        const password = document.getElementById('userPassword').value;
+        const email = document.getElementById('userEmail').value.trim();
+        const role = document.getElementById('userRole').value;
+        const status = document.getElementById('userStatus').value;
+
+        const userData = { username, fullName, password, email, role, status };
+
+        if (this._editingUserId) {
+            DataManager.updateUser(this._editingUserId, userData);
+            this.showToast('Usuario actualizado correctamente', 'success');
+        } else {
+            // Check duplicate username
+            const duplicate = mockData.users.some(u => u.username.toLowerCase() === username.toLowerCase());
+            if (duplicate) {
+                this.showToast('El nombre de usuario ya está registrado', 'error');
+                return;
+            }
+            DataManager.createUser(userData);
+            this.showToast('Usuario creado correctamente', 'success');
+        }
+
+        this.closeModal();
+        this.loadUsers();
     }
 
     deleteUser(userId) {
@@ -2885,8 +4171,174 @@ class SAIIApp {
         }
     }
 
-    openUserModal() {
-        alert('Crear nuevo usuario - Modal no implementado en esta versión demo');
+    loadRoles() {
+        const tbody = document.getElementById('rolesTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        const roles = DataManager.getRoles();
+        roles.forEach(role => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${role.id.toUpperCase()}</strong></td>
+                <td>${role.name}</td>
+                <td>
+                    <div style="max-width: 450px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${role.permissions.join(', ')}">
+                        ${role.permissions.map(p => `<span class="badge-status badge-active" style="margin-right:4px; font-size:0.75rem; background-color: var(--color-bg-tertiary); color: var(--color-text-primary); border: 1px solid var(--color-border);">${p}</span>`).join('')}
+                    </div>
+                </td>
+                <td>
+                    <div class="action-icons">
+                        <button class="icon-btn icon-edit" onclick="app.editRole('${role.id}')" title="Editar Permisos">&#9998;</button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    editRole(roleId) {
+        this._editingRoleId = roleId;
+        const role = DataManager.getRoles().find(r => r.id === roleId);
+        if (!role) return;
+
+        document.getElementById('roleNameInput').value = role.name;
+
+        const listContainer = document.getElementById('rolePermissionsList');
+        listContainer.innerHTML = '';
+
+        const allViews = [
+            { id: 'dashboard', label: 'Dashboard' },
+            { id: 'students', label: 'Gestión de Alumnos' },
+            { id: 'courses', label: 'Cursos y Módulos' },
+            { id: 'teachers', label: 'Gestión de Docentes' },
+            { id: 'groups', label: 'Grupos Académicos' },
+            { id: 'enrollments', label: 'Matrículas' },
+            { id: 'attendance', label: 'Asistencia de Alumnos' },
+            { id: 'grades', label: 'Registro de Notas' },
+            { id: 'certificates', label: 'Certificados y Constancias' },
+            { id: 'reports', label: 'Reportes y Estadísticas' },
+            { id: 'users', label: 'Usuarios y Accesos' },
+            { id: 'settings', label: 'Configuración' }
+        ];
+
+        allViews.forEach(v => {
+            const div = document.createElement('div');
+            div.style.display = 'flex';
+            div.style.alignItems = 'center';
+            div.style.gap = '8px';
+
+            const checked = role.permissions.includes(v.id) ? 'checked' : '';
+            div.innerHTML = `
+                <input type="checkbox" id="perm_${v.id}" value="${v.id}" ${checked}>
+                <label for="perm_${v.id}">${v.label}</label>
+            `;
+            listContainer.appendChild(div);
+        });
+
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('roleModal').style.display = 'block';
+    }
+
+    handleRoleSubmit(e) {
+        e.preventDefault();
+        const roleId = this._editingRoleId;
+        const checkboxes = document.querySelectorAll('#rolePermissionsList input[type="checkbox"]');
+        const selectedPermissions = [];
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                selectedPermissions.push(cb.value);
+            }
+        });
+
+        const success = DataManager.updateRolePermissions(roleId, selectedPermissions);
+        if (success) {
+            this.showToast('Permisos de rol actualizados', 'success');
+            this.closeModal();
+            this.loadRoles();
+            
+            // Reapply permissions immediately if current active role is the edited one
+            if (DataManager.currentUser && DataManager.currentUser.role === roleId) {
+                this.setRolePermissions(roleId);
+            }
+        } else {
+            this.showToast('Error al actualizar permisos', 'error');
+        }
+    }
+
+    // ========== SETTINGS MODULE ==========
+    loadSettings() {
+        const sets = DataManager.getSettings();
+        if (!sets) return;
+
+        document.getElementById('settingsSystemName').value = sets.systemName;
+        document.getElementById('settingsInstituteName').value = sets.instituteName;
+        document.getElementById('settingsUniversityName').value = sets.universityName;
+        document.getElementById('settingsEmail').value = sets.instituteEmail;
+        document.getElementById('settingsPhone').value = sets.institutePhone;
+        document.getElementById('settingsAcademicPeriod').value = sets.academicPeriod;
+        document.getElementById('settingsMinPassingGrade').value = sets.minPassingGrade;
+        document.getElementById('settingsMinAttendanceRequired').value = sets.minAttendanceRequired;
+        document.getElementById('settingsResponsibleAcademic').value = sets.responsibleAcademic;
+        document.getElementById('settingsEnableNotifications').checked = sets.enableNotifications;
+        document.getElementById('settingsEnableAutoSave').checked = sets.enableAutoSave;
+        document.getElementById('settingsDefaultTheme').value = sets.defaultTheme;
+        document.getElementById('settingsLanguage').value = sets.systemLanguage;
+    }
+
+    saveSystemSettings() {
+        const systemName = document.getElementById('settingsSystemName').value.trim();
+        const instituteName = document.getElementById('settingsInstituteName').value.trim();
+        const universityName = document.getElementById('settingsUniversityName').value.trim();
+        const email = document.getElementById('settingsEmail').value.trim();
+        const phone = document.getElementById('settingsPhone').value.trim();
+        const academicPeriod = document.getElementById('settingsAcademicPeriod').value.trim();
+        const minPassingGrade = Number(document.getElementById('settingsMinPassingGrade').value);
+        const minAttendanceRequired = Number(document.getElementById('settingsMinAttendanceRequired').value);
+        const responsible = document.getElementById('settingsResponsibleAcademic').value.trim();
+        const notifications = document.getElementById('settingsEnableNotifications').checked;
+        const autoSave = document.getElementById('settingsEnableAutoSave').checked;
+        const defaultTheme = document.getElementById('settingsDefaultTheme').value;
+        const language = document.getElementById('settingsLanguage').value;
+
+        const updatedSettings = {
+            systemName, instituteName, universityName,
+            instituteEmail: email, institutePhone: phone,
+            academicPeriod, minPassingGrade, minAttendanceRequired,
+            responsibleAcademic: responsible,
+            enableNotifications: notifications,
+            enableAutoSave: autoSave,
+            defaultTheme, systemLanguage: language
+        };
+
+        DataManager.saveSettings(updatedSettings);
+        this.showToast('Configuración guardada correctamente', 'success');
+
+        // Apply visual updates immediately
+        document.querySelector('.header-institution-label').textContent = `${systemName} - Sistema Administrativo del ${instituteName} — UNP`;
+        
+        // Apply theme if requested
+        if (defaultTheme === 'dark' && !this.isDarkMode) {
+            this.toggleTheme();
+        } else if (defaultTheme === 'light' && this.isDarkMode) {
+            this.toggleTheme();
+        }
+
+        this.loadSettings();
+    }
+
+    restoreDefaultSettings() {
+        if (confirm('¿Restaurar todos los valores de configuración por defecto?')) {
+            const defaults = DataManager.restoreDefaultSettings();
+            this.loadSettings();
+            this.showToast('Valores restaurados por defecto', 'success');
+            
+            // Reapply system name labels
+            document.querySelector('.header-institution-label').textContent = `${defaults.systemName} - Sistema Administrativo del ${defaults.instituteName} — UNP`;
+            if (defaults.defaultTheme === 'light' && this.isDarkMode) {
+                this.toggleTheme();
+            }
+        }
     }
 
     // ========== MODAL MANAGEMENT ==========
@@ -2913,3 +4365,6 @@ class SAIIApp {
 
 // Initialize app
 let app = new SAIIApp();
+
+// Global helpers to map HTML inline event handlers
+window.closeModal = () => app.closeModal();

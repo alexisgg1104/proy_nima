@@ -130,7 +130,7 @@ const mockData = {
             endDate: '2024-04-20',
             hours: 150,
             maxQuota: 30,
-            status: 'inprogress',
+            status: 'finished',
             observations: ''
         },
         { 
@@ -286,6 +286,9 @@ const mockData = {
         { id: 'GRD003', groupId: 'GRP001', studentId: 'ALU003', moduleGrades: { MOD001: 18, MOD002: 17, MOD003: 16 } },
         { id: 'GRD004', groupId: 'GRP001', studentId: 'ALU004', moduleGrades: { MOD001: 12, MOD002: 10, MOD003: 9 } },
         { id: 'GRD005', groupId: 'GRP001', studentId: 'ALU007', moduleGrades: { MOD001: 15, MOD002: 16, MOD003: 14 } },
+        { id: 'GRD006', groupId: 'GRP003', studentId: 'ALU001', moduleGrades: { MOD004: 15, MOD005: 16, MOD006: 14, MOD007: 15, MOD008: 16, MOD009: 15 } },
+        { id: 'GRD007', groupId: 'GRP003', studentId: 'ALU008', moduleGrades: { MOD004: 14, MOD005: 15, MOD006: 13, MOD007: 14, MOD008: 15, MOD009: 14 } },
+        { id: 'GRD008', groupId: 'GRP003', studentId: 'ALU009', moduleGrades: { MOD004: 16, MOD005: 17, MOD006: 15, MOD007: 16, MOD008: 17, MOD009: 16 } },
     ],
 
     // Grade Sheets status (Fase 6)
@@ -296,19 +299,55 @@ const mockData = {
 
     // Certificates
     certificates: [
-        { id: 'CRT001', studentId: 'ALU001', groupId: 'GRP001', code: 'CERT-2024-00001', issueDate: '2024-03-20', status: 'issued' },
-        { id: 'CRT002', studentId: 'ALU002', groupId: 'GRP001', code: 'CERT-2024-00002', issueDate: '2024-03-20', status: 'issued' },
-        { id: 'CRT003', studentId: 'ALU003', groupId: 'GRP001', code: 'CERT-2024-00003', issueDate: '2024-03-20', status: 'issued' },
+        { id: 'CRT001', studentId: 'ALU001', groupId: 'GRP001', code: 'CERT-2024-00001', issueDate: '2024-03-20', status: 'generated', type: 'certificado', deanSigned: true, directorSigned: true, deanSignedAt: '2024-03-20', directorSignedAt: '2024-03-20', deanSignerName: 'DR. FRANCISCO JAVIER CRUZ VILCHEZ', directorSignerName: 'DR. JONATHAN DAVID NIMA RAMOS', observations: '' },
+        { id: 'CRT002', studentId: 'ALU002', groupId: 'GRP001', code: 'CERT-2024-00002', issueDate: '2024-03-20', status: 'pending', type: 'constancia', deanSigned: true, directorSigned: true, deanSignedAt: '2024-03-20', directorSignedAt: '2024-03-20', deanSignerName: 'DR. FRANCISCO JAVIER CRUZ VILCHEZ', directorSignerName: 'DR. JONATHAN DAVID NIMA RAMOS', observations: '' },
+        { id: 'CRT003', studentId: 'ALU003', groupId: 'GRP001', code: 'CERT-2024-00003', issueDate: '2024-03-20', status: 'toBeSigned', type: 'certificado', deanSigned: false, directorSigned: false, deanSignedAt: null, directorSignedAt: null, deanSignerName: null, directorSignerName: null, observations: '' },
+        { id: 'CRT004', studentId: 'ALU007', groupId: 'GRP001', code: 'CERT-2024-00004', issueDate: '2024-03-20', status: 'toBeSigned', type: 'certificado', deanSigned: false, directorSigned: true, deanSignedAt: null, directorSignedAt: '2024-03-20', deanSignerName: null, directorSignerName: 'DR. JONATHAN DAVID NIMA RAMOS', observations: '' },
+        { id: 'CRT005', studentId: 'ALU001', groupId: 'GRP003', code: 'CERT-2024-00005', issueDate: '2024-03-20', status: 'toBeSigned', type: 'certificado', deanSigned: true, directorSigned: false, deanSignedAt: '2024-03-20', directorSignedAt: null, deanSignerName: 'DR. FRANCISCO JAVIER CRUZ VILCHEZ', directorSignerName: null, observations: '' }
     ],
 
     // System Users
     users: [
-        { id: 'USR001', username: 'admin', password: 'admin123', fullName: 'Admin', role: 'admin', email: 'admin@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-15 10:30' },
+        { id: 'USR001', username: 'admin', password: 'admin123', fullName: 'DR. JONATHAN DAVID NIMA RAMOS', role: 'admin', email: 'admin@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-15 10:30' },
         { id: 'USR002', username: 'secretaria', password: 'secretaria123', fullName: 'Juan María Secretaria', role: 'secretary', email: 'secretaria@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-14 09:15' },
         { id: 'USR003', username: 'roberto.silva', password: 'docente123', fullName: 'Roberto Silva', role: 'teacher', email: 'roberto.silva@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-15 08:00' },
         { id: 'USR004', username: 'coordinador', password: 'coordinador123', fullName: 'Carlos Coordinador Académico', role: 'coordinator', email: 'coordinador@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-13 14:45' },
         { id: 'USR005', username: 'lucia.espinoza', password: 'docente123', fullName: 'Lucía Espinoza', role: 'teacher', email: 'lucia.espinoza@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-15 08:30' },
+        { id: 'USR006', username: 'decano', password: 'decano123', fullName: 'Dr. Francisco Javier Cruz Vilchez', role: 'dean', email: 'decano@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-15 11:00' }
     ],
+
+    // System Settings (Fase 7)
+    settings: {
+        systemName: 'SAII',
+        instituteName: 'Instituto de Informática',
+        universityName: 'Universidad Nacional de Piura',
+        instituteEmail: 'info@institutoinformatica.edu.pe',
+        institutePhone: '+51 (73) 123-4567',
+        academicPeriod: '2024-I',
+        minPassingGrade: 11,
+        minAttendanceRequired: 70,
+        defaultTheme: 'light',
+        enableNotifications: true,
+        enableAutoSave: true,
+        systemLanguage: 'es',
+        responsibleAcademic: 'DR. JONATHAN DAVID NIMA RAMOS - Director'
+    },
+
+    // Role Permissions (Fase 7)
+    rolePermissions: {
+        admin: ['dashboard', 'students', 'courses', 'teachers', 'groups', 'enrollments', 'attendance', 'grades', 'certificates', 'reports', 'users', 'settings'],
+        secretary: ['dashboard', 'students', 'enrollments', 'certificates', 'reports'],
+        teacher: ['dashboard', 'grades', 'attendance', 'reports'],
+        coordinator: ['dashboard', 'courses', 'groups', 'reports', 'students'],
+        dean: ['dashboard', 'certificates']
+    },
+
+    // Saved Reports (Fase 7)
+    savedReports: [
+        { id: 'REP001', name: 'Alumnos en Riesgo Académico (Asistencia < 70%)', type: 'attendance', createdBy: 'Admin', createdAt: '2024-03-01', queryConfig: { minAtt: 70 } },
+        { id: 'REP002', name: 'Resumen de Calificaciones por Curso', type: 'grades', createdBy: 'Admin', createdAt: '2024-03-05', queryConfig: {} },
+        { id: 'REP003', name: 'Historial de Certificados Emitidos 2024-I', type: 'certificates', createdBy: 'Secretaria', createdAt: '2024-03-10', queryConfig: {} }
+    ]
 
 };
 
@@ -712,5 +751,178 @@ const DataManager = {
         }
         return true;
     },
+
+    // Calculate attendance percentage for a student in a group
+    calculateAttendancePercentage: function(studentId, groupId) {
+        const att = mockData.studentAttendanceByGroup.find(a => a.groupId === groupId);
+        if (!att || !att.days || att.days.length === 0) {
+            return 100; // if no attendance records exist, count as 100% or default.
+        }
+        const studentRec = att.students.find(s => s.studentId === studentId);
+        if (!studentRec || !studentRec.attendance) {
+            return 0;
+        }
+        const totalDays = att.days.length;
+        let activeDays = 0;
+        att.days.forEach(d => {
+            const status = studentRec.attendance[d];
+            if (status === 'presente' || status === 'tarde') {
+                activeDays++;
+            }
+        });
+        return Math.round((activeDays / totalDays) * 100);
+    },
+
+    // Report operations
+    getSavedReports: function() {
+        return mockData.savedReports || [];
+    },
+
+    createReport: function(report) {
+        if (!mockData.savedReports) mockData.savedReports = [];
+        report.id = 'REP' + String(mockData.savedReports.length + 1).padStart(3, '0');
+        report.createdAt = new Date().toISOString().split('T')[0];
+        mockData.savedReports.push(report);
+        return report;
+    },
+
+    updateReport: function(id, data) {
+        const report = mockData.savedReports.find(r => r.id === id);
+        if (report) {
+            Object.assign(report, data);
+            return report;
+        }
+        return null;
+    },
+
+    deleteReport: function(id) {
+        const idx = mockData.savedReports.findIndex(r => r.id === id);
+        if (idx !== -1) {
+            mockData.savedReports.splice(idx, 1);
+            return true;
+        }
+        return false;
+    },
+
+    // User operations
+    getUsers: function() {
+        return mockData.users || [];
+    },
+
+    createUser: function(user) {
+        user.id = 'USR' + String(mockData.users.length + 1).padStart(3, '0');
+        user.lastLogin = '-';
+        if (!user.status) user.status = 'active';
+        mockData.users.push(user);
+        return user;
+    },
+
+    updateUser: function(id, data) {
+        const user = mockData.users.find(u => u.id === id);
+        if (user) {
+            Object.assign(user, data);
+            return user;
+        }
+        return null;
+    },
+
+    // Roles and Permissions operations
+    getRoles: function() {
+        return Object.keys(mockData.rolePermissions).map(roleKey => {
+            const roleLabels = {
+                admin: 'Administrador',
+                secretary: 'Secretaria Académica',
+                teacher: 'Docente',
+                coordinator: 'Coordinador Académico'
+            };
+            return {
+                id: roleKey,
+                name: roleLabels[roleKey] || roleKey,
+                permissions: mockData.rolePermissions[roleKey]
+            };
+        });
+    },
+
+    updateRolePermissions: function(roleKey, permissions) {
+        if (mockData.rolePermissions[roleKey]) {
+            mockData.rolePermissions[roleKey] = permissions;
+            return true;
+        }
+        return false;
+    },
+
+    // Settings operations
+    getSettings: function() {
+        return mockData.settings;
+    },
+
+    saveSettings: function(settingsData) {
+        mockData.settings = Object.assign(mockData.settings, settingsData);
+        return mockData.settings;
+    },
+
+    restoreDefaultSettings: function() {
+        mockData.settings = {
+            systemName: 'SAII',
+            instituteName: 'Instituto de Informática',
+            universityName: 'Universidad Nacional de Piura',
+            instituteEmail: 'info@institutoinformatica.edu.pe',
+            institutePhone: '+51 (73) 123-4567',
+            academicPeriod: '2024-I',
+            minPassingGrade: 11,
+            minAttendanceRequired: 70,
+            defaultTheme: 'light',
+            enableNotifications: true,
+            enableAutoSave: true,
+            systemLanguage: 'es',
+            responsibleAcademic: 'DR. JONATHAN DAVID NIMA RAMOS - Director'
+        };
+        return mockData.settings;
+    },
+
+    // Certificates operations (Fase 7 Extensions)
+    annulCertificate: function(id) {
+        const idx = mockData.certificates.findIndex(c => c.id === id);
+        if (idx !== -1) {
+            mockData.certificates.splice(idx, 1);
+            return true;
+        }
+        return false;
+    },
+
+    createCertificate: function(certData) {
+        const certId = 'CRT' + String(mockData.certificates.length + 1).padStart(3, '0');
+        const codePrefix = certData.type === 'constancia' ? 'CONS' : 'CERT';
+        const newCert = {
+            id: certId,
+            code: `${codePrefix}-${new Date().getFullYear()}-${String(mockData.certificates.length + 1).padStart(5, '0')}`,
+            studentId: certData.studentId,
+            groupId: certData.groupId,
+            type: certData.type,
+            status: certData.status || 'toBeSigned',
+            deanSigned: certData.deanSigned || false,
+            directorSigned: certData.directorSigned || false,
+            deanSignedAt: certData.deanSignedAt || null,
+            directorSignedAt: certData.directorSignedAt || null,
+            deanSignerName: certData.deanSignerName || null,
+            directorSignerName: certData.directorSignerName || null,
+            issueDate: certData.issueDate || new Date().toISOString().split('T')[0],
+            observations: certData.observations || ''
+        };
+        mockData.certificates.push(newCert);
+        return newCert;
+    },
+
+    generateBulkCertificates: function() {
+        let count = 0;
+        mockData.certificates.forEach(c => {
+            if (c.status === 'pending') {
+                c.status = 'generated';
+                c.issueDate = new Date().toISOString().split('T')[0];
+                count++;
+            }
+        });
+        return count;
+    }
 
 };

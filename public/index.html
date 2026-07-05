@@ -31,10 +31,11 @@
                     <label for="role">Seleccione su rol</label>
                     <select id="role" required>
                         <option value="">-- Seleccione un rol --</option>
-                        <option value="admin">Administrador</option>
+                        <option value="admin">Administrador / Director</option>
                         <option value="secretary">Secretaria Académica</option>
                         <option value="teacher">Docente / Instructor</option>
                         <option value="coordinator">Coordinador Académico</option>
+                        <option value="dean">Decano</option>
                     </select>
                 </div>
                 
@@ -142,6 +143,16 @@
                 </div>
                 
                 <div class="header-right">
+                    <div class="role-simulator-wrapper" style="margin-right: 15px; display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-secondary);">Simular Rol:</span>
+                        <select id="simulatedRoleSelect" class="role-selector-header filter-select" style="padding: 4px 10px; font-size: 0.85rem; border-radius: 4px; border: 1px solid var(--color-border); background: var(--color-bg-secondary); color: var(--color-text-primary); cursor: pointer; outline: none;" onchange="app.simulateRoleChange(this.value)">
+                            <option value="admin">Administrador / Director</option>
+                            <option value="secretary">Secretaria</option>
+                            <option value="teacher">Docente</option>
+                            <option value="coordinator">Coordinador</option>
+                            <option value="dean">Decano</option>
+                        </select>
+                    </div>
                     <button class="header-btn notifications-btn" id="notificationsBtn" title="Notificaciones">
                         🔔
                         <span class="badge">3</span>
@@ -741,8 +752,9 @@
                 <!-- Certificates View -->
                 <div id="certificates" class="view">
                     <div class="module-header">
-                        <div class="module-controls">
-                            <button class="btn btn-primary icon-add-btn" data-action="new-certificate" title="Generar Nueva Constancia">➕ Generar Constancia</button>
+                        <div class="module-controls" style="display: flex; gap: 10px;">
+                            <button class="btn btn-primary icon-add-btn" id="emitCertBtn" disabled>➕ Emitir Documento</button>
+                            <button class="btn btn-secondary" onclick="app.generateBulkCertificates()" title="Generar todos los certificados aptos pendientes">⚙️ Generar Certificados Pendientes</button>
                         </div>
                     </div>
 
@@ -864,32 +876,83 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Reportes Guardados (Fase 7) -->
+                    <div class="card" style="margin-top: var(--spacing-xl);">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3>Reportes Guardados / Consultas Personalizadas</h3>
+                            <button class="btn btn-primary btn-sm" onclick="app.openNewReportModal()">➕ Nuevo Reporte</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="data-table" id="savedReportsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Nombre del Reporte</th>
+                                            <th>Tipo de Reporte</th>
+                                            <th>Creado Por</th>
+                                            <th>Fecha Creación</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="savedReportsTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Users View -->
                 <div id="users" class="view">
-                    <div class="module-header">
-                        <div class="module-controls">
-                            <button class="btn btn-primary icon-add-btn" data-action="new-user" title="Nuevo Usuario">➕ Nuevo Usuario</button>
+                    <div class="tabs-container" style="display: flex; gap: 10px; margin-bottom: var(--spacing-lg); border-bottom: 2px solid var(--color-border); padding-bottom: 10px;">
+                        <button class="tab-btn active" id="tabUsersBtn" onclick="app.switchUsersTab('users')" style="padding: 8px 16px; border: none; background: none; font-weight: 600; cursor: pointer; border-radius: 4px; color: var(--color-text-primary); border-bottom: 3px solid var(--color-primary);">Usuarios</button>
+                        <button class="tab-btn" id="tabRolesBtn" onclick="app.switchUsersTab('roles')" style="padding: 8px 16px; border: none; background: none; font-weight: 600; cursor: pointer; border-radius: 4px; color: var(--color-text-secondary);">Roles y Permisos</button>
+                    </div>
+
+                    <!-- Panel de Usuarios -->
+                    <div id="usersPanel">
+                        <div class="module-header">
+                            <div class="module-controls">
+                                <button class="btn btn-primary icon-add-btn" onclick="app.openNewUserModal()" title="Nuevo Usuario">➕ Nuevo Usuario</button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="data-table" id="usersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Nombre Completo</th>
+                                        <th>Rol</th>
+                                        <th>Correo</th>
+                                        <th>Estado</th>
+                                        <th>Último Acceso</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
-                    <div class="table-responsive">
-                        <table class="data-table" id="usersTable">
-                            <thead>
-                                <tr>
-                                    <th>Usuario</th>
-                                    <th>Nombre Completo</th>
-                                    <th>Rol</th>
-                                    <th>Correo</th>
-                                    <th>Estado</th>
-                                    <th>Último Acceso</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usersTableBody">
-                            </tbody>
-                        </table>
+                    <!-- Panel de Roles (Fase 7) -->
+                    <div id="rolesPanel" style="display: none;">
+                        <div class="table-responsive">
+                            <table class="data-table" id="rolesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Rol ID</th>
+                                        <th>Nombre Mostrar</th>
+                                        <th>Permisos Asignados</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rolesTableBody">
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -902,20 +965,24 @@
                             </div>
                             <div class="card-body settings-form">
                                 <div class="form-group">
+                                    <label>Nombre del Sistema</label>
+                                    <input type="text" id="settingsSystemName">
+                                </div>
+                                <div class="form-group">
                                     <label>Nombre del Instituto</label>
-                                    <input type="text" value="Instituto de Informática" readonly>
+                                    <input type="text" id="settingsInstituteName">
                                 </div>
                                 <div class="form-group">
                                     <label>Universidad</label>
-                                    <input type="text" value="Universidad Nacional de Piura" readonly>
+                                    <input type="text" id="settingsUniversityName">
                                 </div>
                                 <div class="form-group">
                                     <label>Correo Institucional</label>
-                                    <input type="email" value="info@institutoinformatica.edu.pe">
+                                    <input type="email" id="settingsEmail">
                                 </div>
                                 <div class="form-group">
                                     <label>Teléfono</label>
-                                    <input type="text" value="+51 (73) 123-4567">
+                                    <input type="text" id="settingsPhone">
                                 </div>
                             </div>
                         </div>
@@ -927,17 +994,20 @@
                             <div class="card-body settings-form">
                                 <div class="form-group">
                                     <label>Período Académico Actual</label>
-                                    <input type="text" value="2024-I">
+                                    <input type="text" id="settingsAcademicPeriod">
                                 </div>
                                 <div class="form-group">
                                     <label>Nota Mínima Aprobatoria</label>
-                                    <input type="number" value="11" min="0" max="20">
+                                    <input type="number" id="settingsMinPassingGrade" min="0" max="20">
                                 </div>
                                 <div class="form-group">
                                     <label>Asistencia Mínima Requerida (%)</label>
-                                    <input type="number" value="70" min="0" max="100">
+                                    <input type="number" id="settingsMinAttendanceRequired" min="0" max="100">
                                 </div>
-                                <button class="btn btn-primary">Guardar Cambios</button>
+                                <div class="form-group">
+                                    <label>Responsable Académico / Firma</label>
+                                    <input type="text" id="settingsResponsibleAcademic">
+                                </div>
                             </div>
                         </div>
 
@@ -948,25 +1018,36 @@
                             <div class="card-body settings-form">
                                 <div class="form-group">
                                     <label>
-                                        <input type="checkbox" id="enableNotifications" checked>
+                                        <input type="checkbox" id="settingsEnableNotifications">
                                         Habilitar notificaciones
                                     </label>
                                 </div>
                                 <div class="form-group">
                                     <label>
-                                        <input type="checkbox" id="enableAutoSave" checked>
+                                        <input type="checkbox" id="settingsEnableAutoSave">
                                         Guardado automático
                                     </label>
                                 </div>
                                 <div class="form-group">
+                                    <label>Tema por Defecto</label>
+                                    <select id="settingsDefaultTheme">
+                                        <option value="light">Claro</option>
+                                        <option value="dark">Oscuro</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
                                     <label>Idioma</label>
-                                    <select>
+                                    <select id="settingsLanguage">
                                         <option value="es">Español</option>
                                         <option value="en">English</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
+                        <button class="btn btn-primary" onclick="app.saveSystemSettings()">Guardar Cambios</button>
+                        <button class="btn btn-secondary" onclick="app.restoreDefaultSettings()">Restaurar valores por defecto</button>
                     </div>
                 </div>
             </div>
@@ -1063,8 +1144,8 @@
         </div>
     </div>
 
-    <div id="certificateModal" class="modal" style="display: none;">
-        <div class="modal-content modal-lg">
+    <div id="certificateModal" class="modal modal-cert" style="display: none;">
+        <div class="modal-content">
             <div class="modal-header">
                 <h2>Certificado / Constancia</h2>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
@@ -1439,6 +1520,219 @@
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
             <div class="modal-body" id="studentGradesDetailBody">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Nuevo / Editar Usuario (Fase 7) -->
+    <div id="userFormModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="userModalTitle">Nuevo Usuario</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm" class="form-modal" onsubmit="app.handleUserSubmit(event)">
+                    <div class="form-group">
+                        <label>Usuario / Login *</label>
+                        <input type="text" id="userUsername" required placeholder="Ej: roberto.silva">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre Completo *</label>
+                        <input type="text" id="userFullName" required placeholder="Ej: Roberto Silva">
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña *</label>
+                        <input type="password" id="userPassword" required placeholder="Contraseña de acceso">
+                    </div>
+                    <div class="form-group">
+                        <label>Correo Electrónico *</label>
+                        <input type="email" id="userEmail" required placeholder="Ej: roberto.silva@student.edu.pe">
+                    </div>
+                    <div class="form-group">
+                        <label>Rol *</label>
+                        <select id="userRole" required>
+                            <option value="admin">Administrador</option>
+                            <option value="secretary">Secretaria Académica</option>
+                            <option value="teacher">Docente</option>
+                            <option value="coordinator">Coordinador Académico</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado *</label>
+                        <select id="userStatus" required>
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Editar Permisos de Rol (Fase 7) -->
+    <div id="roleModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar Permisos de Rol</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="roleForm" class="form-modal" onsubmit="app.handleRoleSubmit(event)">
+                    <div class="form-group">
+                        <label>Rol</label>
+                        <input type="text" id="roleNameInput" readonly style="font-weight: bold; background: var(--color-bg-tertiary);">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: bold; margin-bottom: 10px; display: block;">Módulos Permitidos:</label>
+                        <div id="rolePermissionsList" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-bg-secondary);">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar Permisos</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Nuevo / Editar Reporte Personalizado (Fase 7) -->
+    <div id="reportModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="reportModalTitle">Nuevo Reporte Personalizado</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="reportForm" class="form-modal" onsubmit="app.handleReportSubmit(event)">
+                    <div class="form-group">
+                        <label>Nombre del Reporte *</label>
+                        <input type="text" id="reportName" required placeholder="Ej: Reporte de Asistencia Crítica">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Reporte *</label>
+                        <select id="reportType" required onchange="app.onReportTypeChange(this.value)">
+                            <option value="attendance">Asistencia de Alumnos</option>
+                            <option value="grades">Notas y Calificaciones</option>
+                            <option value="certificates">Certificados Emitidos</option>
+                            <option value="enrollments">Matrículas</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="reportConfigContainer">
+                        <label>Parámetros del Filtro</label>
+                        <div style="padding: 10px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-bg-secondary);">
+                            <div class="form-row" id="repFilterRow1">
+                                <div class="form-group">
+                                    <label>Curso</label>
+                                    <select id="reportFilterCourse" class="filter-select" style="width: 100%;">
+                                        <option value="">Todos los cursos</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="repAttMinContainer">
+                                    <label>Asistencia Menor a (%)</label>
+                                    <input type="number" id="reportFilterMinAtt" value="70" min="0" max="100" style="width: 100%;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar Reporte</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Previsualización de Reporte Guardado (Fase 7) -->
+    <div id="reportPreviewModal" class="modal modal-attendance" style="display: none;">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 id="reportPreviewTitle">Previsualización de Reporte</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: var(--spacing-md); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p><strong>Tipo:</strong> <span id="reportPreviewType"></span></p>
+                        <p><strong>Generado el:</strong> <span id="reportPreviewDate"></span></p>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary btn-sm" onclick="app.exportReportSimulated('pdf')">Descargar PDF</button>
+                        <button class="btn btn-secondary btn-sm" onclick="app.exportReportSimulated('excel')">Descargar Excel</button>
+                    </div>
+                </div>
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="data-table" id="reportPreviewTable">
+                        <thead id="reportPreviewTableHead">
+                        </thead>
+                        <tbody id="reportPreviewTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-actions" style="margin-top: 15px;">
+                    <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal: Emitir/Preparar Certificado o Constancia (Fase 7 Ext) -->
+    <div id="emitCertModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Emitir Documento Académico</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="emitCertForm" class="form-modal" onsubmit="app.handleEmitCertSubmit(event)">
+                    <input type="hidden" id="emitStudentId">
+                    <input type="hidden" id="emitGroupId">
+                    <div class="form-group">
+                        <label>Alumno</label>
+                        <input type="text" id="emitStudentName" readonly style="background: var(--color-bg-tertiary); font-weight: bold; width: 100%;">
+                    </div>
+                    <div class="form-group">
+                        <label>Curso / Grupo</label>
+                        <input type="text" id="emitGroupName" readonly style="background: var(--color-bg-tertiary); width: 100%;">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Documento *</label>
+                        <select id="emitDocType" required style="width: 100%;">
+                            <option value="certificado">Certificado de Aprobación</option>
+                            <option value="constancia">Constancia de Participación</option>
+                        </select>
+                    </div>
+                    <div class="form-actions" style="margin-top: 15px;">
+                        <button type="submit" class="btn btn-primary">Confirmar y Enviar a Firmar</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Observación de Certificados (Fase 7 Ext) -->
+    <div id="certObsModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Ayuda / Observación de Documento</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="obsCertId">
+                <div class="form-group">
+                    <label>Escriba una observación o indicación de revisión *</label>
+                    <textarea id="certObsText" rows="4" maxlength="500" placeholder="Ej: Corregir nombres del alumno, verificar promedio..." style="width: 100%; box-sizing: border-box;"></textarea>
+                </div>
+                <div class="form-actions" style="margin-top: 15px;">
+                    <button type="button" class="btn btn-primary" onclick="app.submitCertObservation()">Guardar Observación</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                </div>
             </div>
         </div>
     </div>
