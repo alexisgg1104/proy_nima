@@ -12,7 +12,7 @@ Este archivo define el mapa general de fases de desarrollo para la etapa del bac
 | **Fase B1** | Diseño de base de datos | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B2** | Estructura PHP MVC | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B3** | Autenticación, sesiones, usuarios y roles | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
-| **Fase B4** | CRUD académico base | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
+| **Fase B4** | CRUD académico base | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B5** | Grupos académicos y matrículas | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B6** | Asistencia de alumnos | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B7** | Notas, actas y certificados | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
@@ -111,15 +111,15 @@ Estado: **Completada**.
 
 ## Fase B4: CRUD académico base
 
-Estado: **Pendiente**.
+Estado: **Completada**.
 
 ### Objetivos
 * Desarrollar los controladores y modelos para gestionar las entidades académicas fundamentales del Instituto.
 
 ### Tareas
-- [ ] Implementar el CRUD completo de Alumnos (`/api/students`) con validaciones del DNI (8 dígitos), código (10 dígitos) y correo.
-- [ ] Implementar el CRUD completo de Docentes (`/api/teachers`).
-- [ ] Implementar el CRUD completo de Cursos (`/api/courses`) y sus Módulos asociados, asegurando que la suma de porcentajes de los módulos de un curso sume exactamente 100% en el servidor.
+- [x] Implementar el CRUD completo de Alumnos (`/api/students`) con validaciones del DNI (8 dígitos), código (10 dígitos) y correo.
+- [x] Implementar el CRUD completo de Docentes (`/api/teachers`).
+- [x] Implementar el CRUD completo de Cursos (`/api/courses`) y sus Módulos asociados, asegurando que la suma de porcentajes de los módulos de un curso sume exactamente 100% en el servidor.
 
 ### Criterios de Aceptación
 * Es posible crear, listar, actualizar y desactivar alumnos, docentes y cursos desde endpoints REST JSON.
@@ -331,4 +331,25 @@ Estado: **Pendiente**.
   * Middleware de protección de rutas `requireAuth` con soporte para verificación de privilegios por roles de usuario.
   * Implementación del CRUD administrativo completo de usuarios (`/api/users`).
 - **Siguiente fase sugerida:** Fase B4 — CRUD académico base.
+
+### Fase B4 — CRUD Académico Base
+- **Fecha:** 2026-07-05
+- **Rama:** `alexis/backend-b4-crud-academico`
+- **Commit o mensaje sugerido:** `feat: fase B4 implementar crud para alumnos docentes y cursos`
+- **Estado final:** Completado
+- **Archivos creados:**
+  * `app/Models/Student.php`
+  * `app/Models/Teacher.php`
+  * `app/Models/Course.php`
+  * `app/Controllers/StudentController.php`
+  * `app/Controllers/TeacherController.php`
+  * `app/Controllers/CourseController.php`
+- **Archivos modificados:**
+  * `public/index.php`
+  * `SAII_BACKEND_BACKLOG.md`
+- **Cambios principales:**
+  * CRUD completo para Alumnos (`/api/students`) y Docentes (`/api/teachers`) con validaciones de longitud y formato de DNI (8 dígitos) y código (10 dígitos).
+  * CRUD completo para Cursos y Módulos asociados (`/api/courses`) de forma transaccional (Begin/Commit/Rollback).
+  * Validación estricta para asegurar que los módulos del curso sumen exactamente el 100% en total.
+- **Siguiente fase sugerida:** Fase B5 — Grupos académicos y matrículas.
 

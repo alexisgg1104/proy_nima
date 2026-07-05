@@ -105,5 +105,30 @@ $router->addRoute('POST', '/api/users', [UserController::class, 'create']);
 $router->addRoute('PUT', '/api/users/{id}', [UserController::class, 'update']);
 $router->addRoute('DELETE', '/api/users/{id}', [UserController::class, 'delete']);
 
+use App\Controllers\StudentController;
+use App\Controllers\TeacherController;
+use App\Controllers\CourseController;
+
+// Rutas de Alumnos - CRUD (Fase B4)
+$router->addRoute('GET', '/api/students', [StudentController::class, 'index']);
+$router->addRoute('GET', '/api/students/{id}', [StudentController::class, 'show']);
+$router->addRoute('POST', '/api/students', [StudentController::class, 'create']);
+$router->addRoute('PUT', '/api/students/{id}', [StudentController::class, 'update']);
+$router->addRoute('DELETE', '/api/students/{id}', [StudentController::class, 'delete']);
+
+// Rutas de Docentes - CRUD (Fase B4)
+$router->addRoute('GET', '/api/teachers', [TeacherController::class, 'index']);
+$router->addRoute('GET', '/api/teachers/{id}', [TeacherController::class, 'show']);
+$router->addRoute('POST', '/api/teachers', [TeacherController::class, 'create']);
+$router->addRoute('PUT', '/api/teachers/{id}', [TeacherController::class, 'update']);
+$router->addRoute('DELETE', '/api/teachers/{id}', [TeacherController::class, 'delete']);
+
+// Rutas de Cursos y Módulos - CRUD (Fase B4)
+$router->addRoute('GET', '/api/courses', [CourseController::class, 'index']);
+$router->addRoute('GET', '/api/courses/{id}', [CourseController::class, 'show']);
+$router->addRoute('POST', '/api/courses', [CourseController::class, 'create']);
+$router->addRoute('PUT', '/api/courses/{id}', [CourseController::class, 'update']);
+$router->addRoute('DELETE', '/api/courses/{id}', [CourseController::class, 'delete']);
+
 // Despachar la petición
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
