@@ -76,7 +76,7 @@ Durante esta etapa se usan datos simulados en JavaScript para poder presentar, p
 
 ### Etapa posterior — Backend real
 
-El proyecto **sí tendrá backend real** más adelante.
+El proyecto **sí tendrá backend real** más adelante. Su planificación oficial está definida en `SAII_BACKEND_BACKLOG.md`.
 
 La etapa posterior debe contemplar:
 
@@ -87,7 +87,7 @@ La etapa posterior debe contemplar:
 - Persistencia de alumnos, docentes, cursos, grupos, matrículas, asistencias, notas, certificados, usuarios, roles y configuración.
 
 > [!NOTE]
-> No implementar backend real dentro de las fases actuales de frontend salvo que el usuario lo pida explícitamente o exista una fase backend definida. La prohibición no significa que el proyecto nunca tendrá backend; significa que el agente no debe improvisarlo durante una fase frontend.
+> El agente solo debe implementar código PHP o alterar la base de datos cuando el usuario solicite explícitamente una fase de backend (ej: "Lee README.md y haz la Fase B1").
 
 ---
 
@@ -100,6 +100,18 @@ La etapa posterior debe contemplar:
 - Datos mock en JavaScript durante la etapa actual.
 - Sin React, Vue, Angular ni otros frameworks JavaScript.
 - Sin Tailwind, Bootstrap ni frameworks CSS.
+
+---
+
+## Stack tecnológico obligatorio para las fases de backend
+
+- Backend: PHP 8.0+ sin frameworks (Vanilla PHP).
+- Base de datos: MySQL / MariaDB (usando XAMPP y phpMyAdmin en local).
+- Acceso a datos: PDO (PHP Data Objects) con consultas preparadas obligatorias.
+- Estructura: Patrón MVC con división estricta en capas (Controllers, Models, router index.php).
+- Formato de intercambio: Respuestas estructuradas únicamente en formato JSON mediante la cabecera `Content-Type: application/json`.
+- Seguridad: Sesiones nativas de PHP seguras, contraseñas con hash (`password_hash`), validación en el servidor, middleware de verificación de roles y protección CSRF.
+
 
 ---
 
@@ -222,14 +234,16 @@ Para ejecutar cualquier fase, el usuario debe escribir únicamente:
 ```text
 Lee README.md y haz la Fase X.
 ```
-
-El agente debe interpretar `X` como el número de fase, leer el `README.md`, seguir las referencias internas y buscar el prompt operativo correspondiente en `SAII_ESTADO_Y_PROMPTS.md`.
-
-Para la Fase 5, el usuario también usa el mismo prompt mínimo. El agente debe saber por el `README.md` y por estos documentos que debe leer adicionalmente:
-
+O para fases de backend:
 ```text
-SAII_ASISTENCIA_ALUMNOS.md
+Lee README.md y haz la Fase Bx.
 ```
+
+El agente debe interpretar `X` o `Bx` como el número de fase, leer el `README.md` y seguir las referencias internas:
+- Para fases frontend: buscar el prompt operativo correspondiente en `SAII_ESTADO_Y_PROMPTS.md`.
+- Para fases backend: buscar el prompt operativo correspondiente en `SAII_BACKEND_ESTADO_Y_PROMPTS.md`.
+- Para la Fase 5: leer adicionalmente `SAII_ASISTENCIA_ALUMNOS.md`.
+
 
 ---
 
@@ -287,11 +301,9 @@ Resumen para pegar en SAII_BACKLOG.md:
 
 ## Regla sobre el resumen en el backlog
 
-Al terminar cada fase, el agente debe actualizar `SAII_BACKLOG.md` en la sección:
-
-```text
-## Bitácora de ejecución de fases
-```
+Al terminar cada fase:
+- Para fases frontend: el agente debe actualizar `SAII_BACKLOG.md` en la sección `## Bitácora de ejecución de fases`.
+- Para fases backend: el agente debe actualizar `SAII_BACKEND_BACKLOG.md` en la sección `## Bitácora de ejecución de fases de backend`.
 
 Debe agregar un resumen breve pero útil con:
 

@@ -45,7 +45,8 @@ El detalle operativo completo de cada fase está en `SAII_ESTADO_Y_PROMPTS.md`.
 | Fase 5 | Control de Asistencia de Alumnos | **Completada (corregida)** | `SAII_ESTADO_Y_PROMPTS.md` + `SAII_ASISTENCIA_ALUMNOS.md` |
 | Fase 6 | Registro de Notas | **Completada** | `SAII_ESTADO_Y_PROMPTS.md` |
 | Fase 7 | Certificados, Reportes, Usuarios, Roles y Configuración | **Completada** | `SAII_ESTADO_Y_PROMPTS.md` |
-| Etapa posterior | Backend PHP MVC + MySQL | Pendiente futuro | Documento backend por definir |
+| Etapa Backend | Backend PHP MVC + MySQL (Fases B0 a B10) | **Planificada / En Ejecución** | [SAII_BACKEND_BACKLOG.md](file:///c:/Users/manue/Downloads/saii-frontend-development%20(2)/SAII_BACKEND_BACKLOG.md) |
+
 
 ---
 
@@ -220,26 +221,21 @@ Referencia operativa: ver sección **Fase 7 pendiente — Certificados, Reportes
 
 ## Etapa posterior: Backend PHP MVC + MySQL
 
-Estado: **Pendiente futuro**.
+Estado: **Planificado / Iniciando**.
 
-Esta etapa no forma parte de las fases frontend actuales, pero sí forma parte del alcance final del proyecto.
+Esta etapa se ha estructurado formalmente en 11 fases de backend (Fase B0 a Fase B10). Toda la especificación detallada de objetivos, tareas, diccionarios de datos, APIs de conexión, políticas de seguridad y guías de configuración se encuentran distribuidas en los archivos de planificación técnica creados:
 
-Cuando el usuario indique iniciar backend, se deberá crear una planificación específica para:
+- [SAII_BACKEND_CONTEXTO.md](file:///c:/Users/manue/Downloads/saii-frontend-development%20(2)/SAII_BACKEND_CONTEXTO.md)
+- [SAII_BACKEND_BACKLOG.md](file:///c:/Users/manue/Downloads/saii-frontend-development%20(2)/SAII_BACKEND_BACKLOG.md)
+- [SAII_BACKEND_ESTADO_Y_PROMPTS.md](file:///c:/Users/manue/Downloads/saii-frontend-development%20(2)/SAII_BACKEND_ESTADO_Y_PROMPTS.md)
+- [SAII_BACKEND_DB_SCHEMA.md](file:///c:/Users/manue/Downloads/saii-frontend-development%20(2)/SAII_BACKEND_DB_SCHEMA.md)
+- [SAII_BACKEND_API_CONTRATO.md](file:///c:/Users/manue/Downloads/saii-frontend-development%20(2)/SAII_BACKEND_API_CONTRATO.md)
+- [SAII_BACKEND_SEGURIDAD.md](file:///c:/Users/manue/Downloads/saii-frontend-development%20(2)/SAII_BACKEND_SEGURIDAD.md)
+- [SAII_BACKEND_MIGRACION_MOCK.md](file:///c:/Users/manue/Downloads/saii-frontend-development%20(2)/SAII_BACKEND_MIGRACION_MOCK.md)
+- [README_BACKEND_SETUP.md](file:///c:/Users/manue/Downloads/saii-frontend-development%20(2)/README_BACKEND_SETUP.md)
 
-- Estructura MVC en PHP.
-- Conexión MySQL.
-- Modelos.
-- Controladores.
-- Vistas o endpoints.
-- Autenticación real.
-- Roles y permisos.
-- Migración de datos mock a tablas.
-- Validaciones backend.
-- Seguridad básica.
-- Integración con el frontend.
+El trabajo de backend debe realizarse en orden correlativo y por fases pequeñas e independientes, comenzando por la Fase B0 (Auditoría del frontend y corrección de referencias) e integrando progresivamente cada módulo.
 
-> [!NOTE]
-> No crear backend durante Fase 3, 4, 5, 6 o 7 salvo que el usuario lo pida de forma explícita.
 
 ---
 
