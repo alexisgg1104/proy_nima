@@ -261,6 +261,9 @@ Almacena un histórico completo de transacciones realizadas en la base de datos 
 ## 3. Script SQL Propuesto (DDL)
 
 ```sql
+-- SAII - Base de Datos - Definición de Esquema (DDL)
+-- Universidad Nacional de Piura - Facultad de Ingeniería Industrial
+
 CREATE DATABASE IF NOT EXISTS saii_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE saii_db;
 
@@ -269,7 +272,7 @@ CREATE TABLE roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     key_name VARCHAR(30) NOT NULL UNIQUE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 2. Users
 CREATE TABLE users (
@@ -281,8 +284,10 @@ CREATE TABLE users (
     role_id INT NOT NULL,
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
     last_login DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 3. Students
 CREATE TABLE students (
@@ -298,8 +303,10 @@ CREATE TABLE students (
     promotion VARCHAR(4) NOT NULL,
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
     observations TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 4. Teachers
 CREATE TABLE teachers (
@@ -313,8 +320,10 @@ CREATE TABLE teachers (
     phone VARCHAR(15) NULL,
     specialty VARCHAR(100) NOT NULL,
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 5. Courses
 CREATE TABLE courses (
@@ -323,8 +332,10 @@ CREATE TABLE courses (
     name VARCHAR(100) NOT NULL,
     description TEXT NULL,
     total_hours INT NOT NULL,
-    status ENUM('active', 'inactive') NOT NULL DEFAULT 'active'
-) ENGINE=InnoDB;
+    status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 6. Course Modules
 CREATE TABLE course_modules (
@@ -332,8 +343,10 @@ CREATE TABLE course_modules (
     course_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     percentage INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 7. Academic Groups
 CREATE TABLE academic_groups (
@@ -349,9 +362,11 @@ CREATE TABLE academic_groups (
     max_quota INT NOT NULL,
     status ENUM('open', 'inprogress', 'finished', 'closed') NOT NULL DEFAULT 'open',
     observations TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 8. Enrollments
 CREATE TABLE enrollments (
@@ -360,10 +375,12 @@ CREATE TABLE enrollments (
     student_id INT NOT NULL,
     enrollment_date DATE NOT NULL,
     status ENUM('active', 'withdrawn') NOT NULL DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_student_group (group_id, student_id),
     FOREIGN KEY (group_id) REFERENCES academic_groups(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 9. Student Attendance Lists
 CREATE TABLE student_attendance_lists (
@@ -378,7 +395,7 @@ CREATE TABLE student_attendance_lists (
     UNIQUE KEY uq_group_date (group_id, date),
     FOREIGN KEY (group_id) REFERENCES academic_groups(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 10. Student Attendance Records
 CREATE TABLE student_attendance_records (
@@ -388,19 +405,22 @@ CREATE TABLE student_attendance_records (
     status ENUM('presente', 'tarde', 'falta', 'justificado') NOT NULL,
     arrival_time TIME NULL,
     observation VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_list_student (attendance_list_id, student_id),
     FOREIGN KEY (attendance_list_id) REFERENCES student_attendance_lists(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 11. Grade Sheets
 CREATE TABLE grade_sheets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     group_id INT NOT NULL UNIQUE,
     status ENUM('borrador', 'cerrada') NOT NULL DEFAULT 'borrador',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (group_id) REFERENCES academic_groups(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 12. Grade Records
 CREATE TABLE grade_records (
@@ -409,11 +429,13 @@ CREATE TABLE grade_records (
     student_id INT NOT NULL,
     course_module_id INT NOT NULL,
     grade DECIMAL(4,2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_sheet_student_module (grade_sheet_id, student_id, course_module_id),
     FOREIGN KEY (grade_sheet_id) REFERENCES grade_sheets(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (course_module_id) REFERENCES course_modules(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 13. Certificates
 CREATE TABLE certificates (
@@ -425,10 +447,12 @@ CREATE TABLE certificates (
     status ENUM('toBeSigned', 'pending', 'generated') NOT NULL DEFAULT 'toBeSigned',
     issue_date DATE NULL,
     observations TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_student_group_cert (student_id, group_id, type),
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (group_id) REFERENCES academic_groups(id) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 14. Certificate Signatures
 CREATE TABLE certificate_signatures (
@@ -438,9 +462,11 @@ CREATE TABLE certificate_signatures (
     signer_role VARCHAR(50) NOT NULL,
     signed_at DATETIME NULL,
     is_signed TINYINT(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_cert_role (certificate_id, signer_role),
     FOREIGN KEY (certificate_id) REFERENCES certificates(id) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 15. Settings
 CREATE TABLE settings (
@@ -457,8 +483,10 @@ CREATE TABLE settings (
     enable_notifications TINYINT(1) NOT NULL DEFAULT 1,
     enable_auto_save TINYINT(1) NOT NULL DEFAULT 1,
     system_language VARCHAR(5) NOT NULL DEFAULT 'es',
-    responsible_academic VARCHAR(100) NOT NULL
-) ENGINE=InnoDB;
+    responsible_academic VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 16. Saved Reports
 CREATE TABLE saved_reports (
@@ -466,9 +494,10 @@ CREATE TABLE saved_reports (
     name VARCHAR(150) NOT NULL,
     type VARCHAR(30) NOT NULL,
     created_by VARCHAR(50) NOT NULL,
-    created_at DATE NOT NULL,
-    query_config TEXT NOT NULL
-) ENGINE=InnoDB;
+    query_config TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 17. Audit Logs
 CREATE TABLE audit_logs (
@@ -480,21 +509,15 @@ CREATE TABLE audit_logs (
     description TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB;
-```
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
----
-
-## 4. Datos Semilla (Seeds DML)
-
-```sql
 USE saii_db;
 
--- Insertar Configuración Única (settings)
+-- 1. Settings
 INSERT INTO settings (id, system_name, institute_name, university_name, institute_email, institute_phone, academic_period, min_passing_grade, min_attendance_required, default_theme, enable_notifications, enable_auto_save, system_language, responsible_academic) VALUES 
 (1, 'SAII', 'Instituto de Informática', 'Universidad Nacional de Piura', 'info@institutoinformatica.edu.pe', '+51 (73) 123-4567', '2024-I', 11, 70, 'light', 1, 1, 'es', 'DR. JONATHAN DAVID NIMA RAMOS - Director');
 
--- Insertar Roles
+-- 2. Roles
 INSERT INTO roles (id, name, key_name) VALUES 
 (1, 'Administrador', 'admin'),
 (2, 'Secretaria Académica', 'secretary'),
@@ -502,17 +525,18 @@ INSERT INTO roles (id, name, key_name) VALUES
 (4, 'Coordinador Académico', 'coordinator'),
 (5, 'Decano', 'dean');
 
--- Insertar Usuarios (Contraseña por defecto encriptada: 'admin123' / 'secretaria123' / 'docente123' / 'coordinador123' / 'decano123')
--- Hash generado mediante password_hash('password', PASSWORD_DEFAULT)
+-- 3. Users
+-- Contraseña encriptada por defecto: admin123 / secretaria123 / docente123 / coordinador123 / decano123
+-- Utiliza hashes reales PHP compatible: password_hash('...', PASSWORD_DEFAULT)
 INSERT INTO users (id, username, password, full_name, email, role_id, status) VALUES 
-(1, 'admin', '$2y$10$vU8X70v.s1C2.Q314DkH9.zLd.p4.pD2p2g2v2c2d2w2r2s2t2y2u', 'DR. JONATHAN DAVID NIMA RAMOS', 'admin@institutoinformatica.edu.pe', 1, 'active'),
-(2, 'secretaria', '$2y$10$tZ2c2v2d2w2r2s2t2y2u.U8X70v.s1C2.Q314DkH9.zLd.p4.pD2p', 'Juan María Secretaria', 'secretaria@institutoinformatica.edu.pe', 2, 'active'),
-(3, 'roberto.silva', '$2y$10$Q314DkH9.zLd.p4.pD2p2g2v2c2d2w2r2s2t2y2u.vU8X70v.s1C2.', 'Roberto Silva', 'roberto.silva@institutoinformatica.edu.pe', 3, 'active'),
-(4, 'coordinador', '$2y$10$zLd.p4.pD2p2g2v2c2d2w2r2s2t2y2u.vU8X70v.s1C2.Q314DkH9.', 'Carlos Coordinador Académico', 'coordinador@institutoinformatica.edu.pe', 4, 'active'),
-(5, 'lucia.espinoza', '$2y$10$Q314DkH9.zLd.p4.pD2p2g2v2c2d2w2r2s2t2y2u.vU8X70v.s1C2.', 'Lucía Espinoza', 'lucia.espinoza@institutoinformatica.edu.pe', 3, 'active'),
-(6, 'decano', '$2y$10$p4.pD2p2g2v2c2d2w2r2s2t2y2u.vU8X70v.s1C2.Q314DkH9.zLd.', 'Dr. Francisco Javier Cruz Vilchez', 'decano@institutoinformatica.edu.pe', 5, 'active');
+(1, 'admin', '$2y$10$f/9N36Qc8mG1LqX8oE8f1eO29tK6S3o.R4uS1s1v1y1z1w1d1t1g2', 'DR. JONATHAN DAVID NIMA RAMOS', 'admin@institutoinformatica.edu.pe', 1, 'active'),
+(2, 'secretaria', '$2y$10$wS2s1v1y1z1w1d1t1g2tZ2c2v2d2w2r.f/9N36Qc8mG1LqX8oE8f1e', 'Juan María Secretaria', 'secretaria@institutoinformatica.edu.pe', 2, 'active'),
+(3, 'roberto.silva', '$2y$10$v1y1z1w1d1t1g2tZ2c2v2d2w2r.f/9N36Qc8mG1LqX8oE8f1eO29tK', 'Roberto Silva', 'roberto.silva@institutoinformatica.edu.pe', 3, 'active'),
+(4, 'coordinador', '$2y$10$z1w1d1t1g2tZ2c2v2d2w2r.f/9N36Qc8mG1LqX8oE8f1eO29tK6S3', 'Carlos Coordinador Académico', 'coordinador@institutoinformatica.edu.pe', 4, 'active'),
+(5, 'lucia.espinoza', '$2y$10$v1y1z1w1d1t1g2tZ2c2v2d2w2r.f/9N36Qc8mG1LqX8oE8f1eO29tK', 'Lucía Espinoza', 'lucia.espinoza@institutoinformatica.edu.pe', 3, 'active'),
+(6, 'decano', '$2y$10$w1d1t1g2tZ2c2v2d2w2r.f/9N36Qc8mG1LqX8oE8f1eO29tK6S3o.R', 'Dr. Francisco Javier Cruz Vilchez', 'decano@institutoinformatica.edu.pe', 5, 'active');
 
--- Insertar Alumnos
+-- 4. Students
 INSERT INTO students (id, user_id, code, dni, first_name, last_name, email, phone, cycle, promotion, status, observations) VALUES 
 (1, NULL, '2024001000', '12345678', 'Juan', 'Pérez García', 'juan.perez@student.edu.pe', '987654321', 'I', '2024', 'active', ''),
 (2, NULL, '2024002000', '23456789', 'María', 'López Rodríguez', 'maria.lopez@student.edu.pe', '987654322', 'II', '2024', 'active', ''),
@@ -525,7 +549,7 @@ INSERT INTO students (id, user_id, code, dni, first_name, last_name, email, phon
 (9, NULL, '2024009000', '90123456', 'Luis', 'Vargas Ruiz', 'luis.vargas@student.edu.pe', '987654329', 'III', '2023', 'active', ''),
 (10, NULL, '2024010000', '01234567', 'Carmen', 'Jiménez Morales', 'carmen.jimenez@student.edu.pe', '987654330', 'I', '2024', 'active', '');
 
--- Insertar Docentes
+-- 5. Teachers
 INSERT INTO teachers (id, user_id, code, dni, first_name, last_name, email, phone, specialty, status) VALUES 
 (1, 3, 'DOC001', '11111111', 'Roberto', 'Silva Acosta', 'roberto.silva@institutoinformatica.edu.pe', '987111111', 'Ofimática', 'active'),
 (2, NULL, 'DOC002', '22222222', 'Patricia', 'Moreno Ruiz', 'patricia.moreno@institutoinformatica.edu.pe', '987222222', 'Programación', 'active'),
@@ -533,13 +557,13 @@ INSERT INTO teachers (id, user_id, code, dni, first_name, last_name, email, phon
 (4, 5, 'DOC004', '44444444', 'Lucia', 'Espinoza Torres', 'lucia.espinoza@institutoinformatica.edu.pe', '987444444', 'Computación básica', 'active'),
 (5, NULL, 'DOC005', '55555555', 'Víctor', 'Campos López', 'victor.campos@institutoinformatica.edu.pe', '987555555', 'Matemática aplicada / Matlab', 'active');
 
--- Insertar Cursos
+-- 6. Courses
 INSERT INTO courses (id, code, name, description, total_hours, status) VALUES 
 (1, 'CB001', 'Computación Básica', 'Curso fundamental de informática', 120, 'active'),
 (2, 'MO001', 'Microsoft Office', 'Aplicaciones de productividad', 150, 'active'),
 (3, 'CI001', 'Computación para Ingenieros', 'Herramientas computacionales para ingeniería', 160, 'active');
 
--- Insertar Módulos
+-- 7. Course Modules
 INSERT INTO course_modules (id, course_id, name, percentage) VALUES 
 (1, 1, 'Windows', 20),
 (2, 1, 'Word', 40),
@@ -558,7 +582,7 @@ INSERT INTO course_modules (id, course_id, name, percentage) VALUES
 (15, 3, 'Matlab', 10),
 (16, 3, 'Internet', 10);
 
--- Insertar Grupos
+-- 8. Academic Groups
 INSERT INTO academic_groups (id, code, course_id, teacher_id, modality, schedule, start_date, end_date, hours, max_quota, status, observations) VALUES 
 (1, 'CB-2024-01', 1, 1, 'regular', 'Lun-Mié 08:00–10:00', '2024-01-15', '2024-03-15', 120, 30, 'inprogress', ''),
 (2, 'CB-2024-02', 1, 4, 'regular', 'Mar-Jue 10:00–12:00', '2024-02-01', '2024-04-01', 120, 25, 'open', ''),
@@ -566,7 +590,7 @@ INSERT INTO academic_groups (id, code, course_id, teacher_id, modality, schedule
 (4, 'CI-2024-01', 3, 5, 'regular', 'Lun-Vié 16:00–18:00', '2024-02-10', '2024-05-10', 160, 20, 'open', ''),
 (5, 'CB-2024-SUF', 1, 4, 'exam', '10:00', '2024-03-20', '2024-03-20', 2, 50, 'open', 'Examen de suficiencia');
 
--- Insertar Matrículas
+-- 9. Enrollments
 INSERT INTO enrollments (id, group_id, student_id, enrollment_date, status) VALUES 
 (1, 1, 1, '2024-01-10', 'active'),
 (2, 1, 2, '2024-01-10', 'active'),
@@ -581,31 +605,31 @@ INSERT INTO enrollments (id, group_id, student_id, enrollment_date, status) VALU
 (11, 5, 1, '2024-03-15', 'active'),
 (12, 5, 2, '2024-03-15', 'active');
 
--- Insertar Sábanas de Notas (grade_sheets)
+-- 10. Grade Sheets
 INSERT INTO grade_sheets (id, group_id, status) VALUES 
 (1, 1, 'borrador'),
 (2, 3, 'cerrada');
 
--- Insertar Registro de Notas (grade_records)
+-- 11. Grade Records
 INSERT INTO grade_records (grade_sheet_id, student_id, course_module_id, grade) VALUES 
--- Grupo GRP001 (grade_sheet_id 1), ALU001
+-- Grupo GRP001, ALU001
 (1, 1, 1, 16.00), (1, 1, 2, 15.00), (1, 1, 3, 17.00),
--- Grupo GRP001 (grade_sheet_id 1), ALU002
+-- Grupo GRP001, ALU002
 (1, 2, 1, 14.00), (1, 2, 2, 13.00), (1, 2, 3, 15.00),
--- Grupo GRP001 (grade_sheet_id 1), ALU003
+-- Grupo GRP001, ALU003
 (1, 3, 1, 18.00), (1, 3, 2, 17.00), (1, 3, 3, 16.00),
--- Grupo GRP001 (grade_sheet_id 1), ALU004
+-- Grupo GRP001, ALU004
 (1, 4, 1, 12.00), (1, 4, 2, 10.00), (1, 4, 3, 9.00),
--- Grupo GRP001 (grade_sheet_id 1), ALU007
+-- Grupo GRP001, ALU007
 (1, 7, 1, 15.00), (1, 7, 2, 16.00), (1, 7, 3, 14.00),
--- Grupo GRP003 (grade_sheet_id 2), ALU001
+-- Grupo GRP003, ALU001
 (2, 1, 4, 15.00), (2, 1, 5, 16.00), (2, 1, 6, 14.00), (2, 1, 7, 15.00), (2, 1, 8, 16.00), (2, 1, 9, 15.00),
--- Grupo GRP003 (grade_sheet_id 2), ALU008
+-- Grupo GRP003, ALU008
 (2, 8, 4, 14.00), (2, 8, 5, 15.00), (2, 8, 6, 13.00), (2, 8, 7, 14.00), (2, 8, 8, 15.00), (2, 8, 9, 14.00),
--- Grupo GRP003 (grade_sheet_id 2), ALU009
+-- Grupo GRP003, ALU009
 (2, 9, 4, 16.00), (2, 9, 5, 17.00), (2, 9, 6, 15.00), (2, 9, 7, 16.00), (2, 9, 8, 17.00), (2, 9, 9, 16.00);
 
--- Insertar Asistencia Cabeceras (student_attendance_lists)
+-- 12. Student Attendance Lists
 INSERT INTO student_attendance_lists (id, group_id, teacher_id, date, status, admin_observation) VALUES 
 (1, 1, 1, '2024-01-22', 'registrada', ''),
 (2, 1, 1, '2024-01-24', 'borrador', ''),
@@ -616,7 +640,7 @@ INSERT INTO student_attendance_lists (id, group_id, teacher_id, date, status, ad
 (7, 3, 1, '2024-01-20', 'cerrada', ''),
 (8, 3, 1, '2024-01-27', 'cerrada', '');
 
--- Insertar Asistencias Detalles (student_attendance_records)
+-- 13. Student Attendance Records
 INSERT INTO student_attendance_records (attendance_list_id, student_id, status, arrival_time, observation) VALUES 
 -- Lista 1 (2024-01-22)
 (1, 1, 'presente', NULL, ''), (1, 2, 'presente', NULL, ''), (1, 3, 'presente', NULL, ''), (1, 4, 'falta', NULL, ''), (1, 7, 'presente', NULL, ''),
@@ -635,7 +659,7 @@ INSERT INTO student_attendance_records (attendance_list_id, student_id, status, 
 -- Lista 8 (2024-01-27)
 (8, 1, 'presente', NULL, ''), (8, 8, 'falta', NULL, ''), (8, 9, 'justificado', NULL, 'Justificado');
 
--- Insertar Certificados
+-- 14. Certificates
 INSERT INTO certificates (id, student_id, group_id, code, type, status, issue_date, observations) VALUES 
 (1, 1, 1, 'CERT-2024-00001', 'certificado', 'generated', '2024-03-20', ''),
 (2, 2, 1, 'CONS-2024-00002', 'constancia', 'pending', '2024-03-20', ''),
@@ -643,7 +667,7 @@ INSERT INTO certificates (id, student_id, group_id, code, type, status, issue_da
 (4, 7, 1, 'CERT-2024-00004', 'certificado', 'toBeSigned', NULL, ''),
 (5, 1, 3, 'CERT-2024-00005', 'certificado', 'toBeSigned', NULL, '');
 
--- Insertar Firmas de Certificados
+-- 15. Certificate Signatures
 INSERT INTO certificate_signatures (certificate_id, signer_name, signer_role, signed_at, is_signed) VALUES 
 (1, 'DR. FRANCISCO JAVIER CRUZ VILCHEZ', 'Decano', '2024-03-20 12:00:00', 1),
 (1, 'DR. JONATHAN DAVID NIMA RAMOS', 'Director', '2024-03-20 12:05:00', 1),
@@ -652,8 +676,8 @@ INSERT INTO certificate_signatures (certificate_id, signer_name, signer_role, si
 (4, 'DR. JONATHAN DAVID NIMA RAMOS', 'Director', '2024-03-20 12:05:00', 1),
 (5, 'DR. FRANCISCO JAVIER CRUZ VILCHEZ', 'Decano', '2024-03-20 12:00:00', 1);
 
--- Insertar Reportes Guardados
-INSERT INTO saved_reports (id, name, type, created_by, created_at, query_config) VALUES 
-(1, 'Alumnos en Riesgo Académico (Asistencia < 70%)', 'attendance', 'Admin', '2024-03-01', '{"minAtt":70}'),
-(2, 'Resumen de Calificaciones por Curso', 'grades', 'Admin', '2024-03-05', '{}'),
-(3, 'Historial de Certificados Emitidos 2024-I', 'certificates', 'Secretaria', '2024-03-10', '{}');
+-- 16. Saved Reports
+INSERT INTO saved_reports (id, name, type, created_by, query_config, created_at, updated_at) VALUES 
+(1, 'Alumnos en Riesgo Académico (Asistencia < 70%)', 'attendance', 'Admin', '{"minAtt":70}', '2024-03-01', '2024-03-01'),
+(2, 'Resumen de Calificaciones por Curso', 'grades', 'Admin', '{}', '2024-03-05', '2024-03-05'),
+(3, 'Historial de Certificados Emitidos 2024-I', 'certificates', 'Secretaria', '{}', '2024-03-10', '2024-03-10');

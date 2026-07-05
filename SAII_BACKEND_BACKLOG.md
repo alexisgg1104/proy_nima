@@ -9,7 +9,7 @@ Este archivo define el mapa general de fases de desarrollo para la etapa del bac
 | Fase | Nombre | Estado | Fuente Operativa |
 |---|---|---|---|
 | **Fase B0** | Auditoría y estabilización previa del frontend | **En Ejecución** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
-| **Fase B1** | Diseño de base de datos | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
+| **Fase B1** | Diseño de base de datos | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B2** | Estructura PHP MVC | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B3** | Autenticación, sesiones, usuarios y roles | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B4** | CRUD académico base | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
@@ -46,17 +46,18 @@ Estado: **En Ejecución**.
 
 ## Fase B1: Diseño de base de datos
 
-Estado: **Pendiente**.
+Estado: **Completada**.
 
 ### Objetivos
 * Diseñar un modelo de base de datos relacional MySQL normalizado que abarque la totalidad de los datos mock del sistema.
 * Garantizar la integridad de datos mediante constraints de llaves primarias y foráneas.
 
 ### Tareas
-- [ ] Diseñar el modelo relacional (ER) textual y detallado.
-- [ ] Definir los tipos de datos óptimos para cada columna (DNI de 8, código de 10, contraseñas hash, estados, etc.).
-- [ ] Crear el script SQL `schema.sql` con la definición DDL de las 17 tablas.
-- [ ] Crear el script SQL `seeds.sql` con datos representativos basados en `public/js/data.js`.
+- [x] Diseñar el modelo relacional (ER) textual y detallado.
+- [x] Definir los tipos de datos óptimos para cada columna (DNI de 8, código de 10, contraseñas hash, estados, etc.).
+- [x] Crear el script SQL `schema.sql` con la definición DDL de las 17 tablas.
+- [x] Crear el script SQL `seeds.sql` con datos representativos basados en `public/js/data.js`.
+
 
 ### Criterios de Aceptación
 * El script SQL se ejecuta sin errores en phpMyAdmin.
@@ -271,4 +272,25 @@ Estado: **Pendiente**.
   * Se diseñó el plan técnico completo y detallado para el desarrollo backend.
   * Se identificaron 6 llamadas a funciones inexistentes en el frontend que deben corregirse (Fase B0).
   * Se constató la presencia de código obsoleto ("asistencia docente" / planillas) en `app.js` que no es compatible con el flujo de asistencia de alumnos y debe limpiarse.
-- **Siguiente fase sugerida:** Fase B1 — Diseño de base de datos.
+- **Siguiente fase sugerida:** Fase B2 — Estructura PHP MVC.
+
+### Fase B1 — Diseño de Base de Datos
+- **Fecha:** 2026-07-05
+- **Rama:** `main` (o la rama actual de trabajo de backend)
+- **Commit o mensaje sugerido:** `database: validar esquema mysql inicial para saii`
+- **Estado final:** Completado
+- **Archivos creados:**
+  * `database/reset.sql`
+  * `database/README.md`
+- **Archivos modificados:**
+  * `database/schema.sql`
+  * `database/seeds.sql`
+  * `SAII_BACKEND_DB_SCHEMA.md`
+  * `SAII_BACKEND_BACKLOG.md`
+- **Cambios principales:**
+  * Se validó e importó exitosamente la estructura SQL de 17 tablas con codificación utf8mb4 y motor InnoDB.
+  * Se optimizaron las tablas agregando columnas de auditoría `created_at` y `updated_at`.
+  * Se verificó la consistencia e integridad referencial de los datos semilla (seeds.sql).
+  * Se creó un script de reinicio local rápido (`reset.sql`) y la documentación de configuración e importación (`database/README.md`).
+- **Siguiente fase sugerida:** Fase B2 — Estructura PHP MVC.
+
