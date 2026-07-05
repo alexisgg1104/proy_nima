@@ -19,12 +19,12 @@ INSERT INTO roles (id, name, key_name) VALUES
 -- Contraseña encriptada por defecto: admin123 / secretaria123 / docente123 / coordinador123 / decano123
 -- Utiliza hashes reales PHP compatible: password_hash('...', PASSWORD_DEFAULT)
 INSERT INTO users (id, username, password, full_name, email, role_id, status) VALUES 
-(1, 'admin', '$2y$10$f/9N36Qc8mG1LqX8oE8f1eO29tK6S3o.R4uS1s1v1y1z1w1d1t1g2', 'DR. JONATHAN DAVID NIMA RAMOS', 'admin@institutoinformatica.edu.pe', 1, 'active'),
-(2, 'secretaria', '$2y$10$wS2s1v1y1z1w1d1t1g2tZ2c2v2d2w2r.f/9N36Qc8mG1LqX8oE8f1e', 'Juan María Secretaria', 'secretaria@institutoinformatica.edu.pe', 2, 'active'),
-(3, 'roberto.silva', '$2y$10$v1y1z1w1d1t1g2tZ2c2v2d2w2r.f/9N36Qc8mG1LqX8oE8f1eO29tK', 'Roberto Silva', 'roberto.silva@institutoinformatica.edu.pe', 3, 'active'),
-(4, 'coordinador', '$2y$10$z1w1d1t1g2tZ2c2v2d2w2r.f/9N36Qc8mG1LqX8oE8f1eO29tK6S3', 'Carlos Coordinador Académico', 'coordinador@institutoinformatica.edu.pe', 4, 'active'),
-(5, 'lucia.espinoza', '$2y$10$v1y1z1w1d1t1g2tZ2c2v2d2w2r.f/9N36Qc8mG1LqX8oE8f1eO29tK', 'Lucía Espinoza', 'lucia.espinoza@institutoinformatica.edu.pe', 3, 'active'),
-(6, 'decano', '$2y$10$w1d1t1g2tZ2c2v2d2w2r.f/9N36Qc8mG1LqX8oE8f1eO29tK6S3o.R', 'Dr. Francisco Javier Cruz Vilchez', 'decano@institutoinformatica.edu.pe', 5, 'active');
+(1, 'admin', '$2y$10$ZfnjIbCSmg6OwSocj2LsLuvGBoySkaw/.5UQjis0cVfF.rpkP9ova', 'DR. JONATHAN DAVID NIMA RAMOS', 'admin@institutoinformatica.edu.pe', 1, 'active'),
+(2, 'secretaria', '$2y$10$GuGGcL2vEugjZOHYzOsImuwkdYCRwQ2VDtt22RLwjC/NUdAWchj1G', 'Juan María Secretaria', 'secretaria@institutoinformatica.edu.pe', 2, 'active'),
+(3, 'roberto.silva', '$2y$10$Lu5pHmYtNQ5YuOxWr8hDJ.S56i2XbB3h.s0wHDgbn4rW9BkJpMw.C', 'Roberto Silva', 'roberto.silva@institutoinformatica.edu.pe', 3, 'active'),
+(4, 'coordinador', '$2y$10$CLZvo9hP8IV5C8ZhMTsyuOp8HauLvzkpr3JU5NMMOmzkiK2i9/H..', 'Carlos Coordinador Académico', 'coordinador@institutoinformatica.edu.pe', 4, 'active'),
+(5, 'lucia.espinoza', '$2y$10$Lu5pHmYtNQ5YuOxWr8hDJ.S56i2XbB3h.s0wHDgbn4rW9BkJpMw.C', 'Lucía Espinoza', 'lucia.espinoza@institutoinformatica.edu.pe', 3, 'active'),
+(6, 'decano', '$2y$10$w1I437LVXlKsf1mBppu4Zu0.zpRF7GEGdOxQTV9Z1Ve73BD6vbxNa', 'Dr. Francisco Javier Cruz Vilchez', 'decano@institutoinformatica.edu.pe', 5, 'active');
 
 -- 4. Students
 INSERT INTO students (id, user_id, code, dni, first_name, last_name, email, phone, cycle, promotion, status, observations) VALUES 

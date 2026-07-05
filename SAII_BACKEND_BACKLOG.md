@@ -10,8 +10,8 @@ Este archivo define el mapa general de fases de desarrollo para la etapa del bac
 |---|---|---|---|
 | **Fase B0** | Auditoría y estabilización previa del frontend | **En Ejecución** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B1** | Diseño de base de datos | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
-| **Fase B2** | Estructura PHP MVC | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
-| **Fase B3** | Autenticación, sesiones, usuarios y roles | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
+| **Fase B2** | Estructura PHP MVC | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
+| **Fase B3** | Autenticación, sesiones, usuarios y roles | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B4** | CRUD académico base | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B5** | Grupos académicos y matrículas | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B6** | Asistencia de alumnos | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
@@ -67,19 +67,19 @@ Estado: **Completada**.
 
 ## Fase B2: Estructura PHP MVC
 
-Estado: **Pendiente**.
+Estado: **Completada**.
 
 ### Objetivos
 * Crear la estructura básica del proyecto en capas bajo el patrón Modelo-Vista-Controlador en PHP 8.
 * Implementar un sistema de enrutamiento básico para responder solicitudes JSON de forma organizada.
 
 ### Tareas
-- [ ] Estructurar los directorios del proyecto: `app/` (Models, Controllers), `config/` (DB connection), `public/` (index.php, router, assets).
-- [ ] Crear el Front Controller `public/index.php` que reciba todas las solicitudes.
-- [ ] Crear la clase `Router` que mapee rutas HTTP (GET/POST/PUT/DELETE) a métodos de controladores.
-- [ ] Configurar la conexiónPDO en `config/database.php` leyendo credenciales desde un archivo `.env`.
-- [ ] Definir las clases base `BaseModel` y `BaseController`.
-- [ ] Crear una clase helper para estandarizar las respuestas JSON de la API.
+- [x] Estructurar los directorios del proyecto: `app/` (Models, Controllers), `config/` (DB connection), `public/` (index.php, router, assets).
+- [x] Crear el Front Controller `public/index.php` que reciba todas las solicitudes.
+- [x] Crear la clase `Router` que mapee rutas HTTP (GET/POST/PUT/DELETE) a métodos de controladores.
+- [x] Configurar la conexión PDO en `config/database.php` leyendo credenciales desde un archivo `.env`.
+- [x] Definir las clases base `BaseModel` y `BaseController`.
+- [x] Crear una clase helper para estandarizar las respuestas JSON de la API.
 
 ### Criterios de Aceptación
 * Acceder a `http://localhost/saii-backend/public/api/test` retorna una respuesta JSON de prueba exitosa.
@@ -89,19 +89,19 @@ Estado: **Pendiente**.
 
 ## Fase B3: Autenticación, sesiones, usuarios y roles
 
-Estado: **Pendiente**.
+Estado: **Completada**.
 
 ### Objetivos
 * Reemplazar el login simulado del frontend por un flujo de autenticación real en el servidor.
 * Administrar los accesos y los menús según el rol del usuario de forma segura.
 
 ### Tareas
-- [ ] Crear la tabla `users` con hashes seguros en BD.
-- [ ] Implementar el endpoint `/api/auth/login` que valide credenciales con `password_verify` e inicie la sesión de PHP (`$_SESSION`).
-- [ ] Implementar el endpoint `/api/auth/logout` que destruya la sesión.
-- [ ] Implementar el endpoint `/api/auth/me` para retornar el perfil del usuario autenticado en la sesión.
-- [ ] Crear Middlewares o filtros de autenticación y de roles para proteger las rutas de la API.
-- [ ] Implementar el CRUD completo de administración de usuarios y la gestión de permisos de roles.
+- [x] Crear la tabla `users` con hashes seguros en BD.
+- [x] Implementar el endpoint `/api/auth/login` que valide credenciales con `password_verify` e inicie la sesión de PHP (`$_SESSION`).
+- [x] Implementar el endpoint `/api/auth/logout` que destruya la sesión.
+- [x] Implementar el endpoint `/api/auth/me` para retornar el perfil del usuario autenticado en la sesión.
+- [x] Crear Middlewares o filtros de autenticación y de roles para proteger las rutas de la API.
+- [x] Implementar el CRUD completo de administración de usuarios y la gestión de permisos de roles.
 
 ### Criterios de Aceptación
 * No es posible acceder a endpoints protegidos de la API sin una sesión activa (retorna HTTP 401).
@@ -293,4 +293,42 @@ Estado: **Pendiente**.
   * Se verificó la consistencia e integridad referencial de los datos semilla (seeds.sql).
   * Se creó un script de reinicio local rápido (`reset.sql`) y la documentación de configuración e importación (`database/README.md`).
 - **Siguiente fase sugerida:** Fase B2 — Estructura PHP MVC.
+
+### Fase B2 — Estructura PHP MVC
+- **Fecha:** 2026-07-05
+- **Rama:** `alexis/backend-b2-mvc-router`
+- **Commit o mensaje sugerido:** `feat: fase B2 estructurar arquitectura mvc php y enrutamiento api`
+- **Estado final:** Completado
+- **Archivos creados:**
+  * `config/Database.php`
+  * `app/Core/Router.php`
+  * `app/Core/BaseModel.php`
+  * `app/Core/BaseController.php`
+  * `.htaccess`
+  * `.env.example`
+- **Archivos modificados:**
+  * `public/index.php`
+- **Cambios principales:**
+  * Configuración del ruteador nativo en PHP con expresiones regulares y soporte de subdirectorios de XAMPP.
+  * Implementación de la autocarga PSR-4 y la conexión a MySQL usando PDO Singleton.
+
+### Fase B3 — Autenticación, Sesiones, Usuarios y Roles
+- **Fecha:** 2026-07-05
+- **Rama:** `alexis/backend-b3-auth-sessions`
+- **Commit o mensaje sugerido:** `feat: fase B3 implementar autenticacion real y control de sesiones por rol`
+- **Estado final:** Completado
+- **Archivos creados:**
+  * `app/Models/User.php`
+  * `app/Models/Role.php`
+  * `app/Controllers/AuthController.php`
+  * `app/Controllers/UserController.php`
+- **Archivos modificados:**
+  * `app/Core/BaseController.php`
+  * `public/index.php`
+  * `database/seeds.sql`
+- **Cambios principales:**
+  * Flujo de inicio de sesión real validado mediante `password_verify` en MySQL.
+  * Middleware de protección de rutas `requireAuth` con soporte para verificación de privilegios por roles de usuario.
+  * Implementación del CRUD administrativo completo de usuarios (`/api/users`).
+- **Siguiente fase sugerida:** Fase B4 — CRUD académico base.
 

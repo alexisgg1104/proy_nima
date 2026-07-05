@@ -24,4 +24,20 @@ class BaseController {
         ], JSON_UNESCAPED_UNICODE);
         exit;
     }
+
+    // Middleware de sesión y autorización por rol
+    protected function requireAuth(array $allowedRoles = []) {
+        if (!isset($_SESSION['user']) || !isset($_SESSION['user']['username'])) {
+            $this->error('No autenticado. Por favor inicie sesión.', 401);
+        }
+
+        if (!empty($allowedRoles)) {
+            $userRole = $_SESSION['user']['role'] ?? '';
+            if (!in_array($userRole, $allowedRoles)) {
+                $this->error('Acceso denegado. Permisos insuficientes.', 403);
+            }
+        }
+
+        return $_SESSION['user'];
+    }
 }

@@ -90,5 +90,20 @@ $router->addRoute('GET', '/api/test', function() {
     exit;
 });
 
+use App\Controllers\AuthController;
+use App\Controllers\UserController;
+
+// Rutas de Autenticación (Fase B3)
+$router->addRoute('POST', '/api/auth/login', [AuthController::class, 'login']);
+$router->addRoute('POST', '/api/auth/logout', [AuthController::class, 'logout']);
+$router->addRoute('GET', '/api/auth/me', [AuthController::class, 'me']);
+
+// Rutas de Gestión de Usuarios - CRUD (Fase B3)
+$router->addRoute('GET', '/api/users', [UserController::class, 'index']);
+$router->addRoute('GET', '/api/users/{id}', [UserController::class, 'show']);
+$router->addRoute('POST', '/api/users', [UserController::class, 'create']);
+$router->addRoute('PUT', '/api/users/{id}', [UserController::class, 'update']);
+$router->addRoute('DELETE', '/api/users/{id}', [UserController::class, 'delete']);
+
 // Despachar la petición
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
