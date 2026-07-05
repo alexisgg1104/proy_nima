@@ -171,5 +171,17 @@ $router->addRoute('GET', '/api/certificates/{id}', [CertificateController::class
 $router->addRoute('POST', '/api/certificates', [CertificateController::class, 'create']);
 $router->addRoute('POST', '/api/certificates/{id}/sign', [CertificateController::class, 'sign']);
 
+use App\Controllers\ReportController;
+
+// Rutas de Reportes, Gráficos y Exportaciones (Fase B8)
+$router->addRoute('GET', '/api/reports/dashboard', [ReportController::class, 'dashboard']);
+$router->addRoute('GET', '/api/reports/saved', [ReportController::class, 'listSaved']);
+$router->addRoute('GET', '/api/reports/saved/{id}', [ReportController::class, 'showSaved']);
+$router->addRoute('POST', '/api/reports/saved', [ReportController::class, 'createSaved']);
+$router->addRoute('PUT', '/api/reports/saved/{id}', [ReportController::class, 'updateSaved']);
+$router->addRoute('DELETE', '/api/reports/saved/{id}', [ReportController::class, 'deleteSaved']);
+$router->addRoute('GET', '/api/reports/export/csv', [ReportController::class, 'exportCSV']);
+$router->addRoute('GET', '/api/reports/pdf/certificate/{id}', [ReportController::class, 'exportPDF']);
+
 // Despachar la petición
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
