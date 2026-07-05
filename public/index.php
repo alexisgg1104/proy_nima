@@ -147,5 +147,16 @@ $router->addRoute('POST', '/api/enrollments', [EnrollmentController::class, 'cre
 $router->addRoute('PUT', '/api/enrollments/{id}', [EnrollmentController::class, 'update']);
 $router->addRoute('DELETE', '/api/enrollments/{id}', [EnrollmentController::class, 'delete']);
 
+use App\Controllers\AttendanceController;
+
+// Rutas de Control de Asistencia (Fase B6)
+$router->addRoute('GET', '/api/attendance', [AttendanceController::class, 'index']);
+$router->addRoute('GET', '/api/attendance/{id}', [AttendanceController::class, 'show']);
+$router->addRoute('GET', '/api/attendance/group/{groupId}/students', [AttendanceController::class, 'getTemplateStudents']);
+$router->addRoute('POST', '/api/attendance', [AttendanceController::class, 'create']);
+$router->addRoute('PUT', '/api/attendance/{id}', [AttendanceController::class, 'update']);
+$router->addRoute('DELETE', '/api/attendance/{id}', [AttendanceController::class, 'delete']);
+$router->addRoute('POST', '/api/attendance/{id}/status', [AttendanceController::class, 'updateStatus']);
+
 // Despachar la petición
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

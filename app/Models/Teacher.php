@@ -96,4 +96,11 @@ class Teacher extends BaseModel {
         $stmt = $this->db->prepare("DELETE FROM teachers WHERE id = :id");
         return $stmt->execute(['id' => $id]);
     }
+
+    // Obtener un docente por su User ID
+    public function getByUserId($userId) {
+        $stmt = $this->db->prepare("SELECT * FROM teachers WHERE user_id = :user_id");
+        $stmt->execute(['user_id' => $userId]);
+        return $stmt->fetch();
+    }
 }

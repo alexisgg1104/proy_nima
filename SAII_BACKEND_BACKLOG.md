@@ -14,7 +14,7 @@ Este archivo define el mapa general de fases de desarrollo para la etapa del bac
 | **Fase B3** | Autenticación, sesiones, usuarios y roles | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B4** | CRUD académico base | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B5** | Grupos académicos y matrículas | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
-| **Fase B6** | Asistencia de alumnos | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
+| **Fase B6** | Asistencia de alumnos | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B7** | Notas, actas y certificados | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B8** | Reportes, gráficos y exportaciones | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B9** | Integración frontend-backend | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
@@ -149,16 +149,16 @@ Estado: **Completada**.
 
 ## Fase B6: Asistencia de alumnos
 
-Estado: **Pendiente**.
+Estado: **Completada**.
 
 ### Objetivos
 * Desarrollar el control y registro diario de asistencia por parte de los docentes.
 
 ### Tareas
-- [ ] Crear endpoints para listar los alumnos matriculados en un grupo específico a fin de inicializar la lista de asistencia del día.
-- [ ] Implementar el guardado de listas de asistencia (`/api/attendance`) con estados: `borrador`, `registrada`, `observada`, `cerrada`.
-- [ ] Lógica de validación: solo los docentes asignados al grupo pueden registrar asistencia del mismo.
-- [ ] Implementar que el administrador pueda observar, reabrir o cerrar de forma definitiva las listas de asistencia.
+- [x] Crear endpoints para listar los alumnos matriculados en un grupo específico a fin de inicializar la lista de asistencia del día.
+- [x] Implementar el guardado de listas de asistencia (`/api/attendance`) con estados: `borrador`, `registrada`, `observada`, `cerrada`.
+- [x] Lógica de validación: solo los docentes asignados al grupo pueden registrar asistencia del mismo.
+- [x] Implementar que el administrador pueda observar, reabrir o cerrar de forma definitiva las listas de asistencia.
 
 ### Criterios de Aceptación
 * El docente puede guardar borradores de asistencia y posteriormente marcarlos como "Registrada".
@@ -371,4 +371,23 @@ Estado: **Pendiente**.
   * CRUD completo para Matrículas (`/api/enrollments`) con control estricto de cupos disponibles (`max_quota`) en tiempo real.
   * Validación que impide la matriculación de alumnos duplicados en un mismo grupo académico.
 - **Siguiente fase sugerida:** Fase B6 — Asistencia de alumnos.
+
+### Fase B6 — Asistencia de Alumnos
+- **Fecha:** 2026-07-05
+- **Rama:** `alexis/backend-b6-student-attendance`
+- **Commit o mensaje sugerido:** `feat: fase B6 endpoints de asistencia de alumnos y restricciones de rol`
+- **Estado final:** Completado
+- **Archivos creados:**
+  * `app/Models/Attendance.php`
+  * `app/Controllers/AttendanceController.php`
+- **Archivos modificados:**
+  * `app/Models/Teacher.php`
+  * `public/index.php`
+  * `SAII_BACKEND_BACKLOG.md`
+- **Cambios principales:**
+  * Endpoint de plantilla de alumnos matriculados (`/api/attendance/group/{groupId}/students`) para facilitar al docente el pase de lista inicial.
+  * CRUD completo de Asistencia de Alumnos (`/api/attendance`) con soporte transaccional para la cabecera y el detalle de alumnos.
+  * Lógica de autorización que restringe a los docentes para registrar asistencia únicamente en sus grupos asignados y editar solo en estados editables (`borrador` y `observada`).
+  * Endpoint administrativo para cambio de estados (`/api/attendance/{id}/status`) permitiendo a administradores y secretarias observar u oficializar (cerrar) las listas de asistencia con observaciones pertinentes.
+- **Siguiente fase sugerida:** Fase B7 — Notas, actas y certificados.
 
