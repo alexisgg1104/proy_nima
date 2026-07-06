@@ -726,6 +726,50 @@ El agente debe actualizar esta sección al terminar cada fase.
   - Clic en "Imprimir" del administrador y "Exportar" del docente descarga el reporte CSV/Excel correctamente.
 - Pendientes o riesgos: ninguno.
 
+#### Ajustes de Registro de Calificaciones (Fase 6)
+
+- Fecha: 2026-07-06
+- Rama: main
+- Commit o mensaje sugerido: `fix: unificar registro, guardado y cierre de calificaciones con base de datos, implementar exportacion a Excel real y segmentar por docente`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `app/Controllers/GradeController.php`
+  - `public/index.php`
+  - `public/js/app.js`
+  - `public/js/data.js`
+  - `docs/frontend/SAII_BACKLOG.md`
+- Funciones creadas o modificadas:
+  - En `app/Controllers/GradeController.php`:
+    - `updateStatus()` (creada: permite actualizar el estado del acta a 'borrador' o 'cerrada' según sea necesario)
+  - En `public/index.php`:
+    - `GET /api/grades` (creada: retorna los registros reales de notas para la precarga del frontend)
+    - `GET /api/grades/sheets` (creada: retorna los estados reales de las actas de notas para sincronización)
+    - `POST /api/grades/group/{groupId}/status` (creada: mapea la actualización de estado del acta)
+  - En `public/js/data.js`:
+    - `preload()` (modificada: incluye las peticiones de actas y notas reales, cacheando las cabeceras)
+    - `getGradeSheetByGroup()` (modificada: lee dinámicamente el estado de la base de datos en lugar de forzar 'cerrada')
+    - `updateGradeSheetStatus()` (modificada: realiza una llamada real POST al backend para guardar en MySQL)
+  - En `public/js/app.js`:
+    - `setupAdminGradesView()` (modificada: restringe los grupos en el selector si el usuario es docente y oculta el filtro general de docentes)
+    - `renderAdminGradesTable()` (modificada: filtra loose `==` por docente asignado y reemplaza las referencias mock por la caché de MySQL `DataManager.getGrades()`)
+    - `viewGradeSheetDetail()` (modificada: actualiza a loose `==` y utiliza las notas de la base de datos real)
+    - `saveModalGrades()` y `saveGradesData()` (creadas/modificadas: guarda de forma masiva y asíncrona la lista de notas en formato compatible con el controlador PHP)
+    - `closeModalGradeSheetFromModal()` (modificada: cierra el acta enviando las notas con estado 'cerrada' de forma asíncrona)
+    - `reopenGradeSheet()` (modificada: reabre el acta actualizando el estado de la base de datos de forma persistente)
+    - `exportGradeSheet()` y `printGradeSheet()` (creadas/modificadas: compila y descarga el reporte de acta de calificaciones formateado a CSV con UTF-8 BOM para Excel)
+- Cambios principales:
+  - **Conexión de notas con MySQL:** Se corrigió el guardado de calificaciones. Se eliminó la función ficticia `saveGrade` que causaba error JS y se conectó con `DataManager.saveGrades` de manera masiva, pre-poblando y guardando borradores persistentes.
+  - **Cierre y reapertura reales:** Se implementó el cambio de estado del acta en base de datos. Al cerrar, los inputs del modal se bloquean instantáneamente. Al reabrir como admin, se reactiva la edición.
+  - **Segmentación por docente asignado:** El docente solo ve en la tabla principal sus grupos a cargo y solo puede filtrar esos grupos.
+  - **Excel/CSV real:** Habilitado el botón de exportación e impresión para descargar el acta en CSV listo para Excel.
+- Pruebas realizadas:
+  - Iniciar sesión como docente y verificar que solo cargan sus grupos y que el desplegable de grupos está filtrado.
+  - Guardar notas parciales como borrador y verificar persistencia en base de datos al recargar la página.
+  - Completar notas, presionar "Cerrar Acta" y constatar que se guarda como `cerrada` en MySQL y los campos se bloquean.
+  - Entrar como administrador, reabrir el acta y confirmar que el docente vuelve a tener permisos de edición.
+  - Descargar acta en Excel y verificar apertura correcta con tildes y promedios correctos.
+- Pendientes o riesgos: ninguno.
+
 ---
 
 ## Regla final del backlog
