@@ -124,3 +124,31 @@ El sistema cuenta con un robusto esquema de seguridad implementado en el backend
 * **Protección contra Ataques CSRF (Cross-Site Request Forgery):** Se valida un token criptográfico único por sesión (`X-CSRF-TOKEN`) en todas las solicitudes que modifican el estado de la base de datos (`POST`, `PUT`, `DELETE`).
 * **Protección contra Ataques XSS (Cross-Site Scripting):** Centralización de desinfección y sanitización recursiva automática (`htmlspecialchars` y `strip_tags`) para todas las cadenas de texto del payload JSON de salida.
 * **Manejo Seguro de Errores:** Excepciones técnicas y errores detallados de MySQL/PHP ocultos al cliente en producción (`display_errors = 0`) y redirigidos al archivo de auditoría interno `logs/php_errors.log`.
+
+---
+
+## 📈 Historial y Fases de Desarrollo
+
+El desarrollo del sistema SAII se llevó a cabo en dos etapas consecutivas de manera planificada e incremental:
+
+### 🎨 Etapa 1: Frontend Interactivo (Fases 1 a 7)
+El objetivo fue consolidar toda la interfaz de usuario en una arquitectura Single Page Application (SPA) con interactividad dinámica y validaciones en el cliente:
+* **Fase 1 (Diseño y Sidebar):** Creación del Layout responsivo institucional y el sidebar de navegación contextual adaptativo por roles.
+* **Fase 2 (CRUDs Base):** Construcción de los paneles y listas interactivas para Alumnos, Docentes, Cursos y Módulos.
+* **Fase 3 (Grupos Académicos):** Panel de programación de horarios, vacantes, modalidad y vinculación docente-curso.
+* **Fase 4 (Módulo de Matrículas):** Rediseño interactivo del flujo de matrículas con control de vacantes.
+* **Fase 5 (Control de Asistencia):** Interfaz para docentes que permite registrar y firmar asistencias de alumnos por fecha y sesión.
+* **Fase 6 (Registro de Calificaciones):** Diseño interactivo para el ingreso de notas modulares y cálculo automático de promedios.
+* **Fase 7 (Acreditación, Reportes y Localización):** Generación visual de certificados con firmas del director, dashboard analítico interactivo con Chart.js, panel de administración de usuarios y localización idiomática (traducción universal i18n por DOM).
+
+### ⚙ Etapa 2: Backend y Base de Datos (Fases B0 a B10)
+En esta fase se implementó el motor de persistencia relacional en MySQL y la API REST en PHP con arquitectura MVC nativa, conectándolos al frontend de forma segura:
+* **Fase B0 (Estabilización):** Auditoría y limpieza de referencias huérfanas en el frontend.
+* **Fase B1 (Modelado de Datos):** Diseño DDL y DML (seeds) de las 17 tablas relacionales en MySQL con restricciones de llaves foráneas.
+* **Fase B2 (Estructura MVC):** Configuración del Front Controller `public/index.php`, autoloader de clases PSR-4 y router dinámico.
+* **Fase B3 (Autenticación y Seguridad):** Gestión de inicio y cierre de sesión seguro en el servidor y CRUD de usuarios administradores.
+* **Fases B4 a B7 (Migración de Controladores):** Implementación de la lógica de negocio y consultas preparadas PDO en los controladores correspondientes para la gestión CRUD y persistencia de Alumnos, Docentes, Cursos, Grupos, Matrículas, Asistencia y Notas.
+* **Fase B8 (Dashboard, Plantillas y Reportes):** Desarrollo de agregaciones SQL para los KPIs del Dashboard, guardado de filtros dinámicos de reportes en base de datos, exportación real a CSV y emisión de constancias en PDF.
+* **Fase B9 (Integración Cliente-Servidor):** Desactivación completa de los datos de prueba (`USE_MOCK = false`), creación del cliente HTTP asíncrono `APIClient` y sistema de caché relacional en memoria en el cliente para eliminar latencias de red y mantener síncrono el pintado de tablas del frontend.
+* **Fase B10 (Aseguramiento y Despliegue):** Integración de tokens CSRF automáticos por sesión, desinfección XSS recursiva en las salidas JSON de `BaseController`, encapsulamiento seguro de excepciones técnicas PHP en `logs/php_errors.log` y manuales de despliegue.
+
