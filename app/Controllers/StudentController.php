@@ -43,11 +43,11 @@ class StudentController extends BaseController {
         $firstName = trim($input['first_name'] ?? '');
         $lastName = trim($input['last_name'] ?? '');
         $email = trim($input['email'] ?? '');
-        $cycle = trim($input['cycle'] ?? '');
+        $cycle = trim($input['cycle'] ?? 'I');
         $promotion = trim($input['promotion'] ?? '');
 
         // 1. Validar campos obligatorios
-        if (empty($code) || empty($dni) || empty($firstName) || empty($lastName) || empty($email) || empty($cycle) || empty($promotion)) {
+        if (empty($code) || empty($dni) || empty($firstName) || empty($lastName) || empty($email) || empty($promotion)) {
             $this->error('Todos los campos excepto teléfono y observaciones son obligatorios.', 400);
         }
 
@@ -121,11 +121,11 @@ class StudentController extends BaseController {
         $firstName = trim($input['first_name'] ?? $student['first_name']);
         $lastName = trim($input['last_name'] ?? $student['last_name']);
         $email = trim($input['email'] ?? $student['email']);
-        $cycle = trim($input['cycle'] ?? $student['cycle']);
+        $cycle = trim($input['cycle'] ?? $student['cycle'] ?? 'I');
         $promotion = trim($input['promotion'] ?? $student['promotion']);
 
         // 1. Validar campos obligatorios
-        if (empty($code) || empty($dni) || empty($firstName) || empty($lastName) || empty($email) || empty($cycle) || empty($promotion)) {
+        if (empty($code) || empty($dni) || empty($firstName) || empty($lastName) || empty($email) || empty($promotion)) {
             $this->error('Todos los campos obligatorios deben ser completados.', 400);
         }
 

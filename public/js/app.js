@@ -1325,7 +1325,6 @@ class SAIIApp {
                 <div class="detail-item"><span class="detail-label">Apellidos</span><span class="detail-value">${student.lastName}</span></div>
                 <div class="detail-item"><span class="detail-label">Correo</span><span class="detail-value">${student.email || '-'}</span></div>
                 <div class="detail-item"><span class="detail-label">Teléfono</span><span class="detail-value">${student.phone || '-'}</span></div>
-                <div class="detail-item"><span class="detail-label">Ciclo</span><span class="detail-value">Ciclo ${student.cycle}</span></div>
                 <div class="detail-item"><span class="detail-label">Promoción</span><span class="detail-value">Promoción ${student.promotion}</span></div>
                 <div class="detail-item"><span class="detail-label">Estado</span><span class="detail-value"><span class="badge-status ${statusClass}">${statusLabel}</span></span></div>
                 ${student.observations ? `<div class="detail-item detail-full"><span class="detail-label">Observaciones</span><span class="detail-value">${student.observations}</span></div>` : ''}
@@ -1342,7 +1341,6 @@ class SAIIApp {
     setupStudentFilters() {
         const searchInput = document.getElementById('studentSearch');
         const statusFilter = document.getElementById('studentStatusFilter');
-        const cycleFilter = document.getElementById('studentCycleFilter');
         const yearFilter = document.getElementById('studentYearFilter');
 
         const applyFilters = () => {
@@ -1362,10 +1360,6 @@ class SAIIApp {
                 students = students.filter(s => s.status === statusFilter.value);
             }
 
-            if (cycleFilter.value) {
-                students = students.filter(s => s.cycle === cycleFilter.value);
-            }
-
             if (yearFilter.value) {
                 students = students.filter(s => s.promotion === yearFilter.value);
             }
@@ -1375,7 +1369,6 @@ class SAIIApp {
 
         searchInput.addEventListener('input', applyFilters);
         statusFilter.addEventListener('change', applyFilters);
-        cycleFilter.addEventListener('change', applyFilters);
         yearFilter.addEventListener('change', applyFilters);
     }
 
@@ -1394,7 +1387,6 @@ class SAIIApp {
                 document.getElementById('studentLastNames').value = student.lastName;
                 document.getElementById('studentEmail').value = student.email;
                 document.getElementById('studentPhone').value = student.phone;
-                document.getElementById('studentCycle').value = student.cycle;
                 document.getElementById('studentPromotion').value = student.promotion;
                 document.getElementById('studentStatus').value = student.status;
                 document.getElementById('studentObservations').value = student.observations;
@@ -1410,7 +1402,7 @@ class SAIIApp {
         form.onsubmit = (e) => this.handleStudentSubmit(e, studentId);
     }
 
-    handleStudentSubmit(e, studentId) {
+    async handleStudentSubmit(e, studentId) {
         e.preventDefault();
 
         const data = {
@@ -1420,7 +1412,6 @@ class SAIIApp {
             lastName: document.getElementById('studentLastNames').value,
             email: document.getElementById('studentEmail').value,
             phone: document.getElementById('studentPhone').value,
-            cycle: document.getElementById('studentCycle').value,
             promotion: document.getElementById('studentPromotion').value,
             status: document.getElementById('studentStatus').value,
             observations: document.getElementById('studentObservations').value
@@ -1431,16 +1422,20 @@ class SAIIApp {
             return;
         }
 
-        if (studentId) {
-            DataManager.updateStudent(studentId, data);
-            this.showToast('Alumno actualizado correctamente', 'success');
-        } else {
-            DataManager.addStudent(data);
-            this.showToast('Alumno registrado correctamente', 'success');
+        try {
+            if (studentId) {
+                await DataManager.updateStudent(studentId, data);
+                this.showToast('Alumno actualizado correctamente', 'success');
+            } else {
+                await DataManager.addStudent(data);
+                this.showToast('Alumno registrado correctamente', 'success');
+            }
+            this.closeModal();
+            this.loadStudents();
+        } catch (error) {
+            console.error("Error al guardar alumno:", error);
+            this.showToast(error.message || 'Error al guardar el alumno', 'error');
         }
-
-        this.closeModal();
-        this.loadStudents();
     }
 
     validateStudentData(data) {
