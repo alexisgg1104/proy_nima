@@ -2959,7 +2959,7 @@ class SAIIApp {
         tbody.innerHTML = '';
 
         const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
-        const teacherId = DataManager.currentUser ? DataManager.currentUser.id : null;
+        const teacherId = DataManager.getTeacherIdForUser(DataManager.currentUser);
 
         const teacherFilter = document.getElementById('attFilterTeacher').value;
         const groupFilter = document.getElementById('attFilterGroup').value;
@@ -2975,9 +2975,9 @@ class SAIIApp {
 
         // Filtrado por rol del docente
         if (role === 'teacher' && teacherId && teacherId !== 'USR999') {
-            listas = listas.filter(l => l.teacherId === teacherId);
+            listas = listas.filter(l => l.teacherId == teacherId);
         } else if (teacherFilter) {
-            listas = listas.filter(l => l.teacherId === teacherFilter);
+            listas = listas.filter(l => l.teacherId == teacherFilter);
         }
 
         if (groupFilter)    listas = listas.filter(l => l.groupId === groupFilter);
