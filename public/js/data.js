@@ -1897,7 +1897,8 @@ const DataManager = {
                 disapproved_count: 30
             };
         }
-        return await APIClient.request('/reports/dashboard');
+        const res = await APIClient.request('/reports/dashboard');
+        return res.data;
     },
 
     getTeacherIdForUser: function(user) {
