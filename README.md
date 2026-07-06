@@ -43,14 +43,28 @@ Asegúrate de tener instalado en tu máquina:
 
 ### 4. Configurar Variables de Entorno (`.env`)
 1. En el directorio raíz del proyecto, renombra el archivo **`.env.example`** a **`.env`**.
-2. Abre el archivo `.env` en tu editor y asegúrate de que las credenciales coincidan con las de tu MySQL local:
+   > [!WARNING]
+   > El archivo `.env` contiene credenciales locales y de correo. Está excluido en el archivo `.gitignore` para evitar filtraciones en el repositorio de GitHub. **Nunca comitas ni subas este archivo al repositorio**.
+2. Abre el archivo `.env` en tu editor y asegúrate de que las credenciales coincidan con las de tu MySQL local. Asimismo, configura las credenciales de correo (SMTP) si deseas habilitar la recuperación de contraseña por email:
    ```ini
+   ; Configuración de Base de Datos
    DB_HOST=127.0.0.1
    DB_PORT=3306
    DB_NAME=proy_nima
    DB_USER=root
    DB_PASS=
+   
+   ; Configuración de Seguridad
+   CSRF_ENABLED=true
    SESSION_SECURE=false
+
+   ; Configuración de Correo Electrónico (SMTP para recuperación de contraseña)
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=tu_correo@gmail.com
+   SMTP_PASS=tu_app_password
+   SMTP_FROM=tu_correo@gmail.com
+   SMTP_FROM_NAME="SAII - Instituto de Informática"
    ```
 
 ---
