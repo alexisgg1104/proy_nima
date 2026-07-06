@@ -1081,6 +1081,32 @@ const DataManager = {
         return true;
     },
 
+    updateEnrollment: async function(enrollmentId, updates) {
+        if (USE_MOCK) {
+            const enrollment = mockData.enrollments.find(e => e.id === enrollmentId);
+            if (enrollment) {
+                Object.assign(enrollment, updates);
+                return enrollment;
+            }
+            return null;
+        }
+        const existing = this.cache.enrollments.find(e => e.id == enrollmentId);
+        if (!existing) return null;
+
+        const body = {
+            group_id: updates.groupId !== undefined ? updates.groupId : existing.groupId,
+            student_id: updates.studentId !== undefined ? updates.studentId : existing.studentId,
+            status: updates.status !== undefined ? updates.status : existing.status
+        };
+
+        const res = await APIClient.request(`/enrollments/${enrollmentId}`, {
+            method: 'PUT',
+            body: body
+        });
+        await this.preload();
+        return res.data;
+    },
+
     // Student Attendance operations
     getStudentAttendanceByGroup: function(groupId) {
         if (USE_MOCK) {

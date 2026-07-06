@@ -2480,34 +2480,49 @@ class SAIIApp {
         document.getElementById('studentDetailModal').style.display = 'block';
     }
 
-    editEnrollmentStatus(enrollmentId, groupId) {
-        const enrollment = DataManager.getEnrollments(groupId).find(e => e.id === enrollmentId);
+    async editEnrollmentStatus(enrollmentId, groupId) {
+        const enrollment = DataManager.getEnrollments(groupId).find(e => e.id == enrollmentId);
         if (!enrollment) return;
         const student = DataManager.getStudentById(enrollment.studentId);
         const newStatus = enrollment.status === 'active' ? 'inactive' : 'active';
         const label = newStatus === 'active' ? 'reactivar' : 'suspender';
         if (confirm(`¿Desea ${label} la matrícula de ${student ? student.firstName + ' ' + student.lastName : 'este alumno'}?`)) {
-            enrollment.status = newStatus;
-            this.showToast(`Matrícula ${newStatus === 'active' ? 'reactivada' : 'suspendida'} correctamente`, 'success');
-            this.renderEnrolledStudents(groupId);
+            try {
+                await DataManager.updateEnrollment(enrollmentId, { status: newStatus });
+                this.showToast(`Matrícula ${newStatus === 'active' ? 'reactivada' : 'suspendida'} correctamente`, 'success');
+                this.loadEnrollmentGroup(groupId);
+            } catch (e) {
+                console.error("Error al actualizar matrícula:", e);
+                this.showToast('Error al cambiar el estado de la matrícula: ' + e.message, 'error');
+            }
         }
     }
 
-    addEnrollment(groupId, studentId) {
-        const result = DataManager.addEnrollment(groupId, studentId);
-        if (result) {
-            this.showToast('Alumno matriculado correctamente', 'success');
-            this.loadEnrollmentGroup(groupId);
-        } else {
-            this.showToast('El alumno ya está matriculado en este grupo', 'error');
+    async addEnrollment(groupId, studentId) {
+        try {
+            const result = await DataManager.addEnrollment(groupId, studentId);
+            if (result) {
+                this.showToast('Alumno matriculado correctamente', 'success');
+                this.loadEnrollmentGroup(groupId);
+            } else {
+                this.showToast('El alumno ya está matriculado en este grupo', 'error');
+            }
+        } catch (error) {
+            console.error("Error al matricular alumno:", error);
+            this.showToast(error.message || 'Error al registrar la matrícula', 'error');
         }
     }
 
-    removeEnrollment(enrollmentId, groupId) {
+    async removeEnrollment(enrollmentId, groupId) {
         if (confirm('¿Remover este alumno del grupo?')) {
-            DataManager.removeEnrollment(enrollmentId);
-            this.showToast('Alumno removido del grupo', 'success');
-            this.loadEnrollmentGroup(groupId);
+            try {
+                await DataManager.removeEnrollment(enrollmentId);
+                this.showToast('Alumno removido del grupo', 'success');
+                this.loadEnrollmentGroup(groupId);
+            } catch (error) {
+                console.error("Error al remover alumno:", error);
+                this.showToast('Error al remover el alumno: ' + error.message, 'error');
+            }
         }
     }
 
