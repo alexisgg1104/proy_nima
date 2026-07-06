@@ -1462,11 +1462,12 @@ const DataManager = {
             return true;
         }
 
+        const apiRole = role === 'dean' ? 'decano' : role;
         await APIClient.request(`/certificates/${id}/sign`, {
             method: 'POST',
             body: {
                 signer_name: signerName,
-                role: role
+                role: apiRole
             }
         });
         await this.preload();
