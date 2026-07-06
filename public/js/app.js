@@ -4379,7 +4379,7 @@ class SAIIApp {
         if (DataManager.currentUser && DataManager.currentUser.role === 'dean') {
             const filteredRows = certificateRows.filter(item => 
                 item.certificate && 
-                item.certificate.status === 'toBeSigned' && 
+                (item.certificate.status === 'toBeSigned' || item.certificate.status === 'pending') && 
                 !item.certificate.deanSigned
             );
             this.renderDeanCertificatesTable(filteredRows);
@@ -4523,7 +4523,9 @@ class SAIIApp {
 
             const docTypeLabel = item.type === 'constancia' ? 'Constancia' : 'Certificado';
             
-            const statusBadge = '<span class="badge-status badge-pending">Por firmar</span>'; // yellow/orange
+            const statusBadge = item.status === 'Pendiente'
+                ? '<span class="badge-status badge-pending-generation">Pendiente</span>'
+                : '<span class="badge-status badge-pending">Por firmar</span>';
             
             const deanSignedBadge = '<span class="badge-status badge-inactive">Pendiente</span>'; // red/orange pending
             
