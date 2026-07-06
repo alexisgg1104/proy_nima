@@ -699,7 +699,9 @@ El agente debe actualizar esta sección al terminar cada fase.
     - `viewAttendanceDetail()` (modificada: establece `canEdit = false` para forzar que el botón de inspección "Ver" (lupa) sea estrictamente de solo lectura)
     - `closeAttendance()` (modificada: corrige el validador de cierre para admitir `'tarde'` como estado completo, valida exclusivamente contra fechas realmente registradas en BD, y utiliza await para evitar la condición de carrera al recargar)
     - `printAttendance()` (modificada: redirige la impresión de asistencia del administrador para descargar directamente la matriz de asistencia en Excel)
+    - `renderAdminAttendanceTable()` (modificada: corrige la obtención del ID del docente conectado/simulado usando getTeacherIdForUser en lugar del id del usuario, solucionando el filtrado en el listado general administrativo)
 - Cambios principales:
+  - **Filtro de Asistencias por Docente Conectado:** Se solucionó un error por el cual el listado general de asistencias del administrador mostraba filas incorrectas o vacías al iniciar sesión como docente. Ahora se utiliza el ID de docente (`teacherId`) en lugar del ID de usuario (`userId`) para filtrar las listas cargadas.
   - **Eliminación definitiva de Fechas Mock:** Se removió el código que generaba automáticamente 4 fechas mock al cargar la matriz de un grupo. Ahora el sistema solo lee y despliega las columnas de fechas reales que existan registradas en la base de datos.
   - **Cierre de Asistencia por el Docente:** Se habilitó el botón de "Cerrar Asistencia" en la planilla del docente. Se actualizó el middleware de seguridad en `AttendanceController::updateStatus` para autorizar peticiones del rol `'teacher'`, permitiendo que el docente guarde con éxito el estado de cierre en la base de datos.
   - **Bloqueo estricto de edición:** Una vez que la lista está en estado `'cerrado'` o `'cerrada'`, el sistema bloquea inmediatamente todos los selectores de la cuadrícula de asistencia del docente e impide la adición de nuevas fechas de clase.
@@ -715,7 +717,7 @@ El agente debe actualizar esta sección al terminar cada fase.
   - **Exportación real a Excel:** Creadores de CSV de datos estructurados con BOM UTF-8 que permiten abrir plantillas con acentos directamente en Excel, tanto en la vista docente como en el listado del administrador.
 - Pruebas realizadas:
   - Simular rol de docente e ingresar al módulo de asistencia para validar la carga de grupos asignados correspondientes al docente activo.
-  - Seleccionar grupo, hacer clic en "Cargar" y constatar la visualización de la matriz de alumnos y fechas registradas en MySQL (sin presencia de fechas mock), verificando que el botón "Volver al listado" se encuentre oculto.
+  - Seleccionar grupo, hacer clic en "Cargar" y constatar la visualización de la matriz de alumnos y fechas registradas en MySQL (sin presencia de fechas mock), verificando que el botón "Volver al listado" se encuentre oculto y que el filtro del listado general administrativo restrinja correctamente las asistencias visibles solo a las de su grupo asignado.
   - Cambiar el selector de estado en una celda de la matriz y corroborar que el toast informe el guardado automático persistente en base de datos.
   - Hacer clic en "➕ Agregar Fecha", introducir una fecha dentro del período del grupo y validar que aparezca como nueva columna interactiva en la matriz.
   - Presionar el botón "Cerrar Asistencia" como docente, verificar que se actualice a `'cerrada'` en MySQL, y constatar que los selectores y el botón de adición queden inmediatamente deshabilitados/ocultos.
