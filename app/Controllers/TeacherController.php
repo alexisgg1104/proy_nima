@@ -55,9 +55,9 @@ class TeacherController extends BaseController {
             $this->error('El DNI debe tener exactamente 8 dígitos numéricos.', 400);
         }
 
-        // 3. Validar formato de Código (exactamente 10 dígitos)
-        if (!preg_match('/^\d{10}$/', $code)) {
-            $this->error('El código debe tener exactamente 10 dígitos numéricos.', 400);
+        // 3. Validar formato de Código (3 a 15 caracteres alfanuméricos)
+        if (!preg_match('/^[A-Za-z0-9]{3,15}$/', $code)) {
+            $this->error('El código del docente debe tener entre 3 y 15 caracteres alfanuméricos.', 400);
         }
 
         // 4. Validar formato de correo electrónico
@@ -129,8 +129,8 @@ class TeacherController extends BaseController {
         if (!preg_match('/^\d{8}$/', $dni)) {
             $this->error('El DNI debe tener exactamente 8 dígitos numéricos.', 400);
         }
-        if (!preg_match('/^\d{10}$/', $code)) {
-            $this->error('El código debe tener exactamente 10 dígitos numéricos.', 400);
+        if (!preg_match('/^[A-Za-z0-9]{3,15}$/', $code)) {
+            $this->error('El código del docente debe tener entre 3 y 15 caracteres alfanuméricos.', 400);
         }
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->error('El correo electrónico no tiene un formato válido.', 400);
