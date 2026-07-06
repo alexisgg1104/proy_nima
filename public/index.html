@@ -660,9 +660,9 @@
 
                             <!-- Tabla de alumnos -->
                             <div class="att-sessions-card">
-                                <div class="att-sessions-top">
-                                    <span class="enrollment-table-title">&#128101; Lista de Asistencia de Alumnos</span>
-                                    <button class="btn btn-secondary btn-sm" id="attMarkAllPresentBtn" onclick="app.markAllPresent()">&#10003; Todos presentes</button>
+                                <div class="att-sessions-top" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span class="enrollment-table-title">&#128101; Matriz de Asistencia de Alumnos</span>
+                                    <button class="btn btn-primary btn-sm" id="attAddDateColBtn" onclick="app.addNewAttendanceDateCol()" style="display: none;">➕ Agregar Fecha</button>
                                 </div>
                                 <div class="table-responsive">
                                     <table class="data-table" id="attendanceStudentsTable">
