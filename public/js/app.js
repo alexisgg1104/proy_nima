@@ -121,8 +121,9 @@ class SAIIApp {
     }
 
     simulateRoleChange(role) {
-        const matchingUser = mockData.users.find(u => u.role === role && u.status === 'active') || 
-                             mockData.users.find(u => u.role === role);
+        const usersListForSimulation = USE_MOCK ? mockData.users : DataManager.getUsers();
+        const matchingUser = usersListForSimulation.find(u => u.role === role && u.status === 'active') || 
+                             usersListForSimulation.find(u => u.role === role);
         if (matchingUser) {
             let teacherId = null;
             if (role === 'teacher') {
@@ -155,7 +156,13 @@ class SAIIApp {
 
     setRolePermissions(role) {
         // Set role-based menu visibility
-        const permissions = mockData.rolePermissions[role] || [];
+        let permissions = [];
+        if (USE_MOCK) {
+            permissions = mockData.rolePermissions[role] || [];
+        } else {
+            const roleObj = DataManager.getRoles().find(r => r.id === role);
+            permissions = roleObj ? roleObj.permissions : [];
+        }
         
         // Show/hide nav items based on permissions
         const navItems = document.querySelectorAll('.nav-item');
@@ -5906,7 +5913,8 @@ class SAIIApp {
             'dean': 'Decano'
         };
 
-        mockData.users.forEach(user => {
+        const users = USE_MOCK ? mockData.users : DataManager.getUsers();
+        users.forEach(user => {
             const statusLabel = user.status === 'active' ? 'Activo' : 'Inactivo';
             const statusClass = user.status === 'active' ? 'badge-active' : 'badge-inactive';
             const row = document.createElement('tr');
@@ -5945,14 +5953,15 @@ class SAIIApp {
 
     editUser(userId) {
         this._editingUserId = userId;
-        const user = mockData.users.find(u => u.id === userId);
+        const usersListForEdit = USE_MOCK ? mockData.users : DataManager.getUsers();
+        const user = usersListForEdit.find(u => u.id == userId);
         if (!user) return;
 
         document.getElementById('userModalTitle').textContent = 'Editar Usuario';
         document.getElementById('userUsername').value = user.username;
         document.getElementById('userUsername').readOnly = true;
         document.getElementById('userFullName').value = user.fullName;
-        document.getElementById('userPassword').value = user.password;
+        document.getElementById('userPassword').value = user.password || '';
         document.getElementById('userEmail').value = user.email;
         document.getElementById('userRole').value = user.role;
         document.getElementById('userStatus').value = user.status;
