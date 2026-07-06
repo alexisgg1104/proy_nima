@@ -17,10 +17,35 @@ class SAIIApp {
             }
         }
         
+        // Dynamically inject spinner styles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+            .spinner-loading {
+                display: inline-block;
+                width: 30px;
+                height: 30px;
+                border: 3px solid rgba(0, 0, 0, 0.1);
+                border-radius: 50%;
+                border-top-color: var(--color-primary);
+                animation: spin 0.8s linear infinite;
+            }
+        `;
+        document.head.appendChild(style);
+        
         this.init();
     }
 
-    init() {
+    showTableSpinner(tbodyId, colspan) {
+        const tbody = document.getElementById(tbodyId);
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center; padding: 2rem;"><div class="spinner-loading"></div></td></tr>`;
+        }
+    }
+
+    async init() {
         this.setupEventListeners();
         this.applyTheme();
         this.setupLoginForm();
@@ -29,6 +54,12 @@ class SAIIApp {
         
         // If user is already logged in, skip login screen
         if (DataManager.currentUser) {
+            try {
+                // Preload cache from server before showing dashboard
+                await DataManager.preload();
+            } catch (e) {
+                console.error("Failed to preload cache on startup", e);
+            }
             this.loginUser(DataManager.currentUser.role);
         } else {
             document.getElementById('loginScreen').style.display = 'flex';
@@ -44,7 +75,7 @@ class SAIIApp {
         }
     }
 
-    handleLogin(e) {
+    async handleLogin(e) {
         e.preventDefault();
         
         const username = document.getElementById('username').value.trim();
@@ -56,13 +87,18 @@ class SAIIApp {
             return;
         }
 
-        if (DataManager.validateLogin(username, password, role)) {
-            this.showToast('Inicio de sesión exitoso', 'success');
-            setTimeout(() => {
-                this.loginUser(role);
-            }, 500);
-        } else {
-            this.showToast('Usuario, contraseña o rol incorrectos', 'error');
+        try {
+            const success = await DataManager.validateLogin(username, password, role);
+            if (success) {
+                this.showToast('Inicio de sesión exitoso', 'success');
+                setTimeout(() => {
+                    this.loginUser(role);
+                }, 500);
+            } else {
+                this.showToast('Usuario, contraseña o rol incorrectos', 'error');
+            }
+        } catch (err) {
+            this.showToast('Error en la autenticación del servidor: ' + err.message, 'error');
         }
     }
 
@@ -1231,10 +1267,15 @@ class SAIIApp {
     }
 
     // ========== STUDENTS MODULE ==========
-    loadStudents() {
-        const students = DataManager.getStudents();
-        this.renderStudentsTable(students);
-        this.setupStudentFilters();
+    async loadStudents() {
+        this.showTableSpinner('studentsTableBody', 7);
+        try {
+            const students = await DataManager.getStudents();
+            this.renderStudentsTable(students);
+            this.setupStudentFilters();
+        } catch (e) {
+            this.showToast('Error al cargar alumnos: ' + e.message, 'error');
+        }
     }
 
     renderStudentsTable(students) {
@@ -1651,10 +1692,15 @@ class SAIIApp {
     }
 
     // ========== TEACHERS MODULE ==========
-    loadTeachers() {
-        const teachers = DataManager.getTeachers();
-        this.renderTeachersTable(teachers);
-        this.setupTeacherFilters();
+    async loadTeachers() {
+        this.showTableSpinner('teachersTableBody', 8);
+        try {
+            const teachers = await DataManager.getTeachers();
+            this.renderTeachersTable(teachers);
+            this.setupTeacherFilters();
+        } catch (e) {
+            this.showToast('Error al cargar docentes: ' + e.message, 'error');
+        }
     }
 
     renderTeachersTable(teachers) {
@@ -1832,13 +1878,19 @@ class SAIIApp {
     }
 
     // ========== GROUPS MODULE ==========
-    loadGroups() {
-        const groups = DataManager.getGroups();
-        this.renderGroupsTable(groups);
-        this.setupGroupFilters();
+    async loadGroups() {
+        this.showTableSpinner('groupsTableBody', 10);
+        try {
+            const groups = await DataManager.getGroups();
+            const enrollments = await DataManager.getEnrollments();
+            this.renderGroupsTable(groups, enrollments);
+            this.setupGroupFilters();
+        } catch (e) {
+            this.showToast('Error al cargar grupos: ' + e.message, 'error');
+        }
     }
 
-    renderGroupsTable(groups) {
+    renderGroupsTable(groups, enrollments = []) {
         const tbody = document.getElementById('groupsTableBody');
         tbody.innerHTML = '';
 
@@ -1856,7 +1908,7 @@ class SAIIApp {
         };
 
         groups.forEach(group => {
-            const enrolledCount = DataManager.getEnrollments(group.id).length;
+            const enrolledCount = enrollments.filter(e => e.groupId == group.id).length;
             const statusInfo = statusMap[group.status] || { label: group.status, css: 'badge-pending' };
             const modalityLabel = group.modality === 'regular' ? 'Curso regular' : 'Examen suficiencia';
             const isClosed = group.status === 'closed';
@@ -1917,11 +1969,12 @@ class SAIIApp {
         modalityFilter.addEventListener('change', applyFilters);
     }
 
-    viewGroupDetails(groupId) {
-        const group = DataManager.getGroupById(groupId);
+    async viewGroupDetails(groupId) {
+        const group = await DataManager.getGroupById(groupId);
         if (!group) return;
 
-        const enrolledCount = DataManager.getEnrollments(groupId).length;
+        const enrollments = await DataManager.getEnrollments(groupId);
+        const enrolledCount = enrollments.length;
         const statusMap = {
             'open': { label: 'Abierto', css: 'badge-open' },
             'inprogress': { label: 'En curso', css: 'badge-inprogress' },
@@ -2154,114 +2207,123 @@ class SAIIApp {
     }
 
     // ========== ENROLLMENTS MODULE ==========
-    setupEnrollments() {
+    async setupEnrollments() {
         const groupSelect = document.getElementById('enrollmentGroupSelect');
-        const groups = DataManager.getGroups();
-
-        groupSelect.innerHTML = '<option value="">-- Seleccione un grupo --</option>';
-        groups.forEach(group => {
-            const option = document.createElement('option');
-            option.value = group.id;
-            option.textContent = `${group.code} - ${group.courseName}`;
-            groupSelect.appendChild(option);
-        });
-
-        groupSelect.addEventListener('change', () => this.loadEnrollmentGroup(groupSelect.value));
+        if (!groupSelect) return;
+        try {
+            const groups = await DataManager.getGroups();
+            groupSelect.innerHTML = '<option value="">-- Seleccione un grupo --</option>';
+            groups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.id;
+                option.textContent = `${group.code} - ${group.courseName}`;
+                groupSelect.appendChild(option);
+            });
+            groupSelect.addEventListener('change', () => this.loadEnrollmentGroup(groupSelect.value));
+        } catch (e) {
+            console.error("Error setting up enrollments", e);
+        }
     }
 
-    loadEnrollmentGroup(groupId) {
+    async loadEnrollmentGroup(groupId) {
         const contentDiv = document.getElementById('enrollmentContent');
         if (!groupId) {
             contentDiv.style.display = 'none';
             return;
         }
 
-        const group = DataManager.getGroupById(groupId);
-        if (!group) return;
+        try {
+            const group = await DataManager.getGroupById(groupId);
+            if (!group) return;
 
-        contentDiv.style.display = 'block';
+            contentDiv.style.display = 'block';
 
-        const enrollments = DataManager.getEnrollments(groupId);
-        const enrolledCount = enrollments.length;
-        const available = group.maxQuota - enrolledCount;
-        const modalityLabel = group.modality === 'regular' ? 'Curso regular' : 'Examen de suficiencia';
+            const enrollments = await DataManager.getEnrollments(groupId);
+            const enrolledCount = enrollments.length;
+            const available = group.maxQuota - enrolledCount;
+            const modalityLabel = group.modality === 'regular' ? 'Curso regular' : 'Examen de suficiencia';
 
-        const statusMap = {
-            'open': 'Abierto', 'inprogress': 'En curso',
-            'finished': 'Terminado', 'closed': 'Cerrado'
-        };
-        const statusLabel = statusMap[group.status] || group.status;
+            const statusMap = {
+                'open': 'Abierto', 'inprogress': 'En curso',
+                'finished': 'Terminado', 'closed': 'Cerrado'
+            };
+            const statusLabel = statusMap[group.status] || group.status;
 
-        // Show enhanced group summary card
-        const infoDiv = document.getElementById('enrollmentGroupInfo');
-        infoDiv.innerHTML = `
-            <div class="enrollment-summary-grid">
-                <div class="enrollment-summary-item">
-                    <span class="enrollment-summary-label">Grupo</span>
-                    <span class="enrollment-summary-value">${group.code}</span>
+            // Show enhanced group summary card
+            const infoDiv = document.getElementById('enrollmentGroupInfo');
+            infoDiv.innerHTML = `
+                <div class="enrollment-summary-grid">
+                    <div class="enrollment-summary-item">
+                        <span class="enrollment-summary-label">Grupo</span>
+                        <span class="enrollment-summary-value">${group.code}</span>
+                    </div>
+                    <div class="enrollment-summary-item">
+                        <span class="enrollment-summary-label">Curso</span>
+                        <span class="enrollment-summary-value">${group.courseName}</span>
+                    </div>
+                    <div class="enrollment-summary-item">
+                        <span class="enrollment-summary-label">Docente</span>
+                        <span class="enrollment-summary-value">${group.teacherName}</span>
+                    </div>
+                    <div class="enrollment-summary-item">
+                        <span class="enrollment-summary-label">Modalidad</span>
+                        <span class="enrollment-summary-value">${modalityLabel}</span>
+                    </div>
+                    <div class="enrollment-summary-item">
+                        <span class="enrollment-summary-label">Cupo máximo</span>
+                        <span class="enrollment-summary-value">${group.maxQuota}</span>
+                    </div>
+                    <div class="enrollment-summary-item">
+                        <span class="enrollment-summary-label">Matriculados</span>
+                        <span class="enrollment-summary-value" style="color: var(--color-primary); font-weight:700;">${enrolledCount}</span>
+                    </div>
+                    <div class="enrollment-summary-item">
+                        <span class="enrollment-summary-label">Cupos disponibles</span>
+                        <span class="enrollment-summary-value" style="color: ${available > 0 ? '#388e3c' : '#c62828'}; font-weight:700;">${available}</span>
+                    </div>
+                    <div class="enrollment-summary-item">
+                        <span class="enrollment-summary-label">Estado</span>
+                        <span class="enrollment-summary-value">${statusLabel}</span>
+                    </div>
                 </div>
-                <div class="enrollment-summary-item">
-                    <span class="enrollment-summary-label">Curso</span>
-                    <span class="enrollment-summary-value">${group.courseName}</span>
-                </div>
-                <div class="enrollment-summary-item">
-                    <span class="enrollment-summary-label">Docente</span>
-                    <span class="enrollment-summary-value">${group.teacherName}</span>
-                </div>
-                <div class="enrollment-summary-item">
-                    <span class="enrollment-summary-label">Modalidad</span>
-                    <span class="enrollment-summary-value">${modalityLabel}</span>
-                </div>
-                <div class="enrollment-summary-item">
-                    <span class="enrollment-summary-label">Cupo máximo</span>
-                    <span class="enrollment-summary-value">${group.maxQuota}</span>
-                </div>
-                <div class="enrollment-summary-item">
-                    <span class="enrollment-summary-label">Matriculados</span>
-                    <span class="enrollment-summary-value" style="color: var(--color-primary); font-weight:700;">${enrolledCount}</span>
-                </div>
-                <div class="enrollment-summary-item">
-                    <span class="enrollment-summary-label">Cupos disponibles</span>
-                    <span class="enrollment-summary-value" style="color: ${available > 0 ? '#388e3c' : '#c62828'}; font-weight:700;">${available}</span>
-                </div>
-                <div class="enrollment-summary-item">
-                    <span class="enrollment-summary-label">Estado</span>
-                    <span class="enrollment-summary-value">${statusLabel}</span>
-                </div>
-            </div>
-        `;
+            `;
 
-        // Update counter badge
-        document.getElementById('enrolledCount').textContent = enrolledCount;
-        document.getElementById('enrolledQuota').textContent = group.maxQuota;
-        const badge = document.getElementById('enrolledAvailableBadge');
-        badge.textContent = available > 0 ? `${available} disponibles` : 'Sin cupos';
-        badge.className = 'enrollment-available-badge ' + (available > 0 ? 'badge-available' : 'badge-full');
+            // Update counter badge
+            document.getElementById('enrolledCount').textContent = enrolledCount;
+            document.getElementById('enrolledQuota').textContent = group.maxQuota;
+            const badge = document.getElementById('enrolledAvailableBadge');
+            badge.textContent = available > 0 ? `${available} disponibles` : 'Sin cupos';
+            badge.className = 'enrollment-available-badge ' + (available > 0 ? 'badge-available' : 'badge-full');
 
-        // Clear search
-        const searchInput = document.getElementById('enrollmentStudentSearch');
-        searchInput.value = '';
-        document.getElementById('enrollmentSearchResults').style.display = 'none';
+            // Clear search
+            const searchInput = document.getElementById('enrollmentStudentSearch');
+            searchInput.value = '';
+            document.getElementById('enrollmentSearchResults').style.display = 'none';
 
-        this.renderEnrolledStudents(groupId);
+            await this.renderEnrolledStudents(groupId);
 
-        // Search functionality
-        searchInput.oninput = () => {
-            const query = searchInput.value.trim().toLowerCase();
-            if (!query) {
-                document.getElementById('enrollmentSearchResults').style.display = 'none';
-                return;
-            }
-            const enrolledIds = DataManager.getEnrollments(groupId).map(e => e.studentId);
-            let filtered = DataManager.getStudents().filter(s =>
-                s.status === 'active' &&
-                !enrolledIds.includes(s.id) &&
-                (s.code.includes(query) || s.dni.includes(query) ||
-                 s.firstName.toLowerCase().includes(query) || s.lastName.toLowerCase().includes(query))
-            ).slice(0, 5);
-            this.renderAvailableStudents(filtered, groupId);
-            document.getElementById('enrollmentSearchResults').style.display = filtered.length > 0 ? 'block' : 'none';
-        };
+            // Search functionality
+            searchInput.oninput = async () => {
+                const query = searchInput.value.trim().toLowerCase();
+                if (!query) {
+                    document.getElementById('enrollmentSearchResults').style.display = 'none';
+                    return;
+                }
+                const currentEnrollments = await DataManager.getEnrollments(groupId);
+                const enrolledIds = currentEnrollments.map(e => e.studentId);
+                const allStudents = await DataManager.getStudents();
+                let filtered = allStudents.filter(s =>
+                    s.status === 'active' &&
+                    !enrolledIds.includes(s.id) &&
+                    (s.code.includes(query) || s.dni.includes(query) ||
+                     s.firstName.toLowerCase().includes(query) || s.lastName.toLowerCase().includes(query))
+                ).slice(0, 5);
+                this.renderAvailableStudents(filtered, groupId);
+                document.getElementById('enrollmentSearchResults').style.display = filtered.length > 0 ? 'block' : 'none';
+            };
+        } catch (e) {
+            this.showToast('Error al cargar grupo de matrícula: ' + e.message, 'error');
+        }
     }
 
     renderAvailableStudents(students, groupId) {
@@ -3566,155 +3628,169 @@ class SAIIApp {
 
 
     // ========== CERTIFICATES MODULE ==========
-    loadCertificates() {
+    async loadCertificates() {
         const tbody = document.getElementById('certificatesTableBody');
         if (!tbody) return;
-        tbody.innerHTML = '';
 
-        // Populate course filter if empty
-        const courseFilter = document.getElementById('certCourseFilter');
-        if (courseFilter && courseFilter.options.length <= 1) {
-            DataManager.getCourses().forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.name;
-                courseFilter.appendChild(opt);
-            });
-            courseFilter.onchange = () => this.loadCertificates();
-        }
+        this.showTableSpinner('certificatesTableBody', 11);
 
-        // Populate group filter if empty
-        const groupFilter = document.getElementById('certGroupFilter');
-        if (groupFilter && groupFilter.options.length <= 1) {
-            DataManager.getGroups().forEach(g => {
-                const opt = document.createElement('option');
-                opt.value = g.id;
-                opt.textContent = g.code;
-                groupFilter.appendChild(opt);
-            });
-            groupFilter.onchange = () => this.loadCertificates();
-        }
-
-        const modalityFilter = document.getElementById('certModalityFilter');
-        if (modalityFilter && !modalityFilter.onchange) {
-            modalityFilter.onchange = () => this.loadCertificates();
-        }
-
-        const courseVal = courseFilter ? courseFilter.value : '';
-        const groupVal = document.getElementById('certGroupFilter') ? document.getElementById('certGroupFilter').value : '';
-        const modalityVal = document.getElementById('certModalityFilter') ? document.getElementById('certModalityFilter').value : '';
-
-        const minPassingGrade = mockData.settings.minPassingGrade;
-        const minAttendanceRequired = mockData.settings.minAttendanceRequired;
-
-        const certificateRows = [];
-
-        mockData.enrollments.forEach(enr => {
-            const student = DataManager.getStudentById(enr.studentId);
-            const group = DataManager.getGroupById(enr.groupId);
-            if (!student || !group) return;
-
-            const course = DataManager.getCourseById(group.courseId);
-            if (!course) return;
-
-            // Apply filters
-            if (courseVal && group.courseId !== courseVal) return;
-            if (groupVal && group.id !== groupVal) return;
-            if (modalityVal && group.modality !== modalityVal) return;
-
-            const gradeRecord = mockData.grades.find(g => g.groupId === enr.groupId && g.studentId === enr.studentId);
-            const average = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
-            const attPct = DataManager.calculateAttendancePercentage(enr.studentId, enr.groupId);
-
-            // Find all certificates for this student and group
-            const studentCerts = mockData.certificates.filter(c => c.studentId === enr.studentId && c.groupId === enr.groupId);
-            
-            // Add each certificate as an independent row
-            studentCerts.forEach(cert => {
-                let statusLabel = 'Por firmar';
-                if (cert.status === 'pending') statusLabel = 'Pendiente';
-                if (cert.status === 'generated' || cert.status === 'issued') statusLabel = 'Generado';
-                if (cert.status === 'annulled') statusLabel = 'Anulado';
-
-                certificateRows.push({
-                    student,
-                    group,
-                    course,
-                    average,
-                    attPct,
-                    status: statusLabel,
-                    reason: cert.observations || '',
-                    certificate: cert,
-                    type: cert.type || 'certificado',
-                    id: cert.id
+        try {
+            // Populate course filter if empty
+            const courseFilter = document.getElementById('certCourseFilter');
+            if (courseFilter && courseFilter.options.length <= 1) {
+                const courses = await DataManager.getCourses();
+                courses.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    courseFilter.appendChild(opt);
                 });
-            });
-
-            // Check if can emit new document (only if not already created/active)
-            const hasCert = studentCerts.some(c => c.type === 'certificado' && c.status !== 'annulled');
-            const hasConst = studentCerts.some(c => c.type === 'constancia' && c.status !== 'annulled');
-
-            const groupFinished = group.status === 'finished' || group.status === 'closed';
-            let isApt = true;
-            let reason = '';
-            
-            if (!groupFinished) {
-                isApt = false;
-                reason = 'Grupo activo';
-            } else if (average < minPassingGrade) {
-                isApt = false;
-                reason = `Promedio bajo (${average.toFixed(1)} < ${minPassingGrade})`;
-            } else if (group.modality === 'regular' && attPct < minAttendanceRequired) {
-                isApt = false;
-                reason = `Inasistencias (${attPct}% < ${minAttendanceRequired}%)`;
+                courseFilter.onchange = () => this.loadCertificates();
             }
 
-            if (!isApt && studentCerts.length === 0) {
-                // If not apt and has no documents at all, add a single "No apto" row
-                certificateRows.push({
-                    student,
-                    group,
-                    course,
-                    average,
-                    attPct,
-                    status: 'No apto',
-                    reason: reason,
-                    certificate: null,
-                    type: '',
-                    id: 'NOAPTO-' + enr.id
+            // Populate group filter if empty
+            const groupFilter = document.getElementById('certGroupFilter');
+            if (groupFilter && groupFilter.options.length <= 1) {
+                const groups = await DataManager.getGroups();
+                groups.forEach(g => {
+                    const opt = document.createElement('option');
+                    opt.value = g.id;
+                    opt.textContent = g.code;
+                    groupFilter.appendChild(opt);
                 });
-            } else {
-                // If apt, add rows for eligible types if they don't already exist
-                if (isApt && !hasCert) {
+                groupFilter.onchange = () => this.loadCertificates();
+            }
+
+            const modalityFilter = document.getElementById('certModalityFilter');
+            if (modalityFilter && !modalityFilter.onchange) {
+                modalityFilter.onchange = () => this.loadCertificates();
+            }
+
+            const courseVal = courseFilter ? courseFilter.value : '';
+            const groupVal = document.getElementById('certGroupFilter') ? document.getElementById('certGroupFilter').value : '';
+            const modalityVal = document.getElementById('certModalityFilter') ? document.getElementById('certModalityFilter').value : '';
+
+            const settings = await DataManager.getSettings();
+            const minPassingGrade = settings.minPassingGrade;
+            const minAttendanceRequired = settings.minAttendanceRequired;
+
+            const certificateRows = [];
+
+            const enrollments = await DataManager.getEnrollments();
+            const certificates = await DataManager.getCertificates();
+            const groups = await DataManager.getGroups();
+            const courses = await DataManager.getCourses();
+            const students = await DataManager.getStudents();
+            const grades = await DataManager.getGrades();
+
+            tbody.innerHTML = '';
+
+            for (const enr of enrollments) {
+                const student = students.find(s => s.id === enr.studentId);
+                const group = groups.find(g => g.id === enr.groupId);
+                if (!student || !group) continue;
+
+                const course = courses.find(c => c.id === group.courseId);
+                if (!course) continue;
+
+                // Apply filters
+                if (courseVal && group.courseId != courseVal) continue;
+                if (groupVal && group.id != groupVal) continue;
+                if (modalityVal && group.modality !== modalityVal) continue;
+
+                const gradeRecord = grades.find(g => g.groupId == enr.groupId && g.studentId == enr.studentId);
+                const average = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
+                const attPct = await DataManager.calculateAttendancePercentage(enr.studentId, enr.groupId);
+
+                // Find all certificates for this student and group
+                const studentCerts = certificates.filter(c => c.studentId == enr.studentId && c.groupId == enr.groupId);
+                
+                // Add each certificate as an independent row
+                studentCerts.forEach(cert => {
+                    let statusLabel = 'Por firmar';
+                    if (cert.status === 'pending') statusLabel = 'Pendiente';
+                    if (cert.status === 'generated' || cert.status === 'issued') statusLabel = 'Generado';
+                    if (cert.status === 'annulled') statusLabel = 'Anulado';
+
                     certificateRows.push({
                         student,
                         group,
                         course,
                         average,
                         attPct,
-                        status: 'Apto',
-                        reason: 'Disponible para emitir Certificado',
-                        certificate: null,
-                        type: 'certificado',
-                        id: 'APTO-CERT-' + enr.id
+                        status: statusLabel,
+                        reason: cert.observations || '',
+                        certificate: cert,
+                        type: cert.type || 'certificado',
+                        id: cert.id
                     });
+                });
+
+                // Check if can emit new document (only if not already created/active)
+                const hasCert = studentCerts.some(c => c.type === 'certificado' && c.status !== 'annulled');
+                const hasConst = studentCerts.some(c => c.type === 'constancia' && c.status !== 'annulled');
+
+                const groupFinished = group.status === 'finished' || group.status === 'closed';
+                let isApt = true;
+                let reason = '';
+                
+                if (!groupFinished) {
+                    isApt = false;
+                    reason = 'Grupo activo';
+                } else if (average < minPassingGrade) {
+                    isApt = false;
+                    reason = `Promedio bajo (${average.toFixed(1)} < ${minPassingGrade})`;
+                } else if (group.modality === 'regular' && attPct < minAttendanceRequired) {
+                    isApt = false;
+                    reason = `Inasistencias (${attPct}% < ${minAttendanceRequired}%)`;
                 }
-                if (isApt && !hasConst) {
+
+                if (!isApt && studentCerts.length === 0) {
+                    // If not apt and has no documents at all, add a single "No apto" row
                     certificateRows.push({
                         student,
                         group,
                         course,
                         average,
                         attPct,
-                        status: 'Apto',
-                        reason: 'Disponible para emitir Constancia',
+                        status: 'No apto',
+                        reason: reason,
                         certificate: null,
-                        type: 'constancia',
-                        id: 'APTO-CONS-' + enr.id
+                        type: '',
+                        id: 'NOAPTO-' + enr.id
                     });
+                } else {
+                    // If apt, add rows for eligible types if they don't already exist
+                    if (isApt && !hasCert) {
+                        certificateRows.push({
+                            student,
+                            group,
+                            course,
+                            average,
+                            attPct,
+                            status: 'Apto',
+                            reason: 'Disponible para emitir Certificado',
+                            certificate: null,
+                            type: 'certificado',
+                            id: 'APTO-CERT-' + enr.id
+                        });
+                    }
+                    if (isApt && !hasConst) {
+                        certificateRows.push({
+                            student,
+                            group,
+                            course,
+                            average,
+                            attPct,
+                            status: 'Apto',
+                            reason: 'Disponible para emitir Constancia',
+                            certificate: null,
+                            type: 'constancia',
+                            id: 'APTO-CONS-' + enr.id
+                        });
+                    }
                 }
             }
-        });
 
         // Set Table Headers according to Current Logged Role
         const thead = document.querySelector('#certificatesTable thead');
@@ -3892,6 +3968,9 @@ class SAIIApp {
 
             tbody.appendChild(row);
         });
+        } catch (e) {
+            this.showToast('Error al procesar certificados: ' + e.message, 'error');
+        }
     }
 
     renderDeanCertificatesTable(rows) {
@@ -4975,61 +5054,71 @@ class SAIIApp {
         this.showToast('Búsqueda de reportes actualizada.', 'success');
     }
 
-    loadSavedReportsTable() {
+    async loadSavedReportsTable() {
         const tbody = document.getElementById('savedReportsTableBody');
         if (!tbody) return;
-        tbody.innerHTML = '';
+        this.showTableSpinner('savedReportsTableBody', 5);
 
-        const reports = DataManager.getSavedReports();
-        
-        const typeLabels = {
-            attendance: 'Asistencia de Alumnos',
-            grades: 'Notas y Calificaciones',
-            certificates: 'Certificados Emitidos',
-            enrollments: 'Matrículas'
-        };
+        try {
+            const reports = await DataManager.getSavedReports();
+            tbody.innerHTML = '';
+            
+            const typeLabels = {
+                attendance: 'Asistencia de Alumnos',
+                grades: 'Notas y Calificaciones',
+                certificates: 'Certificados Emitidos',
+                enrollments: 'Matrículas'
+            };
 
-        if (reports.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--color-text-secondary);">No hay reportes personalizados guardados</td></tr>';
-            return;
+            if (reports.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--color-text-secondary);">No hay reportes personalizados guardados</td></tr>';
+                return;
+            }
+
+            reports.forEach(rep => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${rep.name}</strong></td>
+                    <td>${typeLabels[rep.type] || rep.type}</td>
+                    <td>${rep.createdBy || 'Sistema'}</td>
+                    <td>${rep.createdAt}</td>
+                    <td>
+                        <div class="action-icons">
+                            <button class="icon-btn icon-view" onclick="app.loadSavedReport('${rep.id}')" title="Cargar Consulta">&#128269;</button>
+                            <button class="icon-btn icon-delete" onclick="app.deleteReport('${rep.id}')" title="Eliminar Plantilla">&#128683;</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        } catch (e) {
+            this.showToast('Error al cargar reportes: ' + e.message, 'error');
         }
-
-        reports.forEach(rep => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><strong>${rep.name}</strong></td>
-                <td>${typeLabels[rep.type] || rep.type}</td>
-                <td>${rep.createdBy}</td>
-                <td>${rep.createdAt}</td>
-                <td>
-                    <div class="action-icons">
-                        <button class="icon-btn icon-view" onclick="app.loadSavedReport('${rep.id}')" title="Cargar Consulta">&#128269;</button>
-                        <button class="icon-btn icon-delete" onclick="app.deleteReport('${rep.id}')" title="Eliminar Plantilla">&#128683;</button>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
     }
 
-    loadSavedReport(id) {
-        const rep = mockData.savedReports.find(r => r.id === id);
-        if (!rep) return;
+    async loadSavedReport(id) {
+        try {
+            const reports = await DataManager.getSavedReports();
+            const rep = reports.find(r => r.id === id || String(r.id) === String(id));
+            if (!rep) return;
 
-        document.getElementById('reportTypeFilter').value = rep.type;
-        this.updateReportStatusFilterOptions();
+            document.getElementById('reportTypeFilter').value = rep.type;
+            this.updateReportStatusFilterOptions();
 
-        if (rep.queryConfig) {
-            document.getElementById('reportCourseFilter').value = rep.queryConfig.courseId || '';
-            document.getElementById('reportPromotionFilter').value = rep.queryConfig.promotion || '';
-            document.getElementById('reportCycleFilter').value = rep.queryConfig.cycle || '';
-            document.getElementById('reportStatusFilter').value = rep.queryConfig.status || '';
-            document.getElementById('reportMonthFilter').value = rep.queryConfig.month || '';
-            document.getElementById('reportViewModeFilter').value = rep.queryConfig.viewMode || 'detailed';
+            if (rep.queryConfig) {
+                document.getElementById('reportCourseFilter').value = rep.queryConfig.courseId || '';
+                document.getElementById('reportPromotionFilter').value = rep.queryConfig.promotion || '';
+                document.getElementById('reportCycleFilter').value = rep.queryConfig.cycle || '';
+                document.getElementById('reportStatusFilter').value = rep.queryConfig.status || '';
+                document.getElementById('reportMonthFilter').value = rep.queryConfig.month || '';
+                document.getElementById('reportViewModeFilter').value = rep.queryConfig.viewMode || 'detailed';
+            }
+
+            this.filterReportResults();
+            this.showToast(`Cargada la plantilla: "${rep.name}"`, 'success');
+        } catch (e) {
+            this.showToast('Error al cargar plantilla: ' + e.message, 'error');
         }
-
-        this.filterReportResults();
-        this.showToast(`Cargada la plantilla: "${rep.name}"`, 'success');
     }
 
     openSaveQueryModal() {
@@ -5038,7 +5127,7 @@ class SAIIApp {
         document.getElementById('saveQueryModal').style.display = 'block';
     }
 
-    handleSaveQuerySubmit(e) {
+    async handleSaveQuerySubmit(e) {
         e.preventDefault();
         const name = document.getElementById('saveQueryName').value.trim();
         if (!name) return;
@@ -5052,11 +5141,9 @@ class SAIIApp {
         const viewMode = document.getElementById('reportViewModeFilter').value;
 
         const newReport = {
-            id: 'REP' + String(mockData.savedReports.length + 1).padStart(3, '0'),
             name: name,
             type: type,
             createdBy: DataManager.currentUser ? DataManager.currentUser.fullName : 'Admin',
-            createdAt: new Date().toISOString().split('T')[0],
             queryConfig: {
                 courseId,
                 promotion,
@@ -5067,17 +5154,25 @@ class SAIIApp {
             }
         };
 
-        mockData.savedReports.push(newReport);
-        this.showToast('Plantilla de consulta guardada correctamente.', 'success');
-        this.closeModal();
-        this.loadSavedReportsTable();
+        try {
+            await DataManager.createReport(newReport);
+            this.showToast('Plantilla de consulta guardada correctamente.', 'success');
+            this.closeModal();
+            await this.loadSavedReportsTable();
+        } catch (e) {
+            this.showToast('Error al guardar plantilla: ' + e.message, 'error');
+        }
     }
 
-    deleteReport(id) {
+    async deleteReport(id) {
         if (confirm('¿Eliminar esta plantilla de reporte guardado?')) {
-            mockData.savedReports = mockData.savedReports.filter(r => r.id !== id);
-            this.showToast('Plantilla de reporte eliminada.', 'success');
-            this.loadSavedReportsTable();
+            try {
+                await DataManager.deleteReport(id);
+                this.showToast('Plantilla de reporte eliminada.', 'success');
+                await this.loadSavedReportsTable();
+            } catch (e) {
+                this.showToast('Error al eliminar plantilla: ' + e.message, 'error');
+            }
         }
     }
 

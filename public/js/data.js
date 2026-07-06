@@ -352,481 +352,1174 @@ const mockData = {
 };
 
 // Utility functions for data management
+const USE_MOCK = false;
+
+// Mappers to translate snake_case from DB into camelCase for UI, and vice versa
+const mappers = {
+    student: function(s) {
+        if (!s) return null;
+        return {
+            id: s.id,
+            code: s.code,
+            dni: s.dni,
+            firstName: s.first_name,
+            lastName: s.last_name,
+            email: s.email,
+            phone: s.phone,
+            cycle: s.cycle || 'I',
+            promotion: s.promotion || '2024',
+            status: s.status,
+            observations: s.observations || ''
+        };
+    },
+    teacher: function(t) {
+        if (!t) return null;
+        return {
+            id: t.id,
+            code: t.code,
+            dni: t.dni,
+            firstName: t.first_name,
+            lastName: t.last_name,
+            email: t.email,
+            phone: t.phone,
+            specialty: t.specialty,
+            status: t.status
+        };
+    },
+    course: function(c) {
+        if (!c) return null;
+        return {
+            id: c.id,
+            code: c.code,
+            name: c.name,
+            description: c.description || '',
+            totalHours: c.total_hours,
+            status: c.status,
+            modules: (c.modules || []).map(m => ({
+                id: m.id || m.course_module_id,
+                name: m.name || m.module_name,
+                percentage: m.percentage || m.module_percentage
+            }))
+        };
+    },
+    group: function(g) {
+        if (!g) return null;
+        return {
+            id: g.id,
+            code: g.code,
+            courseId: g.course_id,
+            courseName: g.course_name,
+            teacherId: g.teacher_id,
+            teacherName: g.teacher_name,
+            modality: g.modality,
+            schedule: g.schedule,
+            startDate: g.start_date,
+            endDate: g.end_date,
+            hours: g.hours,
+            maxQuota: g.max_quota,
+            status: g.status,
+            observations: g.observations || ''
+        };
+    },
+    enrollment: function(e) {
+        if (!e) return null;
+        return {
+            id: e.id,
+            groupId: e.group_id,
+            studentId: e.student_id,
+            enrollmentDate: e.enrollment_date,
+            status: e.status,
+            studentName: e.student_name,
+            studentCode: e.student_code,
+            groupCode: e.group_code,
+            courseName: e.course_name
+        };
+    },
+    attendanceList: function(a) {
+        if (!a) return null;
+        return {
+            id: a.id,
+            groupId: a.group_id,
+            date: a.date,
+            status: a.status,
+            teacherId: a.teacher_id,
+            adminObservation: a.admin_observation || ''
+        };
+    },
+    settings: function(s) {
+        if (!s) return null;
+        return {
+            systemName: s.system_name,
+            instituteName: s.institute_name,
+            universityName: s.university_name,
+            instituteEmail: s.institute_email,
+            institutePhone: s.institute_phone,
+            academicPeriod: s.academic_period,
+            minPassingGrade: Number(s.min_passing_grade),
+            minAttendanceRequired: Number(s.min_attendance_required),
+            defaultTheme: s.default_theme,
+            enableNotifications: s.enable_notifications == 1,
+            enableAutoSave: s.enable_auto_save == 1,
+            systemLanguage: s.system_language,
+            responsibleAcademic: s.responsible_academic
+        };
+    },
+    savedReport: function(r) {
+        if (!r) return null;
+        return {
+            id: r.id,
+            name: r.name,
+            type: r.type,
+            createdBy: r.created_by,
+            queryConfig: typeof r.query_config === 'string' ? JSON.parse(r.query_config) : r.query_config,
+            createdAt: r.created_at
+        };
+    },
+    certificate: function(c) {
+        if (!c) return null;
+        const signatures = c.signatures || [];
+        const dirSig = signatures.find(s => s.signer_role === 'director');
+        const decSig = signatures.find(s => s.signer_role === 'decano');
+        return {
+            id: c.id,
+            code: c.code,
+            studentId: c.student_id,
+            groupId: c.group_id,
+            type: c.type,
+            status: c.status,
+            deanSigned: decSig ? (decSig.is_signed == 1) : false,
+            directorSigned: dirSig ? (dirSig.is_signed == 1) : false,
+            deanSignedAt: decSig ? decSig.signed_at : null,
+            directorSignedAt: dirSig ? dirSig.signed_at : null,
+            deanSignerName: decSig ? decSig.signer_name : null,
+            directorSignerName: dirSig ? dirSig.signer_name : null,
+            issueDate: c.issue_date || null,
+            observations: c.observations || '',
+            studentName: c.student_name,
+            studentCode: c.student_code,
+            groupCode: c.group_code,
+            courseName: c.course_name
+        };
+    }
+};
+
+const studentToAPI = function(s) {
+    return {
+        code: s.code,
+        dni: s.dni,
+        first_name: s.firstName,
+        last_name: s.lastName,
+        email: s.email,
+        phone: s.phone,
+        status: s.status,
+        observations: s.observations || ''
+    };
+};
+
+const teacherToAPI = function(t) {
+    return {
+        code: t.code,
+        dni: t.dni,
+        first_name: t.firstName,
+        last_name: t.lastName,
+        email: t.email,
+        phone: t.phone,
+        specialty: t.specialty,
+        status: t.status
+    };
+};
+
+const courseToAPI = function(c) {
+    return {
+        code: c.code,
+        name: c.name,
+        description: c.description || '',
+        total_hours: c.totalHours,
+        status: c.status,
+        modules: c.modules
+    };
+};
+
+const groupToAPI = function(g) {
+    return {
+        code: g.code,
+        course_id: g.courseId,
+        teacher_id: g.teacherId,
+        modality: g.modality,
+        schedule: g.schedule,
+        start_date: g.startDate,
+        end_date: g.endDate,
+        hours: g.hours,
+        max_quota: g.maxQuota,
+        status: g.status,
+        observations: g.observations || ''
+    };
+};
+
+const settingsToAPI = function(s) {
+    return {
+        system_name: s.systemName,
+        institute_name: s.instituteName,
+        university_name: s.universityName,
+        institute_email: s.instituteEmail,
+        institute_phone: s.institutePhone,
+        academic_period: s.academicPeriod,
+        min_passing_grade: s.minPassingGrade,
+        min_attendance_required: s.minAttendanceRequired,
+        default_theme: s.defaultTheme,
+        enable_notifications: s.enableNotifications ? 1 : 0,
+        enable_auto_save: s.enableAutoSave ? 1 : 0,
+        system_language: s.systemLanguage,
+        responsible_academic: s.responsibleAcademic
+    };
+};
+
 const DataManager = {
     currentUser: null,
 
-    // Login validation
-    validateLogin: function(username, password, role) {
-        if (username && password && role) {
-            const user = mockData.users.find(u => 
-                u.username.toLowerCase() === username.toLowerCase() && 
-                u.password === password && 
-                u.role.toLowerCase() === role.toLowerCase()
-            );
-            if (user) {
-                let teacherId = null;
-                if (user.role === 'teacher') {
-                    const teacher = mockData.teachers.find(t => t.email === user.email);
-                    teacherId = teacher ? teacher.id : null;
+    // In-memory cache for fast, synchronous read getters
+    cache: {
+        students: [],
+        teachers: [],
+        courses: [],
+        groups: [],
+        enrollments: [],
+        settings: {},
+        reports: [],
+        certificates: [],
+        grades: [],
+        attendanceLists: [],
+        attendanceRecords: [],
+        users: []
+    },
+
+    // Preload all backend API data into local memory cache
+    preload: async function() {
+        if (USE_MOCK) return;
+        try {
+            const [
+                studentsRes, teachersRes, coursesRes, groupsRes, 
+                enrollmentsRes, settingsRes, reportsRes, certificatesRes,
+                gradesRes, attendanceListsRes, attendanceRecordsRes, usersRes
+            ] = await Promise.all([
+                APIClient.request('/students'),
+                APIClient.request('/teachers'),
+                APIClient.request('/courses'),
+                APIClient.request('/groups'),
+                APIClient.request('/enrollments'),
+                APIClient.request('/settings'),
+                APIClient.request('/reports/saved'),
+                APIClient.request('/certificates'),
+                APIClient.request('/grades'),
+                APIClient.request('/attendance'),
+                APIClient.request('/attendance/records'),
+                APIClient.request('/users').catch(() => ({ data: [] }))
+            ]);
+
+            this.cache.students = (studentsRes.data || []).map(mappers.student);
+            this.cache.teachers = (teachersRes.data || []).map(mappers.teacher);
+            this.cache.courses = (coursesRes.data || []).map(mappers.course);
+            this.cache.groups = (groupsRes.data || []).map(mappers.group);
+            this.cache.enrollments = (enrollmentsRes.data || []).map(mappers.enrollment);
+            this.cache.settings = mappers.settings(settingsRes.data);
+            this.cache.reports = (reportsRes.data || []).map(mappers.savedReport);
+            this.cache.certificates = (certificatesRes.data || []).map(mappers.certificate);
+            
+            // Map grades
+            const groupedGrades = {};
+            (gradesRes.data || []).forEach(r => {
+                const key = `${r.group_id}-${r.student_id}`;
+                if (!groupedGrades[key]) {
+                    groupedGrades[key] = {
+                        groupId: Number(r.group_id),
+                        studentId: Number(r.student_id),
+                        moduleGrades: {}
+                    };
                 }
-                const loggedUser = {
-                    id: user.id,
-                    username: user.username,
-                    fullName: user.fullName,
-                    role: user.role,
-                    email: user.email,
-                    teacherId: teacherId
-                };
-                mockData.currentUser = loggedUser;
-                DataManager.currentUser = loggedUser;
-                localStorage.setItem('saii_currentUser', JSON.stringify(loggedUser));
-                return true;
+                groupedGrades[key].moduleGrades[r.course_module_id] = parseFloat(r.grade);
+            });
+            this.cache.grades = Object.values(groupedGrades);
+
+            // Map attendance lists and records
+            this.cache.attendanceLists = (attendanceListsRes.data || []).map(mappers.attendanceList);
+            this.cache.attendanceRecords = (attendanceRecordsRes.data || []).map(r => ({
+                studentId: Number(r.student_id),
+                status: r.status,
+                groupId: Number(r.group_id),
+                date: r.date
+            }));
+            this.cache.users = usersRes.data || [];
+        } catch (e) {
+            console.error("Error preloading SAII REST API cache:", e);
+            throw e;
+        }
+    },
+
+    // Login validation
+    validateLogin: async function(username, password, role) {
+        if (USE_MOCK) {
+            if (username && password && role) {
+                const user = mockData.users.find(u => 
+                    u.username.toLowerCase() === username.toLowerCase() && 
+                    u.password === password && 
+                    u.role.toLowerCase() === role.toLowerCase()
+                );
+                if (user) {
+                    let teacherId = null;
+                    if (user.role === 'teacher') {
+                        const teacher = mockData.teachers.find(t => t.email === user.email);
+                        teacherId = teacher ? teacher.id : null;
+                    }
+                    const loggedUser = {
+                        id: user.id,
+                        username: user.username,
+                        fullName: user.fullName,
+                        role: user.role,
+                        email: user.email,
+                        teacherId: teacherId
+                    };
+                    mockData.currentUser = loggedUser;
+                    DataManager.currentUser = loggedUser;
+                    localStorage.setItem('saii_currentUser', JSON.stringify(loggedUser));
+                    return true;
+                }
             }
+            return false;
+        }
+
+        const res = await APIClient.request('/auth/login', {
+            method: 'POST',
+            body: { username, password, role }
+        });
+        if (res && res.status === 'success') {
+            const loggedUser = {
+                id: res.data.id,
+                username: res.data.username,
+                fullName: res.data.fullName,
+                role: res.data.role,
+                email: res.data.email,
+                teacherId: null
+            };
+            if (loggedUser.role === 'teacher') {
+                try {
+                    const teachersRes = await APIClient.request('/teachers');
+                    const teacher = teachersRes.data.find(t => t.email === loggedUser.email);
+                    loggedUser.teacherId = teacher ? teacher.id : null;
+                } catch (e) {
+                    console.error("Error fetching teacher detail", e);
+                }
+            }
+            DataManager.currentUser = loggedUser;
+            localStorage.setItem('saii_currentUser', JSON.stringify(loggedUser));
+            
+            // Preload the entire database cache after successful login
+            await this.preload();
+            return true;
         }
         return false;
     },
 
     // Student operations
     getStudents: function() {
-        return mockData.students;
-    },
-
-    addStudent: function(studentData) {
-        const newStudent = {
-            id: 'ALU' + String(mockData.students.length + 1).padStart(3, '0'),
-            ...studentData
-        };
-        mockData.students.push(newStudent);
-        return newStudent;
-    },
-
-    updateStudent: function(id, updates) {
-        const student = mockData.students.find(s => s.id === id);
-        if (student) {
-            Object.assign(student, updates);
-            return student;
+        if (USE_MOCK) {
+            return mockData.students;
         }
-        return null;
+        return this.cache.students;
+    },
+
+    addStudent: async function(studentData) {
+        if (USE_MOCK) {
+            const newStudent = {
+                id: 'ALU' + String(mockData.students.length + 1).padStart(3, '0'),
+                ...studentData
+            };
+            mockData.students.push(newStudent);
+            return newStudent;
+        }
+        const body = {
+            code: studentData.code,
+            dni: studentData.dni,
+            first_name: studentData.firstName,
+            last_name: studentData.lastName,
+            email: studentData.email,
+            phone: studentData.phone,
+            status: studentData.status
+        };
+        const res = await APIClient.request('/students', {
+            method: 'POST',
+            body: body
+        });
+        const mapped = mappers.student(res.data);
+        await this.preload();
+        return mapped;
+    },
+
+    updateStudent: async function(id, updates) {
+        if (USE_MOCK) {
+            const student = mockData.students.find(s => s.id === id);
+            if (student) {
+                Object.assign(student, updates);
+                return student;
+            }
+            return null;
+        }
+        const existing = this.cache.students.find(s => s.id == id);
+        if (!existing) return null;
+        const body = {
+            code: updates.code !== undefined ? updates.code : existing.code,
+            dni: updates.dni !== undefined ? updates.dni : existing.dni,
+            first_name: updates.firstName !== undefined ? updates.firstName : existing.firstName,
+            last_name: updates.lastName !== undefined ? updates.lastName : existing.lastName,
+            email: updates.email !== undefined ? updates.email : existing.email,
+            phone: updates.phone !== undefined ? updates.phone : existing.phone,
+            status: updates.status !== undefined ? updates.status : existing.status,
+            observations: updates.observations !== undefined ? updates.observations : existing.observations
+        };
+        const res = await APIClient.request(`/students/${id}`, {
+            method: 'PUT',
+            body: body
+        });
+        const mapped = mappers.student(res.data);
+        await this.preload();
+        return mapped;
     },
 
     getStudentById: function(id) {
-        return mockData.students.find(s => s.id === id);
+        if (USE_MOCK) {
+            return mockData.students.find(s => s.id === id);
+        }
+        return this.cache.students.find(s => s.id == id);
     },
 
     // Course operations
     getCourses: function() {
-        return mockData.courses;
+        if (USE_MOCK) {
+            return mockData.courses;
+        }
+        return this.cache.courses;
     },
 
     getCourseById: function(id) {
-        return mockData.courses.find(c => c.id === id);
-    },
-
-    addCourse: function(courseData) {
-        const newCourse = {
-            id: 'CRS' + String(mockData.courses.length + 1).padStart(3, '0'),
-            ...courseData
-        };
-        mockData.courses.push(newCourse);
-        return newCourse;
-    },
-
-    updateTeacher: function(id, updates) {
-        const teacher = mockData.teachers.find(t => t.id === id);
-        if (teacher) {
-            Object.assign(teacher, updates);
-            return teacher;
+        if (USE_MOCK) {
+            return mockData.courses.find(c => c.id === id);
         }
-        return null;
+        return this.cache.courses.find(c => c.id == id);
+    },
+
+    addCourse: async function(courseData) {
+        if (USE_MOCK) {
+            const newCourse = {
+                id: 'CRS' + String(mockData.courses.length + 1).padStart(3, '0'),
+                ...courseData
+            };
+            mockData.courses.push(newCourse);
+            return newCourse;
+        }
+        const body = {
+            code: courseData.code,
+            name: courseData.name,
+            description: courseData.description || '',
+            total_hours: courseData.totalHours,
+            status: courseData.status,
+            modules: courseData.modules
+        };
+        const res = await APIClient.request('/courses', {
+            method: 'POST',
+            body: body
+        });
+        const mapped = mappers.course(res.data);
+        await this.preload();
+        return mapped;
     },
 
     // Teacher operations
     getTeachers: function() {
-        return mockData.teachers;
-    },
-
-    addTeacher: function(teacherData) {
-        const newTeacher = {
-            id: 'TCH' + String(mockData.teachers.length + 1).padStart(3, '0'),
-            ...teacherData
-        };
-        mockData.teachers.push(newTeacher);
-        return newTeacher;
+        if (USE_MOCK) {
+            return mockData.teachers;
+        }
+        return this.cache.teachers;
     },
 
     getTeacherById: function(id) {
-        return mockData.teachers.find(t => t.id === id);
+        if (USE_MOCK) {
+            return mockData.teachers.find(t => t.id === id);
+        }
+        return this.cache.teachers.find(t => t.id == id);
+    },
+
+    addTeacher: async function(teacherData) {
+        if (USE_MOCK) {
+            const newTeacher = {
+                id: 'TCH' + String(mockData.teachers.length + 1).padStart(3, '0'),
+                ...teacherData
+            };
+            mockData.teachers.push(newTeacher);
+            return newTeacher;
+        }
+        const body = {
+            code: teacherData.code,
+            dni: teacherData.dni,
+            first_name: teacherData.firstName,
+            last_name: teacherData.lastName,
+            email: teacherData.email,
+            phone: teacherData.phone,
+            specialty: teacherData.specialty,
+            status: teacherData.status
+        };
+        const res = await APIClient.request('/teachers', {
+            method: 'POST',
+            body: body
+        });
+        const mapped = mappers.teacher(res.data);
+        await this.preload();
+        return mapped;
+    },
+
+    updateTeacher: async function(id, updates) {
+        if (USE_MOCK) {
+            const teacher = mockData.teachers.find(t => t.id === id);
+            if (teacher) {
+                Object.assign(teacher, updates);
+                return teacher;
+            }
+            return null;
+        }
+        const existing = this.cache.teachers.find(t => t.id == id);
+        if (!existing) return null;
+        const body = {
+            code: updates.code !== undefined ? updates.code : existing.code,
+            dni: updates.dni !== undefined ? updates.dni : existing.dni,
+            first_name: updates.firstName !== undefined ? updates.firstName : existing.firstName,
+            last_name: updates.lastName !== undefined ? updates.lastName : existing.lastName,
+            email: updates.email !== undefined ? updates.email : existing.email,
+            phone: updates.phone !== undefined ? updates.phone : existing.phone,
+            specialty: updates.specialty !== undefined ? updates.specialty : existing.specialty,
+            status: updates.status !== undefined ? updates.status : existing.status
+        };
+        const res = await APIClient.request(`/teachers/${id}`, {
+            method: 'PUT',
+            body: body
+        });
+        const mapped = mappers.teacher(res.data);
+        await this.preload();
+        return mapped;
     },
 
     // Group operations
     getGroups: function() {
-        return mockData.groups;
+        if (USE_MOCK) {
+            return mockData.groups;
+        }
+        return this.cache.groups;
     },
 
     getGroupById: function(id) {
-        return mockData.groups.find(g => g.id === id);
-    },
-
-    addGroup: function(groupData) {
-        const newGroup = {
-            id: 'GRP' + String(mockData.groups.length + 1).padStart(3, '0'),
-            ...groupData
-        };
-        mockData.groups.push(newGroup);
-        return newGroup;
-    },
-
-    updateGroup: function(id, updates) {
-        const group = mockData.groups.find(g => g.id === id);
-        if (group) {
-            Object.assign(group, updates);
-            return group;
+        if (USE_MOCK) {
+            return mockData.groups.find(g => g.id === id);
         }
-        return null;
+        return this.cache.groups.find(g => g.id == id);
+    },
+
+    addGroup: async function(groupData) {
+        if (USE_MOCK) {
+            const newGroup = {
+                id: 'GRP' + String(mockData.groups.length + 1).padStart(3, '0'),
+                ...groupData
+            };
+            mockData.groups.push(newGroup);
+            return newGroup;
+        }
+        const body = {
+            code: groupData.code,
+            course_id: groupData.courseId,
+            teacher_id: groupData.teacherId,
+            modality: groupData.modality,
+            schedule: groupData.schedule,
+            start_date: groupData.startDate,
+            end_date: groupData.endDate,
+            hours: groupData.hours,
+            max_quota: groupData.maxQuota,
+            status: groupData.status
+        };
+        const res = await APIClient.request('/groups', {
+            method: 'POST',
+            body: body
+        });
+        const mapped = mappers.group(res.data);
+        await this.preload();
+        return mapped;
+    },
+
+    updateGroup: async function(id, updates) {
+        if (USE_MOCK) {
+            const group = mockData.groups.find(g => g.id === id);
+            if (group) {
+                Object.assign(group, updates);
+                return group;
+            }
+            return null;
+        }
+        const existing = this.cache.groups.find(g => g.id == id);
+        if (!existing) return null;
+        const body = {
+            code: updates.code !== undefined ? updates.code : existing.code,
+            course_id: updates.courseId !== undefined ? updates.courseId : existing.courseId,
+            teacher_id: updates.teacherId !== undefined ? updates.teacherId : existing.teacherId,
+            modality: updates.modality !== undefined ? updates.modality : existing.modality,
+            schedule: updates.schedule !== undefined ? updates.schedule : existing.schedule,
+            start_date: updates.startDate !== undefined ? updates.startDate : existing.startDate,
+            end_date: updates.endDate !== undefined ? updates.endDate : existing.endDate,
+            hours: updates.hours !== undefined ? updates.hours : existing.hours,
+            max_quota: updates.maxQuota !== undefined ? updates.maxQuota : existing.maxQuota,
+            status: updates.status !== undefined ? updates.status : existing.status,
+            observations: updates.observations !== undefined ? updates.observations : existing.observations
+        };
+        const res = await APIClient.request(`/groups/${id}`, {
+            method: 'PUT',
+            body: body
+        });
+        const mapped = mappers.group(res.data);
+        await this.preload();
+        return mapped;
     },
 
     // Enrollment operations
-    getEnrollments: function(groupId) {
-        return mockData.enrollments.filter(e => e.groupId === groupId);
-    },
-
-    addEnrollment: function(groupId, studentId) {
-        const existingEnrollment = mockData.enrollments.find(e => e.groupId === groupId && e.studentId === studentId);
-        if (existingEnrollment) {
-            return null; // Already enrolled
+    getEnrollments: function(groupId = null) {
+        if (USE_MOCK) {
+            return mockData.enrollments.filter(e => e.groupId === groupId);
         }
-        const newEnrollment = {
-            id: 'ENR' + String(mockData.enrollments.length + 1).padStart(3, '0'),
-            groupId: groupId,
-            studentId: studentId,
-            enrollmentDate: new Date().toISOString().split('T')[0],
-            status: 'active'
-        };
-        mockData.enrollments.push(newEnrollment);
-        return newEnrollment;
-    },
-
-    removeEnrollment: function(enrollmentId) {
-        const index = mockData.enrollments.findIndex(e => e.id === enrollmentId);
-        if (index > -1) {
-            mockData.enrollments.splice(index, 1);
-            return true;
+        if (groupId) {
+            return this.cache.enrollments.filter(e => e.groupId == groupId);
         }
-        return false;
+        return this.cache.enrollments;
     },
 
-    // ===== STUDENT ATTENDANCE — Fase 5: Control de Asistencia de Alumnos (Enfoque Matriz) =====
-
-    ensureAllGroupsHaveAttendance: function() {
-        mockData.groups.forEach(g => {
-            const exists = mockData.studentAttendanceByGroup.find(att => att.groupId === g.id);
-            if (!exists) {
-                const attId = `AST-${g.code}`;
-                const enrolled = this.getEnrolledStudentsByGroup(g.id);
-                
-                // Generar fechas por defecto
-                const days = [];
-                if (g.startDate) {
-                    const start = new Date(g.startDate);
-                    for (let i = 0; i < 4; i++) {
-                        const d = new Date(start);
-                        d.setDate(start.getDate() + (i * 2));
-                        days.push(d.toISOString().split('T')[0]);
-                    }
-                } else {
-                    days.push(new Date().toISOString().split('T')[0]);
-                }
-
-                const newAtt = {
-                    id: attId,
-                    groupId: g.id,
-                    teacherId: g.teacherId,
-                    status: 'borrador',
-                    days: days,
-                    students: enrolled.map(student => ({
-                        studentId: student.id,
-                        attendance: {}
-                    }))
-                };
-                mockData.studentAttendanceByGroup.push(newAtt);
+    addEnrollment: async function(groupId, studentId) {
+        if (USE_MOCK) {
+            const existingEnrollment = mockData.enrollments.find(e => e.groupId === groupId && e.studentId === studentId);
+            if (existingEnrollment) {
+                return null;
+            }
+            const newEnrollment = {
+                id: 'ENR' + String(mockData.enrollments.length + 1).padStart(3, '0'),
+                groupId: groupId,
+                studentId: studentId,
+                enrollmentDate: new Date().toISOString().split('T')[0],
+                status: 'active'
+            };
+            mockData.enrollments.push(newEnrollment);
+            return newEnrollment;
+        }
+        const res = await APIClient.request('/enrollments', {
+            method: 'POST',
+            body: {
+                group_id: groupId,
+                student_id: studentId
             }
         });
+        const mapped = mappers.enrollment(res.data);
+        await this.preload();
+        return mapped;
     },
 
+    removeEnrollment: async function(enrollmentId) {
+        if (USE_MOCK) {
+            const index = mockData.enrollments.findIndex(e => e.id === enrollmentId);
+            if (index > -1) {
+                mockData.enrollments.splice(index, 1);
+                return true;
+            }
+            return false;
+        }
+        await APIClient.request(`/enrollments/${enrollmentId}`, {
+            method: 'DELETE'
+        });
+        await this.preload();
+        return true;
+    },
+
+    // Student Attendance operations
     getStudentAttendanceByGroup: function(groupId) {
-        this.ensureAllGroupsHaveAttendance();
-        return mockData.studentAttendanceByGroup.find(att => att.groupId === groupId) || null;
+        if (USE_MOCK) {
+            return mockData.studentAttendanceByGroup.find(att => att.groupId === groupId) || null;
+        }
+        const id = `AST-GRP-${groupId}`;
+        return this.getStudentAttendanceById(id);
     },
 
     getStudentAttendanceByTeacher: function(teacherId) {
-        this.ensureAllGroupsHaveAttendance();
-        return mockData.studentAttendanceByGroup.filter(att => att.teacherId === teacherId);
+        if (USE_MOCK) {
+            return mockData.studentAttendanceByGroup.filter(att => att.teacherId === teacherId);
+        }
+        const teachersGroups = this.cache.groups.filter(g => g.teacherId == teacherId);
+        return teachersGroups.map(g => ({
+            id: `AST-GRP-${g.id}`,
+            groupId: g.id,
+            teacherId: g.teacherId,
+            status: g.status === 'closed' || g.status === 'finished' ? 'cerrado' : 'borrador'
+        }));
     },
 
     getAllStudentAttendance: function() {
-        this.ensureAllGroupsHaveAttendance();
-        return mockData.studentAttendanceByGroup;
+        if (USE_MOCK) {
+            return mockData.studentAttendanceByGroup;
+        }
+        return this.cache.groups.map(g => ({
+            id: `AST-GRP-${g.id}`,
+            groupId: g.id,
+            teacherId: g.teacherId,
+            status: g.status === 'closed' || g.status === 'finished' ? 'cerrado' : 'borrador'
+        }));
     },
 
     getStudentAttendanceById: function(id) {
-        this.ensureAllGroupsHaveAttendance();
-        const att = mockData.studentAttendanceByGroup.find(att => att.id === id);
-        if (att) {
-            // Sync enrolled students in case they changed
-            const enrolled = this.getEnrolledStudentsByGroup(att.groupId);
-            enrolled.forEach(student => {
-                const hasRecord = att.students.some(s => s.studentId === student.id);
-                if (!hasRecord) {
-                    att.students.push({
-                        studentId: student.id,
-                        attendance: {}
-                    });
-                }
-            });
+        if (USE_MOCK) {
+            return mockData.studentAttendanceByGroup.find(att => att.id === id) || null;
         }
-        return att || null;
+
+        const groupId = parseInt(id.replace('AST-GRP-', ''));
+        const group = this.getGroupById(groupId);
+        if (!group) return null;
+
+        const dbLists = this.cache.attendanceLists.filter(l => l.groupId == groupId);
+
+        const start = new Date(group.startDate);
+        const days = [];
+        for (let i = 0; i < 4; i++) {
+            const d = new Date(start);
+            d.setDate(start.getDate() + (i * 2));
+            days.push(d.toISOString().split('T')[0]);
+        }
+        dbLists.forEach(l => {
+            if (!days.includes(l.date)) {
+                days.push(l.date);
+            }
+        });
+        days.sort();
+
+        const enrolled = this.getEnrolledStudentsByGroup(groupId);
+        const students = enrolled.map(s => {
+            const attMap = {};
+            this.cache.attendanceRecords
+                .filter(r => r.groupId == groupId && r.studentId == s.id)
+                .forEach(r => {
+                    attMap[r.date] = r.status;
+                });
+            return {
+                studentId: s.id,
+                attendance: attMap
+            };
+        });
+
+        const isAnyClosed = dbLists.some(l => l.status === 'cerrada' || l.status === 'cerrado');
+        const globalStatus = isAnyClosed ? 'cerrado' : 'borrador';
+
+        return {
+            id: id,
+            groupId: groupId,
+            teacherId: group.teacherId,
+            status: globalStatus,
+            days: days,
+            students: students
+        };
     },
 
     getEnrolledStudentsByGroup: function(groupId) {
-        const enrollments = mockData.enrollments.filter(e => e.groupId === groupId && e.status === 'active');
-        return enrollments.map(e => mockData.students.find(s => s.id === e.studentId)).filter(s => s);
-    },
-
-    updateStudentAttendanceRecord: function(attendanceId, studentId, date, value) {
-        const attendance = mockData.studentAttendanceByGroup.find(att => att.id === attendanceId);
-        if (!attendance || attendance.status === 'cerrado') return null;
-        
-        let studentRecord = attendance.students.find(s => s.studentId === studentId);
-        if (!studentRecord) {
-            studentRecord = { studentId: studentId, attendance: {} };
-            attendance.students.push(studentRecord);
+        if (USE_MOCK) {
+            const enrollments = mockData.enrollments.filter(e => e.groupId === groupId && e.status === 'active');
+            return enrollments.map(e => mockData.students.find(s => s.id === e.studentId)).filter(s => s);
         }
-        studentRecord.attendance[date] = value;
-        return studentRecord;
+        const enrolledIds = this.getEnrollments(groupId).map(e => e.studentId);
+        return this.cache.students.filter(s => enrolledIds.includes(s.id));
     },
 
-    updateStudentAttendanceStatus: function(attendanceId, newStatus) {
-        const attendance = mockData.studentAttendanceByGroup.find(att => att.id === attendanceId);
-        if (!attendance) return null;
-        attendance.status = newStatus;
-        return attendance;
-    },
-
-    markAllStudentsPresentForDay: function(attendanceId, date) {
-        const attendance = mockData.studentAttendanceByGroup.find(att => att.id === attendanceId);
-        if (!attendance || attendance.status === 'cerrado') return null;
-        
-        const enrolled = this.getEnrolledStudentsByGroup(attendance.groupId);
-        enrolled.forEach(student => {
-            let studentRecord = attendance.students.find(s => s.studentId === student.id);
+    updateStudentAttendanceRecord: async function(attendanceId, studentId, date, value) {
+        if (USE_MOCK) {
+            const attendance = mockData.studentAttendanceByGroup.find(att => att.id === attendanceId);
+            if (!attendance || attendance.status === 'cerrado') return null;
+            let studentRecord = attendance.students.find(s => s.studentId === studentId);
             if (!studentRecord) {
-                studentRecord = { studentId: student.id, attendance: {} };
+                studentRecord = { studentId: studentId, attendance: {} };
                 attendance.students.push(studentRecord);
             }
-            studentRecord.attendance[date] = 'presente';
-        });
-        return attendance;
-    },
-
-    // Grade operations
-    getGradesByGroup: function(groupId) {
-        return mockData.grades.filter(g => g.groupId === groupId);
-    },
-
-    saveGrade: function(groupId, studentId, moduleGrades) {
-        let grade = mockData.grades.find(g => g.groupId === groupId && g.studentId === studentId);
-        if (!grade) {
-            grade = {
-                id: 'GRD' + String(mockData.grades.length + 1).padStart(3, '0'),
-                groupId: groupId,
-                studentId: studentId,
-                moduleGrades: {}
-            };
-            mockData.grades.push(grade);
+            studentRecord.attendance[date] = value;
+            return studentRecord;
         }
-        grade.moduleGrades = moduleGrades;
-        return grade;
-    },
 
-    // Utility calculations
-    calculateAverage: function(moduleGrades, course) {
-        if (!course || !course.modules) return 0;
-        let total = 0;
-        let weightedSum = 0;
-        
-        course.modules.forEach(module => {
-            const grade = moduleGrades[module.id] || 0;
-            const weight = module.percentage / 100;
-            weightedSum += grade * weight;
-        });
-        
-        return Math.round(weightedSum * 10) / 10;
-    },
+        const groupId = parseInt(attendanceId.replace('AST-GRP-', ''));
+        const matchingList = this.cache.attendanceLists.find(l => l.groupId == groupId && l.date === date);
 
-    getStudentsByGroup: function(groupId) {
-        const enrollments = mockData.enrollments.filter(e => e.groupId === groupId);
-        return enrollments.map(e => mockData.students.find(s => s.id === e.studentId)).filter(s => s);
-    },
-
-    // Certificate operations
-    generateCertificate: function(studentId, groupId) {
-        const certificate = {
-            id: 'CRT' + String(mockData.certificates.length + 1).padStart(3, '0'),
-            studentId: studentId,
-            groupId: groupId,
-            code: 'CERT-' + new Date().getFullYear() + '-' + String(mockData.certificates.length + 1).padStart(5, '0'),
-            issueDate: new Date().toISOString().split('T')[0],
-            status: 'issued'
-        };
-        mockData.certificates.push(certificate);
-        return certificate;
-    },
-
-    getCertificatesByGroup: function(groupId) {
-        return mockData.certificates.filter(c => c.groupId === groupId);
-    },
-
-    // ===== GRADE SHEETS (FASE 6) =====
-    ensureAllGroupsHaveGradeSheet: function() {
-        if (!mockData.gradeSheets) {
-            mockData.gradeSheets = [];
-        }
-        mockData.groups.forEach(g => {
-            const exists = mockData.gradeSheets.find(gs => gs.groupId === g.id);
-            if (!exists) {
-                mockData.gradeSheets.push({
-                    groupId: g.id,
-                    status: (g.status === 'closed' || g.status === 'finished') ? 'cerrada' : 'borrador',
-                    updatedAt: new Date().toISOString().split('T')[0]
-                });
-            }
-        });
-    },
-
-    getGradeSheetByGroup: function(groupId) {
-        this.ensureAllGroupsHaveGradeSheet();
-        return mockData.gradeSheets.find(gs => gs.groupId === groupId) || null;
-    },
-
-    updateGradeSheetStatus: function(groupId, newStatus) {
-        this.ensureAllGroupsHaveGradeSheet();
-        const gs = mockData.gradeSheets.find(gs => gs.groupId === groupId);
-        if (gs) {
-            gs.status = newStatus;
-            gs.updatedAt = new Date().toISOString().split('T')[0];
-            return gs;
-        }
-        return null;
-    },
-
-    getTeacherIdForUser: function(user) {
-        if (!user) return null;
-        if (user.teacherId) return user.teacherId;
-        if (user.role !== 'teacher') return null;
-        const teacher = mockData.teachers.find(t => t.email === user.email);
-        return teacher ? teacher.id : null;
-    },
-
-    isGradeSheetComplete: function(groupId) {
-        const group = this.getGroupById(groupId);
-        if (!group) return false;
-        const course = this.getCourseById(group.courseId);
-        if (!course) return false;
-        
         const enrolled = this.getEnrolledStudentsByGroup(groupId);
-        if (enrolled.length === 0) return false;
-        
-        for (let i = 0; i < enrolled.length; i++) {
-            const student = enrolled[i];
-            const grade = mockData.grades.find(g => g.groupId === groupId && g.studentId === student.id);
-            if (!grade) return false;
-            
-            for (let j = 0; j < course.modules.length; j++) {
-                const mod = course.modules[j];
-                const val = grade.moduleGrades[mod.id];
-                if (val === undefined || val === null || val === '') {
-                    return false;
+
+        if (!matchingList) {
+            const records = enrolled.map(s => ({
+                student_id: s.id,
+                status: s.id == studentId ? value : 'presente'
+            }));
+            await APIClient.request('/attendance', {
+                method: 'POST',
+                body: {
+                    group_id: groupId,
+                    date: date,
+                    status: 'borrador',
+                    records: records
                 }
-            }
+            });
+        } else {
+            const listDetail = await APIClient.request(`/attendance/${matchingList.id}`);
+            const records = enrolled.map(s => {
+                const existingRec = listDetail.data.records.find(r => r.student_id == s.id);
+                const currentStatus = existingRec ? existingRec.status : 'presente';
+                return {
+                    student_id: s.id,
+                    status: s.id == studentId ? value : currentStatus
+                };
+            });
+            await APIClient.request(`/attendance/${matchingList.id}`, {
+                method: 'PUT',
+                body: {
+                    status: 'borrador',
+                    records: records
+                }
+            });
+        }
+        await this.preload();
+        return true;
+    },
+
+    updateStudentAttendanceStatus: async function(attendanceId, newStatus) {
+        if (USE_MOCK) {
+            const attendance = mockData.studentAttendanceByGroup.find(att => att.id === attendanceId);
+            if (!attendance) return null;
+            attendance.status = newStatus;
+            return attendance;
+        }
+
+        const groupId = parseInt(attendanceId.replace('AST-GRP-', ''));
+        const dbLists = this.cache.attendanceLists.filter(l => l.groupId == groupId);
+
+        for (const list of dbLists) {
+            await APIClient.request(`/attendance/${list.id}/status`, {
+                method: 'POST',
+                body: {
+                    status: newStatus === 'cerrado' ? 'cerrada' : newStatus
+                }
+            });
+        }
+        await this.preload();
+        return true;
+    },
+
+    markAllStudentsPresentForDay: async function(attendanceId, date) {
+        if (USE_MOCK) {
+            const attendance = mockData.studentAttendanceByGroup.find(att => att.id === attendanceId);
+            if (!attendance || attendance.status === 'cerrado') return null;
+            const enrolled = this.getEnrolledStudentsByGroup(attendance.groupId);
+            enrolled.forEach(student => {
+                let studentRecord = attendance.students.find(s => s.studentId === student.id);
+                if (!studentRecord) {
+                    studentRecord = { studentId: student.id, attendance: {} };
+                    attendance.students.push(studentRecord);
+                }
+                studentRecord.attendance[date] = 'presente';
+            });
+            return attendance;
+        }
+        const groupId = parseInt(attendanceId.replace('AST-GRP-', ''));
+        const enrolled = this.getEnrolledStudentsByGroup(groupId);
+        for (const s of enrolled) {
+            await this.updateStudentAttendanceRecord(attendanceId, s.id, date, 'presente');
         }
         return true;
     },
 
-    // Calculate attendance percentage for a student in a group
+    // Grade operations
+    getGradeSheetByGroup: function(groupId) {
+        if (USE_MOCK) {
+            return mockData.gradeSheets.find(gs => gs.groupId === groupId) || null;
+        }
+        const found = this.cache.grades.find(g => g.groupId == groupId);
+        return {
+            groupId: groupId,
+            status: found ? 'cerrada' : 'borrador',
+            updatedAt: new Date().toISOString().split('T')[0]
+        };
+    },
+
+    updateGradeSheetStatus: async function(groupId, newStatus) {
+        return true;
+    },
+
+    saveGrades: async function(groupId, records, status) {
+        if (USE_MOCK) return;
+        await APIClient.request(`/grades/group/${groupId}`, {
+            method: 'POST',
+            body: {
+                status: status,
+                records: records
+            }
+        });
+        await this.preload();
+    },
+
+    getGrades: function() {
+        if (USE_MOCK) return mockData.grades;
+        return this.cache.grades;
+    },
+
+    calculateAverage: function(moduleGrades, course) {
+        if (!course || !course.modules) return 0;
+        let weightedSum = 0;
+        course.modules.forEach(module => {
+            const grade = parseFloat(moduleGrades[module.id]) || 0;
+            const weight = module.percentage / 100;
+            weightedSum += grade * weight;
+        });
+        return Math.round(weightedSum * 10) / 10;
+    },
+
     calculateAttendancePercentage: function(studentId, groupId) {
-        const att = mockData.studentAttendanceByGroup.find(a => a.groupId === groupId);
-        if (!att || !att.days || att.days.length === 0) {
-            return 100; // if no attendance records exist, count as 100% or default.
+        if (USE_MOCK) {
+            const att = mockData.studentAttendanceByGroup.find(a => a.groupId === groupId);
+            if (!att || !att.days || att.days.length === 0) return 100;
+            const studentRec = att.students.find(s => s.studentId === studentId);
+            if (!studentRec || !studentRec.attendance) return 0;
+            const totalDays = att.days.length;
+            let activeDays = 0;
+            att.days.forEach(d => {
+                const status = studentRec.attendance[d];
+                if (status === 'presente' || status === 'tarde') activeDays++;
+            });
+            return Math.round((activeDays / totalDays) * 100);
         }
-        const studentRec = att.students.find(s => s.studentId === studentId);
-        if (!studentRec || !studentRec.attendance) {
-            return 0;
-        }
-        const totalDays = att.days.length;
+
+        const dbLists = this.cache.attendanceLists.filter(l => l.groupId == groupId && l.status !== 'borrador');
+        const totalClasses = dbLists.length;
+        if (totalClasses === 0) return 100;
+
+        const studentRecords = this.cache.attendanceRecords.filter(r => r.studentId == studentId && r.groupId == groupId);
         let activeDays = 0;
-        att.days.forEach(d => {
-            const status = studentRec.attendance[d];
-            if (status === 'presente' || status === 'tarde') {
+        studentRecords.forEach(r => {
+            if (r.status === 'presente' || r.status === 'tarde' || r.status === 'justificado') {
                 activeDays++;
             }
         });
-        return Math.round((activeDays / totalDays) * 100);
+        return Math.round((activeDays / totalClasses) * 100);
+    },
+
+    getStudentsByGroup: function(groupId) {
+        return this.getEnrolledStudentsByGroup(groupId);
+    },
+
+    // Certificate operations
+    getCertificates: function() {
+        if (USE_MOCK) return mockData.certificates;
+        return this.cache.certificates;
+    },
+
+    getCertificatesByGroup: function(groupId) {
+        if (USE_MOCK) {
+            return mockData.certificates.filter(c => c.groupId === groupId);
+        }
+        return this.cache.certificates.filter(c => c.groupId == groupId);
+    },
+
+    getCertificateById: function(id) {
+        if (USE_MOCK) {
+            return mockData.certificates.find(c => c.id === id);
+        }
+        return this.cache.certificates.find(c => c.id == id);
+    },
+
+    createCertificate: async function(certData) {
+        if (USE_MOCK) {
+            const certId = 'CRT' + String(mockData.certificates.length + 1).padStart(3, '0');
+            const codePrefix = certData.type === 'constancia' ? 'CONS' : 'CERT';
+            const newCert = {
+                id: certId,
+                code: `${codePrefix}-${new Date().getFullYear()}-${String(mockData.certificates.length + 1).padStart(5, '0')}`,
+                studentId: certData.studentId,
+                groupId: certData.groupId,
+                type: certData.type,
+                status: 'toBeSigned',
+                deanSigned: false,
+                directorSigned: false,
+                issueDate: new Date().toISOString().split('T')[0],
+                observations: certData.observations || ''
+            };
+            mockData.certificates.push(newCert);
+            return newCert;
+        }
+
+        const res = await APIClient.request('/certificates', {
+            method: 'POST',
+            body: {
+                student_id: certData.studentId,
+                group_id: certData.groupId,
+                type: certData.type,
+                observations: certData.observations || ''
+            }
+        });
+        const mapped = mappers.certificate(res.data);
+        await this.preload();
+        return mapped;
+    },
+
+    signCertificate: async function(id, signerName, role) {
+        if (USE_MOCK) {
+            const cert = mockData.certificates.find(c => c.id === id);
+            if (cert) {
+                if (role === 'director') {
+                    cert.directorSigned = true;
+                    cert.directorSignedAt = new Date().toISOString().split('T')[0];
+                    cert.directorSignerName = signerName;
+                } else {
+                    cert.deanSigned = true;
+                    cert.deanSignedAt = new Date().toISOString().split('T')[0];
+                    cert.deanSignerName = signerName;
+                }
+                if (cert.directorSigned && cert.deanSigned) {
+                    cert.status = 'generated';
+                }
+            }
+            return true;
+        }
+
+        await APIClient.request(`/certificates/${id}/sign`, {
+            method: 'POST',
+            body: {
+                signer_name: signerName,
+                role: role
+            }
+        });
+        await this.preload();
+        return true;
+    },
+
+    annulCertificate: async function(id) {
+        if (USE_MOCK) {
+            const idx = mockData.certificates.findIndex(c => c.id === id);
+            if (idx !== -1) {
+                mockData.certificates.splice(idx, 1);
+                return true;
+            }
+            return false;
+        }
+        await APIClient.request(`/certificates/${id}`, {
+            method: 'DELETE'
+        });
+        await this.preload();
+        return true;
     },
 
     // Report operations
     getSavedReports: function() {
-        return mockData.savedReports || [];
-    },
-
-    createReport: function(report) {
-        if (!mockData.savedReports) mockData.savedReports = [];
-        report.id = 'REP' + String(mockData.savedReports.length + 1).padStart(3, '0');
-        report.createdAt = new Date().toISOString().split('T')[0];
-        mockData.savedReports.push(report);
-        return report;
-    },
-
-    updateReport: function(id, data) {
-        const report = mockData.savedReports.find(r => r.id === id);
-        if (report) {
-            Object.assign(report, data);
-            return report;
+        if (USE_MOCK) {
+            return mockData.savedReports || [];
         }
-        return null;
+        return this.cache.reports;
     },
 
-    deleteReport: function(id) {
-        const idx = mockData.savedReports.findIndex(r => r.id === id);
-        if (idx !== -1) {
-            mockData.savedReports.splice(idx, 1);
-            return true;
+    createReport: async function(reportData) {
+        if (USE_MOCK) {
+            reportData.id = 'REP' + String(mockData.savedReports.length + 1).padStart(3, '0');
+            reportData.createdAt = new Date().toISOString().split('T')[0];
+            mockData.savedReports.push(reportData);
+            return reportData;
         }
-        return false;
+        const body = {
+            name: reportData.name,
+            type: reportData.type,
+            query_config: reportData.queryConfig
+        };
+        const res = await APIClient.request('/reports/saved', {
+            method: 'POST',
+            body: body
+        });
+        const mapped = mappers.savedReport(res.data);
+        await this.preload();
+        return mapped;
+    },
+
+    updateReport: async function(id, reportData) {
+        if (USE_MOCK) {
+            const report = mockData.savedReports.find(r => r.id === id);
+            if (report) {
+                Object.assign(report, reportData);
+                return report;
+            }
+            return null;
+        }
+        const body = {
+            name: reportData.name,
+            type: reportData.type,
+            query_config: reportData.queryConfig
+        };
+        const res = await APIClient.request(`/reports/saved/${id}`, {
+            method: 'PUT',
+            body: body
+        });
+        const mapped = mappers.savedReport(res.data);
+        await this.preload();
+        return mapped;
+    },
+
+    deleteReport: async function(id) {
+        if (USE_MOCK) {
+            const idx = mockData.savedReports.findIndex(r => r.id === id);
+            if (idx !== -1) {
+                mockData.savedReports.splice(idx, 1);
+                return true;
+            }
+            return false;
+        }
+        await APIClient.request(`/reports/saved/${id}`, {
+            method: 'DELETE'
+        });
+        await this.preload();
+        return true;
     },
 
     // User operations
     getUsers: function() {
-        return mockData.users || [];
-    },
-
-    createUser: function(user) {
-        user.id = 'USR' + String(mockData.users.length + 1).padStart(3, '0');
-        user.lastLogin = '-';
-        if (!user.status) user.status = 'active';
-        mockData.users.push(user);
-        return user;
-    },
-
-    updateUser: function(id, data) {
-        const user = mockData.users.find(u => u.id === id);
-        if (user) {
-            Object.assign(user, data);
-            return user;
+        if (USE_MOCK) {
+            return mockData.users || [];
         }
-        return null;
+        return this.cache.users;
     },
 
-    // Roles and Permissions operations
+    createUser: async function(userData) {
+        if (USE_MOCK) {
+            userData.id = 'USR' + String(mockData.users.length + 1).padStart(3, '0');
+            userData.lastLogin = '-';
+            mockData.users.push(userData);
+            return userData;
+        }
+        const res = await APIClient.request('/users', {
+            method: 'POST',
+            body: userData
+        });
+        await this.preload();
+        return res.data;
+    },
+
+    updateUser: async function(id, data) {
+        if (USE_MOCK) {
+            const user = mockData.users.find(u => u.id === id);
+            if (user) {
+                Object.assign(user, data);
+                return user;
+            }
+            return null;
+        }
+        await APIClient.request(`/users/${id}`, {
+            method: 'PUT',
+            body: data
+        });
+        await this.preload();
+        return true;
+    },
+
     getRoles: function() {
         return Object.keys(mockData.rolePermissions).map(roleKey => {
             const roleLabels = {
@@ -853,16 +1546,27 @@ const DataManager = {
 
     // Settings operations
     getSettings: function() {
-        return mockData.settings;
+        if (USE_MOCK) {
+            return mockData.settings;
+        }
+        return this.cache.settings;
     },
 
-    saveSettings: function(settingsData) {
-        mockData.settings = Object.assign(mockData.settings, settingsData);
-        return mockData.settings;
+    saveSettings: async function(settingsData) {
+        if (USE_MOCK) {
+            mockData.settings = Object.assign(mockData.settings, settingsData);
+            return mockData.settings;
+        }
+        await APIClient.request('/settings', {
+            method: 'PUT',
+            body: settingsToAPI(settingsData)
+        });
+        await this.preload();
+        return settingsData;
     },
 
-    restoreDefaultSettings: function() {
-        mockData.settings = {
+    restoreDefaultSettings: async function() {
+        const defaults = {
             systemName: 'SAII',
             instituteName: 'Instituto de Informática',
             universityName: 'Universidad Nacional de Piura',
@@ -877,52 +1581,20 @@ const DataManager = {
             systemLanguage: 'es',
             responsibleAcademic: 'DR. JONATHAN DAVID NIMA RAMOS - Director'
         };
-        return mockData.settings;
-    },
-
-    // Certificates operations (Fase 7 Extensions)
-    annulCertificate: function(id) {
-        const idx = mockData.certificates.findIndex(c => c.id === id);
-        if (idx !== -1) {
-            mockData.certificates.splice(idx, 1);
-            return true;
+        if (USE_MOCK) {
+            mockData.settings = defaults;
+            return defaults;
         }
-        return false;
+        await this.saveSettings(defaults);
+        return defaults;
     },
 
-    createCertificate: function(certData) {
-        const certId = 'CRT' + String(mockData.certificates.length + 1).padStart(3, '0');
-        const codePrefix = certData.type === 'constancia' ? 'CONS' : 'CERT';
-        const newCert = {
-            id: certId,
-            code: `${codePrefix}-${new Date().getFullYear()}-${String(mockData.certificates.length + 1).padStart(5, '0')}`,
-            studentId: certData.studentId,
-            groupId: certData.groupId,
-            type: certData.type,
-            status: certData.status || 'toBeSigned',
-            deanSigned: certData.deanSigned || false,
-            directorSigned: certData.directorSigned || false,
-            deanSignedAt: certData.deanSignedAt || null,
-            directorSignedAt: certData.directorSignedAt || null,
-            deanSignerName: certData.deanSignerName || null,
-            directorSignerName: certData.directorSignerName || null,
-            issueDate: certData.issueDate || new Date().toISOString().split('T')[0],
-            observations: certData.observations || ''
-        };
-        mockData.certificates.push(newCert);
-        return newCert;
+    getTeacherIdForUser: function(user) {
+        if (!user) return null;
+        return user.teacherId;
     },
 
-    generateBulkCertificates: function() {
-        let count = 0;
-        mockData.certificates.forEach(c => {
-            if (c.status === 'pending') {
-                c.status = 'generated';
-                c.issueDate = new Date().toISOString().split('T')[0];
-                count++;
-            }
-        });
-        return count;
-    }
-
+    // Helper functions
+    ensureAllGroupsHaveAttendance: function() {},
+    ensureAllGroupsHaveGradeSheet: function() {}
 };

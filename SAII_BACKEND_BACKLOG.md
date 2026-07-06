@@ -16,8 +16,8 @@ Este archivo define el mapa general de fases de desarrollo para la etapa del bac
 | **Fase B5** | Grupos académicos y matrículas | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B6** | Asistencia de alumnos | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B7** | Notas, actas y certificados | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
-| **Fase B8** | Reportes, gráficos y exportaciones | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
-| **Fase B9** | Integración frontend-backend | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
+| **Fase B8** | Reportes, gráficos y exportaciones | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
+| **Fase B9** | Integración frontend-backend | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B10**| Seguridad, pruebas y despliegue | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 
 ---
@@ -411,4 +411,41 @@ Estado: **Pendiente**.
   * Generación y firma de certificados y constancias (`/api/certificates`) validando automáticamente la nota final (>= 11) y asistencia efectiva (>= 70%) desde la configuración.
   * Flujo de doble firma (Director y Decano) que transiciona el estado del certificado a `generated` solo cuando ambas firmas son registradas.
 - **Siguiente fase sugerida:** Fase B8 — Reportes, gráficos y exportaciones.
+
+### Fase B8 — Reportes, Gráficos y Exportaciones
+- **Fecha:** 2026-07-05
+- **Rama:** `alexis/backend-b8-reports`
+- **Commit o mensaje sugerido:** `feat: fase B8 endpoints de reportes y plantillas guardadas`
+- **Estado final:** Completado
+- **Archivos creados:**
+  * `app/Models/Report.php`
+  * `app/Controllers/ReportController.php`
+- **Archivos modificados:**
+  * `public/index.php`
+  * `SAII_BACKEND_BACKLOG.md`
+- **Cambios principales:**
+  * Endpoint de consulta y agregación del dashboard con KPIs en tiempo real (`/api/reports/dashboard`).
+  * CRUD completo de reportes/consultas personalizadas guardadas (`/api/reports/saved`) utilizando formato JSON para su configuración en MySQL.
+- **Siguiente fase sugerida:** Fase B9 — Integración frontend-backend.
+
+### Fase B9 — Integración Frontend-Backend
+- **Fecha:** 2026-07-05
+- **Rama:** `alexis/backend-b9-integration`
+- **Commit o mensaje sugerido:** `feat: fase B9 conectar frontend interactivo con api rest y desactivar mock`
+- **Estado final:** Completado
+- **Archivos creados:**
+  * `public/js/api.js`
+- **Archivos modificados:**
+  * `public/index.html`
+  * `public/index.php`
+  * `public/js/data.js`
+  * `public/js/app.js`
+  * `SAII_BACKEND_BACKLOG.md`
+- **Cambios principales:**
+  * Creación del cliente HTTP REST `APIClient` con persistencia de credenciales de sesión en peticiones.
+  * Modificación de `DataManager` en `data.js` para usar llamadas asíncronas con mappers bidireccionales (`snake_case` de BD y `camelCase` de UI).
+  * Adaptación de todos los cargadores de interfaz en `app.js` a flujos asíncronos (`async/await`) con inyección dinámica de estilos y spinners de carga visuales.
+  * Implementación de endpoints de soporte rápido `/api/users`, `/api/certificates/{id}` y `/api/settings` en la base de datos relacional.
+  * Creación de endpoints de consulta global `/api/grades` y `/api/attendance/records` para optimizar el cálculo de promedios e inasistencias en la sábana de notas y la emisión de constancias en un solo HTTP request.
+- **Siguiente fase sugerida:** Fase B10 — Seguridad, pruebas y despliegue.
 
