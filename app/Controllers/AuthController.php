@@ -128,6 +128,15 @@ class AuthController extends BaseController {
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = $env['SMTP_PORT'] ?? 587;
             
+            // Opciones SSL para local (XAMPP Windows)
+            $mail->SMTPOptions = array(
+                'ssl' => array(
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                )
+            );
+            
             $mail->setFrom($env['SMTP_FROM'] ?? 'noreply@saii.edu', $env['SMTP_FROM_NAME'] ?? 'SAII');
             $mail->addAddress($email);
             
