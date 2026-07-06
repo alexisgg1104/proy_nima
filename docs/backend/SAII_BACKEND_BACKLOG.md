@@ -487,4 +487,7 @@ Estado: **Pendiente**.
   * Persistencia de permisos de rol añadida a base de datos real (MySQL) en la tabla `roles` (columna `permissions`).
   * Enrutador y controladores depurados de rutas anónimas redundantes que causaban fallos en la estructura de base de datos.
   * Formulario de usuarios y permisos completamente asincronizados y mapeados a `full_name` y `role_id` para evitar fallos de almacenamiento en base de datos.
+  * Implementación de modal y endpoint seguro para cambio de contraseñas (`PUT /api/users/{id}/password`) con verificación de contraseña actual.
+  * Campo de contraseña opcional y placeholder dinámico al editar datos de usuario.
+  * Control de autorización en `loadView()` para bloquear y redireccionar o alertar en accesos a vistas restringidas como el Dashboard.
 
