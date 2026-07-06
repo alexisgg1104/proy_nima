@@ -837,6 +837,42 @@ const DataManager = {
         return mapped;
     },
 
+    updateCourse: async function(id, courseData) {
+        if (USE_MOCK) {
+            const course = mockData.courses.find(c => c.id === id);
+            if (course) {
+                Object.assign(course, courseData);
+                return course;
+            }
+            return null;
+        }
+        const existing = this.cache.courses.find(c => c.id == id);
+        if (!existing) return null;
+
+        // Map camelCase to snake_case format for the backend REST API
+        const body = {
+            code: courseData.code !== undefined ? courseData.code : existing.code,
+            name: courseData.name !== undefined ? courseData.name : existing.name,
+            description: courseData.description !== undefined ? courseData.description : existing.description,
+            total_hours: courseData.totalHours !== undefined ? courseData.totalHours : existing.totalHours,
+            status: courseData.status !== undefined ? courseData.status : existing.status,
+            modules: courseData.modules !== undefined ? courseData.modules.map(m => ({
+                name: m.name,
+                percentage: m.percentage
+            })) : existing.modules.map(m => ({
+                name: m.name,
+                percentage: m.percentage
+            }))
+        };
+
+        const res = await APIClient.request(`/courses/${id}`, {
+            method: 'PUT',
+            body: body
+        });
+        await this.preload();
+        return res.data;
+    },
+
     // Teacher operations
     getTeachers: function() {
         if (USE_MOCK) {

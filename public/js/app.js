@@ -1529,13 +1529,18 @@ class SAIIApp {
         });
     }
 
-    deleteCourse(courseId) {
+    async deleteCourse(courseId) {
         if (confirm('¿Desactivar este curso?')) {
             const course = DataManager.getCourseById(courseId);
             if (course) {
-                course.status = 'inactive';
-                this.showToast('Curso desactivado', 'success');
-                this.loadCourses();
+                try {
+                    await DataManager.updateCourse(courseId, { status: 'inactive' });
+                    this.showToast('Curso desactivado', 'success');
+                    this.loadCourses();
+                } catch (e) {
+                    console.error("Error al desactivar curso:", e);
+                    this.showToast('Error al desactivar el curso: ' + e.message, 'error');
+                }
             }
         }
     }
@@ -1644,7 +1649,7 @@ class SAIIApp {
         if (warning) warning.style.display = total !== 100 ? 'block' : 'none';
     }
 
-    handleCourseSubmit(e) {
+    async handleCourseSubmit(e) {
         e.preventDefault();
         const nameInputs = document.querySelectorAll('.module-name-input');
         const pctInputs = document.querySelectorAll('.module-pct-input');
@@ -1672,18 +1677,20 @@ class SAIIApp {
         if (!data.totalHours || data.totalHours < 1) { this.showToast('Las horas totales deben ser mayor a 0', 'error'); return; }
 
         const courseId = this._editingCourseId;
-        if (courseId) {
-            const course = DataManager.getCourseById(courseId);
-            if (course) {
-                Object.assign(course, data);
+        try {
+            if (courseId) {
+                await DataManager.updateCourse(courseId, data);
                 this.showToast('Curso actualizado correctamente', 'success');
+            } else {
+                await DataManager.addCourse(data);
+                this.showToast('Curso creado correctamente', 'success');
             }
-        } else {
-            DataManager.addCourse(data);
-            this.showToast('Curso creado correctamente', 'success');
+            this.closeModal();
+            this.loadCourses();
+        } catch (error) {
+            console.error("Error al guardar curso:", error);
+            this.showToast(error.message || 'Error al guardar el curso', 'error');
         }
-        this.closeModal();
-        this.loadCourses();
     }
 
     // ========== TEACHERS MODULE ==========
