@@ -413,6 +413,7 @@ const mappers = {
             teacherName: g.teacher_name,
             modality: g.modality,
             schedule: g.schedule,
+            classroom: g.schedule, // Mapear schedule del backend a classroom en el frontend
             startDate: g.start_date,
             endDate: g.end_date,
             hours: g.hours,
@@ -975,12 +976,13 @@ const DataManager = {
             course_id: groupData.courseId,
             teacher_id: groupData.teacherId,
             modality: groupData.modality,
-            schedule: groupData.schedule,
+            schedule: groupData.schedule || groupData.classroom || 'No especificado',
             start_date: groupData.startDate,
             end_date: groupData.endDate,
             hours: groupData.hours,
             max_quota: groupData.maxQuota,
-            status: groupData.status
+            status: groupData.status,
+            observations: groupData.observations || ''
         };
         const res = await APIClient.request('/groups', {
             method: 'POST',

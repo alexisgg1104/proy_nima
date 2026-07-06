@@ -2035,7 +2035,6 @@ class SAIIApp {
         document.getElementById('groupFieldsRegular').style.display = 'block';
         document.getElementById('groupFieldsExam').style.display = 'none';
 
-        // Populate course select
         const courseSelect = document.getElementById('groupCourse');
         courseSelect.innerHTML = '<option value="">-- Seleccione un curso --</option>';
         DataManager.getCourses().forEach(c => {
@@ -2044,6 +2043,27 @@ class SAIIApp {
             opt.textContent = c.name;
             courseSelect.appendChild(opt);
         });
+
+        // Set hours inputs as readOnly
+        const groupHoursInput = document.getElementById('groupHours');
+        const groupExamHoursInput = document.getElementById('groupExamHours');
+        if (groupHoursInput) groupHoursInput.readOnly = true;
+        if (groupExamHoursInput) groupExamHoursInput.readOnly = true;
+
+        // Auto populate hours based on course selection
+        courseSelect.onchange = () => {
+            const courseId = courseSelect.value;
+            if (courseId) {
+                const course = DataManager.getCourseById(courseId);
+                if (course) {
+                    if (groupHoursInput) groupHoursInput.value = course.totalHours;
+                    if (groupExamHoursInput) groupExamHoursInput.value = course.totalHours;
+                }
+            } else {
+                if (groupHoursInput) groupHoursInput.value = '';
+                if (groupExamHoursInput) groupExamHoursInput.value = '';
+            }
+        };
 
         // Populate teacher select
         const teacherSelect = document.getElementById('groupTeacher');
@@ -2100,13 +2120,14 @@ class SAIIApp {
         document.getElementById('groupFieldsExam').style.display = modality === 'exam' ? 'block' : 'none';
     }
 
-    handleGroupSubmit(e) {
+    async handleGroupSubmit(e) {
         e.preventDefault();
         const modality = document.getElementById('groupModality').value;
         const courseId = document.getElementById('groupCourse').value;
         const teacherId = document.getElementById('groupTeacher').value;
         const course = DataManager.getCourseById(courseId);
         const teacher = DataManager.getTeacherById(teacherId);
+        const classroomVal = document.getElementById('groupClassroom').value.trim();
 
         const data = {
             code: document.getElementById('groupCode').value.trim(),
@@ -2116,7 +2137,8 @@ class SAIIApp {
             teacherId: teacherId,
             teacherName: teacher ? `${teacher.firstName} ${teacher.lastName}` : '',
             status: document.getElementById('groupStatus').value,
-            classroom: document.getElementById('groupClassroom').value.trim(),
+            schedule: classroomVal || 'No especificado', // Send classroom as schedule to database
+            classroom: classroomVal,
             observations: document.getElementById('groupObservations').value.trim()
         };
 
@@ -2141,15 +2163,20 @@ class SAIIApp {
         if (!this.validateGroupData(data)) return;
 
         const groupId = this._editingGroupId;
-        if (groupId) {
-            DataManager.updateGroup(groupId, data);
-            this.showToast('Grupo actualizado correctamente', 'success');
-        } else {
-            DataManager.addGroup(data);
-            this.showToast('Grupo creado correctamente', 'success');
+        try {
+            if (groupId) {
+                await DataManager.updateGroup(groupId, data);
+                this.showToast('Grupo actualizado correctamente', 'success');
+            } else {
+                await DataManager.addGroup(data);
+                this.showToast('Grupo creado correctamente', 'success');
+            }
+            this.closeModal();
+            this.loadGroups();
+        } catch (error) {
+            console.error("Error al guardar grupo académico:", error);
+            this.showToast(error.message || 'Error al guardar el grupo', 'error');
         }
-        this.closeModal();
-        this.loadGroups();
     }
 
     validateGroupData(data) {
@@ -2199,19 +2226,29 @@ class SAIIApp {
         return true;
     }
 
-    closeGroup(groupId) {
+    async closeGroup(groupId) {
         if (confirm('¿Desea cerrar este grupo? Esta acción no se puede revertir desde el sistema.')) {
-            DataManager.updateGroup(groupId, { status: 'closed' });
-            this.showToast('Grupo cerrado correctamente', 'success');
-            this.loadGroups();
+            try {
+                await DataManager.updateGroup(groupId, { status: 'closed' });
+                this.showToast('Grupo cerrado correctamente', 'success');
+                this.loadGroups();
+            } catch (error) {
+                console.error("Error al cerrar grupo:", error);
+                this.showToast('Error al cerrar el grupo: ' + error.message, 'error');
+            }
         }
     }
 
-    deleteGroup(groupId) {
+    async deleteGroup(groupId) {
         if (confirm('¿Desactivar este grupo académico?')) {
-            DataManager.updateGroup(groupId, { status: 'closed' });
-            this.showToast('Grupo desactivado', 'success');
-            this.loadGroups();
+            try {
+                await DataManager.updateGroup(groupId, { status: 'closed' });
+                this.showToast('Grupo desactivado', 'success');
+                this.loadGroups();
+            } catch (error) {
+                console.error("Error al desactivar grupo:", error);
+                this.showToast('Error al desactivar el grupo: ' + error.message, 'error');
+            }
         }
     }
 
