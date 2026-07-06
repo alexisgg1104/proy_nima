@@ -1489,6 +1489,116 @@ const DataManager = {
         return true;
     },
 
+    saveCertificateObservation: async function(id, text) {
+        if (USE_MOCK) {
+            const cert = mockData.certificates.find(c => c.id === id);
+            if (cert) cert.observations = text;
+            return true;
+        }
+        await APIClient.request(`/certificates/${id}/observation`, {
+            method: 'POST',
+            body: {
+                observations: text
+            }
+        });
+        await this.preload();
+        return true;
+    },
+
+    generateBulkCertificates: async function() {
+        if (USE_MOCK) {
+            let count = 0;
+            const settings = mockData.settings;
+            const minPassingGrade = settings.minPassingGrade;
+
+            mockData.enrollments.forEach(enr => {
+                const student = mockData.students.find(s => s.id === enr.studentId);
+                const group = mockData.groups.find(g => g.id === enr.groupId);
+                if (!student || !group || group.status !== 'finished') return;
+
+                const hasCert = mockData.certificates.some(c => c.studentId === enr.studentId && c.groupId === enr.groupId && c.status !== 'annulled');
+                if (hasCert) return;
+
+                const gradeRecord = mockData.grades.find(g => g.groupId === enr.groupId && g.studentId === enr.studentId);
+                const course = mockData.courses.find(c => c.id === group.courseId);
+                const average = gradeRecord ? this.calculateAverage(gradeRecord.moduleGrades, course) : 0;
+                
+                if (average >= minPassingGrade) {
+                    const certId = 'CRT' + String(mockData.certificates.length + 1).padStart(3, '0');
+                    mockData.certificates.push({
+                        id: certId,
+                        code: `CERT-${new Date().getFullYear()}-${String(mockData.certificates.length + 1).padStart(5, '0')}`,
+                        studentId: enr.studentId,
+                        groupId: enr.groupId,
+                        type: 'certificado',
+                        status: 'toBeSigned',
+                        deanSigned: false,
+                        directorSigned: false,
+                        issueDate: new Date().toISOString().split('T')[0],
+                        observations: 'Emisión automática en lote'
+                    });
+                    count++;
+                }
+            });
+            return count;
+        }
+
+        const settings = await this.getSettings();
+        const minPassingGrade = settings.minPassingGrade;
+        const minAttendanceRequired = settings.minAttendanceRequired;
+
+        const enrollments = await this.getEnrollments();
+        const certificates = await this.getCertificates();
+        const groups = await this.getGroups();
+        const courses = await this.getCourses();
+        const students = await this.getStudents();
+        const grades = await this.getGrades();
+
+        let count = 0;
+        for (const enr of enrollments) {
+            const student = students.find(s => s.id == enr.studentId);
+            const group = groups.find(g => g.id == enr.groupId);
+            if (!student || !group || (group.status !== 'finished' && group.status !== 'closed')) continue;
+
+            const course = courses.find(c => c.id == group.courseId);
+            if (!course) continue;
+
+            const hasCert = certificates.some(c => c.studentId == enr.studentId && c.groupId == enr.groupId && c.type === 'certificado' && c.status !== 'annulled');
+            if (hasCert) continue;
+
+            const gradeRecord = grades.find(g => g.groupId == enr.groupId && g.studentId == enr.studentId);
+            const average = gradeRecord ? this.calculateAverage(gradeRecord.moduleGrades, course) : 0;
+            const attPct = await this.calculateAttendancePercentage(enr.studentId, enr.groupId);
+
+            let isApt = average >= minPassingGrade;
+            if (group.modality === 'regular' && attPct < minAttendanceRequired) {
+                isApt = false;
+            }
+
+            if (isApt) {
+                try {
+                    await APIClient.request('/certificates', {
+                        method: 'POST',
+                        body: {
+                            student_id: enr.studentId,
+                            group_id: enr.groupId,
+                            type: 'certificado',
+                            observations: 'Emisión automática en lote'
+                        }
+                    });
+                    count++;
+                } catch (e) {
+                    console.error("Error al emitir certificado en bulk:", e);
+                }
+            }
+        }
+
+        if (count > 0) {
+            await this.preload();
+        }
+        return count;
+    },
+
     // Report operations
     getSavedReports: function() {
         if (USE_MOCK) {

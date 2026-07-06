@@ -4205,6 +4205,7 @@ class SAIIApp {
             const minAttendanceRequired = settings.minAttendanceRequired;
 
             const certificateRows = [];
+            this.certificateRows = certificateRows;
 
             const enrollments = await DataManager.getEnrollments();
             const certificates = await DataManager.getCertificates();
@@ -4565,39 +4566,34 @@ class SAIIApp {
     }
 
     finalizeCertificate(certId) {
-        const cert = mockData.certificates.find(c => c.id === certId);
-        if (!cert) return;
-        
-        if (cert.status !== 'pending') {
-            this.showToast('El documento aún requiere firmas del Decano y/o Director.', 'error');
-            return;
-        }
-
-        cert.status = 'generated';
-        cert.issueDate = new Date().toISOString().split('T')[0];
-        
-        this.showToast('Documento generado oficialmente con éxito.', 'success');
-        this.viewCertificate(cert.id);
-        this.loadCertificates();
+        this.showToast('El documento se actualiza automáticamente al registrar ambas firmas.', 'info');
     }
 
-    generateBulkCertificates() {
-        const count = DataManager.generateBulkCertificates();
-        if (count > 0) {
-            this.showToast(`${count} documentos generados y emitidos correctamente`, 'success');
-            this.loadCertificates();
-        } else {
-            this.showToast('No hay documentos con firmas completas listos para generar (estado Pendiente)', 'info');
+    async generateBulkCertificates() {
+        try {
+            this.showToast('Generando certificados aptos pendientes...', 'info');
+            const count = await DataManager.generateBulkCertificates();
+            if (count > 0) {
+                this.showToast(`${count} documentos generados y emitidos correctamente`, 'success');
+                await this.loadCertificates();
+            } else {
+                this.showToast('No hay alumnos aptos pendientes para generación masiva.', 'info');
+            }
+        } catch (e) {
+            console.error("Error en generación masiva:", e);
+            this.showToast('Error al generar certificados: ' + e.message, 'error');
         }
     }
 
-    annulCertificate(id) {
+    async annulCertificate(id) {
         if (confirm('¿Está seguro de que desea anular este documento?')) {
-            const cert = mockData.certificates.find(c => c.id === id);
-            if (cert) {
-                cert.status = 'annulled';
+            try {
+                await DataManager.annulCertificate(id);
                 this.showToast('Documento anulado correctamente', 'success');
-                this.loadCertificates();
+                await this.loadCertificates();
+            } catch (e) {
+                console.error("Error al anular documento:", e);
+                this.showToast('Error al anular documento: ' + e.message, 'error');
             }
         }
     }
@@ -4611,7 +4607,7 @@ class SAIIApp {
     }
 
     viewCertificate(certificateId) {
-        const cert = mockData.certificates.find(c => c.id === certificateId);
+        const cert = (DataManager.getCertificates() || []).find(c => c.id == certificateId);
         if (!cert) return;
 
         const student = DataManager.getStudentById(cert.studentId);
@@ -4917,16 +4913,17 @@ class SAIIApp {
         }
     }
 
-    handleEmitCertSubmit(e) {
+    async handleEmitCertSubmit(e) {
         e.preventDefault();
         const studentId = document.getElementById('emitStudentId').value;
         const groupId = document.getElementById('emitGroupId').value;
         const type = document.getElementById('emitDocType').value;
 
         // Check if certificate/constancia already exists active
-        const exists = mockData.certificates.some(c => 
-            c.studentId === studentId && 
-            c.groupId === groupId && 
+        const certificates = await DataManager.getCertificates();
+        const exists = (certificates || []).some(c => 
+            c.studentId == studentId && 
+            c.groupId == groupId && 
             c.type === type && 
             c.status !== 'annulled'
         );
@@ -4937,76 +4934,74 @@ class SAIIApp {
             return;
         }
 
-        // Create new certificate record in status 'toBeSigned'
-        const cert = DataManager.createCertificate({
-            studentId,
-            groupId,
-            type,
-            status: 'toBeSigned',
-            deanSigned: false,
-            directorSigned: false,
-            issueDate: new Date().toISOString().split('T')[0]
-        });
+        try {
+            // Create new certificate record in status 'toBeSigned'
+            const cert = await DataManager.createCertificate({
+                studentId,
+                groupId,
+                type,
+                observations: ''
+            });
 
-        if (cert) {
-            this.showToast('Documento preparado y enviado a firma del Decano y Director.', 'success');
-            this.closeModal();
-            this.loadCertificates();
-            
-            // Disable emit button
-            const emitBtn = document.getElementById('emitCertBtn');
-            if (emitBtn) emitBtn.setAttribute('disabled', 'true');
-        } else {
-            this.showToast('Error al crear el documento.', 'error');
+            if (cert) {
+                this.showToast('Documento preparado y enviado a firma del Decano y Director.', 'success');
+                this.closeModal();
+                await this.loadCertificates();
+                
+                // Disable emit button
+                const emitBtn = document.getElementById('emitCertBtn');
+                if (emitBtn) emitBtn.setAttribute('disabled', 'true');
+            } else {
+                this.showToast('Error al crear el documento.', 'error');
+            }
+        } catch (error) {
+            console.error("Error al crear certificado:", error);
+            this.showToast('Error al crear el documento: ' + error.message, 'error');
         }
     }
 
-    signDocument(certId, role) {
-        const cert = mockData.certificates.find(c => c.id === certId);
-        if (!cert) return;
-
-        const today = new Date().toISOString().split('T')[0];
-
-        if (role === 'dean') {
-            cert.deanSigned = true;
-            cert.deanSignedAt = today;
-            cert.deanSignerName = 'DR. FRANCISCO JAVIER CRUZ VILCHEZ';
-            this.showToast('Documento firmado por el Decano', 'success');
-        } else if (role === 'director') {
-            cert.directorSigned = true;
-            cert.directorSignedAt = today;
-            cert.directorSignerName = 'DR. JONATHAN DAVID NIMA RAMOS';
-            this.showToast('Documento firmado por el Director', 'success');
+    async signDocument(certId, role) {
+        const signerName = role === 'dean' ? 'DR. FRANCISCO JAVIER CRUZ VILCHEZ' : 'DR. JONATHAN DAVID NIMA RAMOS';
+        
+        try {
+            await DataManager.signCertificate(certId, signerName, role);
+            
+            // Check if both signatures are complete to show appropriate toast
+            const cert = (DataManager.getCertificates() || []).find(c => c.id == certId);
+            if (cert && cert.status === 'generated') {
+                this.showToast('Firma completa. El documento ha sido emitido oficialmente con éxito.', 'success');
+            } else {
+                this.showToast(`Documento firmado por el ${role === 'dean' ? 'Decano' : 'Director'}`, 'success');
+            }
+            
+            await this.loadCertificates();
+        } catch (e) {
+            console.error("Error al firmar documento:", e);
+            this.showToast('Error al firmar el documento: ' + e.message, 'error');
         }
-
-        // Re-evaluate status automatically if both signed
-        if (cert.deanSigned && cert.directorSigned) {
-            cert.status = 'pending';
-            this.showToast('Firma completa. El documento se encuentra en estado Pendiente listo para ser emitido.', 'success');
-        }
-
-        this.loadCertificates();
     }
 
     openCertObservationModal(certId) {
         document.getElementById('obsCertId').value = certId;
-        const cert = mockData.certificates.find(c => c.id === certId);
+        const cert = (DataManager.getCertificates() || []).find(c => c.id == certId);
         document.getElementById('certObsText').value = cert ? cert.observations || '' : '';
         
         document.getElementById('modalOverlay').style.display = 'block';
         document.getElementById('certObsModal').style.display = 'block';
     }
 
-    submitCertObservation() {
+    async submitCertObservation() {
         const certId = document.getElementById('obsCertId').value;
         const text = document.getElementById('certObsText').value.trim();
 
-        const cert = mockData.certificates.find(c => c.id === certId);
-        if (cert) {
-            cert.observations = text;
+        try {
+            await DataManager.saveCertificateObservation(certId, text);
             this.showToast('Observación del Decano guardada correctamente', 'success');
             this.closeModal();
-            this.loadCertificates();
+            await this.loadCertificates();
+        } catch (e) {
+            console.error("Error al guardar observación:", e);
+            this.showToast('Error al guardar la observación: ' + e.message, 'error');
         }
     }
 
@@ -5197,7 +5192,7 @@ class SAIIApp {
                         else groupDisapproved++;
                     }
 
-                    const cert = mockData.certificates.find(c => c.studentId === student.id && c.groupId === group.id);
+                    const cert = (DataManager.getCertificates() || []).find(c => c.studentId == student.id && c.groupId == group.id);
                     if (cert && cert.status === 'generated') {
                         groupCertCount++;
                     }
@@ -5212,7 +5207,7 @@ class SAIIApp {
                     if (status === 'disapproved' && groupDisapproved === 0) return;
                 }
                 if (type === 'certificates' && status) {
-                    const groupCerts = mockData.certificates.filter(c => c.groupId === group.id && c.status === status);
+                    const groupCerts = (DataManager.getCertificates() || []).filter(c => c.groupId == group.id && c.status === status);
                     if (groupCerts.length === 0) return;
                 }
 
@@ -5319,7 +5314,7 @@ class SAIIApp {
                     } else {
                         disapproved++;
                     }
-                    const hasCert = mockData.certificates.some(c => c.studentId === r.student.id && c.groupId === r.group.id && c.status === 'generated');
+                    const hasCert = (DataManager.getCertificates() || []).some(c => c.studentId == r.student.id && c.groupId == r.group.id && c.status === 'generated');
                     if (hasCert) certsCount++;
 
                     const attData = mockData.studentAttendanceByGroup.find(a => a.groupId === r.group.id);
@@ -5394,7 +5389,7 @@ class SAIIApp {
                         if (average >= mockData.settings.minPassingGrade) approved++;
                         else disapproved++;
                     }
-                    const hasCert = mockData.certificates.some(c => c.studentId === r.student.id && c.groupId === r.group.id && c.status === 'generated');
+                    const hasCert = (DataManager.getCertificates() || []).some(c => c.studentId == r.student.id && c.groupId == r.group.id && c.status === 'generated');
                     if (hasCert) certsCount++;
 
                     totalAttDays += 100;
@@ -5425,7 +5420,7 @@ class SAIIApp {
                     </tr>
                 `;
 
-                mockData.certificates.forEach(cert => {
+                (DataManager.getCertificates() || []).forEach(cert => {
                     const student = DataManager.getStudentById(cert.studentId);
                     const group = DataManager.getGroupById(cert.groupId);
                     if (!student || !group) return;
@@ -5533,7 +5528,7 @@ class SAIIApp {
                         else disapproved++;
                     }
 
-                    const hasCert = mockData.certificates.some(c => c.studentId === r.student.id && c.groupId === r.group.id && c.status === 'generated');
+                    const hasCert = (DataManager.getCertificates() || []).some(c => c.studentId == r.student.id && c.groupId == r.group.id && c.status === 'generated');
                     if (hasCert) certsCount++;
 
                     const attPct = DataManager.calculateAttendancePercentage(r.student.id, r.group.id);

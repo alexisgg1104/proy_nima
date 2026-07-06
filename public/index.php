@@ -257,6 +257,7 @@ $router->addRoute('GET', '/api/certificates', [CertificateController::class, 'in
 $router->addRoute('GET', '/api/certificates/{id}', [CertificateController::class, 'show']);
 $router->addRoute('POST', '/api/certificates', [CertificateController::class, 'create']);
 $router->addRoute('POST', '/api/certificates/{id}/sign', [CertificateController::class, 'sign']);
+$router->addRoute('POST', '/api/certificates/{id}/observation', [CertificateController::class, 'saveObservation']);
 
 use App\Controllers\ReportController;
 

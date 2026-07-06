@@ -770,6 +770,49 @@ El agente debe actualizar esta sección al terminar cada fase.
   - Descargar acta en Excel y verificar apertura correcta con tildes y promedios correctos.
 - Pendientes o riesgos: ninguno.
 
+#### Ajustes de Certificados y Constancias (Fase 7)
+
+- Fecha: 2026-07-06
+- Rama: main
+- Commit o mensaje sugerido: `fix: conectar modulo de certificados a base de datos, habilitar rol decano y registro de observaciones`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `app/Controllers/CertificateController.php`
+  - `public/index.php`
+  - `public/js/app.js`
+  - `public/js/data.js`
+  - `docs/frontend/SAII_BACKLOG.md`
+- Funciones creadas o modificadas:
+  - En `app/Controllers/CertificateController.php`:
+    - `index()` (modificada: autoriza rol 'dean' y retorna las firmas asociadas a cada certificado)
+    - `show()` (modificada: autoriza rol 'dean')
+    - `sign()` (modificada: autoriza rol 'dean')
+    - `saveObservation()` (creada: permite actualizar la observación del certificado en base de datos)
+  - En `public/index.php`:
+    - `POST /api/certificates/{id}/observation` (ruta añadida para registrar observaciones)
+  - En `public/js/data.js`:
+    - `saveCertificateObservation()` (creada: envía POST asíncrono para guardar observaciones en base de datos)
+    - `generateBulkCertificates()` (creada: realiza la emisión masiva asíncrona de alumnos aptos y los guarda en base de datos)
+  - En `public/js/app.js`:
+    - `loadCertificates()` (modificada: guarda `this.certificateRows` para acceso masivo y utiliza comparaciones loose `==`)
+    - `handleEmitCertSubmit()` (modificada: espera de forma asíncrona la creación y verifica existencia contra BD)
+    - `signDocument()` (modificada: firma asíncronamente y actualiza el estado de las firmas en la base de datos)
+    - `openCertObservationModal()` (modificada: carga las observaciones directamente desde la caché de la base de datos)
+    - `submitCertObservation()` (modificada: persiste la observación en MySQL de manera asíncrona)
+    - `viewCertificate()` y reportes (modificadas: reemplazan las referencias mock con la caché real de base de datos)
+- Cambios principales:
+  - **Acceso Decano:** Se corrigieron los errores 403 modificando `requireAuth` para incluir el rol `'dean'`. Ahora el Decano puede consultar el listado, ver documentos y firmar sin restricciones.
+  - **Firma Real en MySQL:** El botón de firma de Director y Decano ahora conecta con el backend e inserta la firma real en `certificate_signatures`. El estado se actualiza automáticamente a `'generated'` al completarse ambas firmas.
+  - **Observación Persistente:** El botón y formulario de observación ahora guardan la observación directamente en la columna `observations` de la tabla `certificates` de MySQL.
+  - **Generación Masiva Real:** El botón "Generar Certificados Pendientes" ejecuta la emisión en lote evaluando promedio y asistencia mínima sobre los datos reales de la base de datos.
+  - **Ver Documento:** El botón de vista previa (lupa) de certificados ahora carga el certificado desde la base de datos de manera correcta.
+- Pruebas realizadas:
+  - Generar certificados individuales y en lote asíncronamente.
+  - Iniciar sesión como Decano (dean), firmar actas pendientes y verificar firmas guardadas en MySQL.
+  - Iniciar sesión como Director/Admin, firmar el mismo certificado y comprobar que pasa automáticamente a estado "Generado".
+  - Registrar observación en el botón de chat como Decano y verificar persistencia en base de datos al recargar la página.
+- Pendientes o riesgos: ninguno.
+
 ---
 
 ## Regla final del backlog

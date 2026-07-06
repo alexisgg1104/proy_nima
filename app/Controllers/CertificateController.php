@@ -12,17 +12,21 @@ class CertificateController extends BaseController {
 
     // Listar todos los certificados (GET /api/certificates)
     public function index() {
-        $this->requireAuth(['admin', 'secretary']);
+        $this->requireAuth(['admin', 'secretary', 'dean']);
 
         $certModel = new Certificate();
         $certs = $certModel->getAll();
+
+        foreach ($certs as &$cert) {
+            $cert['signatures'] = $certModel->getSignatures((int)$cert['id']);
+        }
 
         $this->json($certs);
     }
 
     // Obtener detalles de un certificado y sus firmas (GET /api/certificates/{id})
     public function show($id) {
-        $this->requireAuth(['admin', 'secretary']);
+        $this->requireAuth(['admin', 'secretary', 'dean']);
 
         $certModel = new Certificate();
         $cert = $certModel->getById((int)$id);
@@ -119,7 +123,7 @@ class CertificateController extends BaseController {
 
     // Registrar firma de certificado (POST /api/certificates/{id}/sign)
     public function sign($id) {
-        $this->requireAuth(['admin', 'secretary']);
+        $this->requireAuth(['admin', 'secretary', 'dean']);
 
         $certModel = new Certificate();
         $cert = $certModel->getById((int)$id);
@@ -147,4 +151,26 @@ class CertificateController extends BaseController {
             $this->error('Ocurrió un error al registrar la firma electrónica en el servidor.', 500);
         }
     }
+
+    // Registrar observación de certificado (POST /api/certificates/{id}/observation)
+    public function saveObservation($id) {
+        $this->requireAuth(['admin', 'secretary', 'dean']);
+
+        $certModel = new Certificate();
+        $cert = $certModel->getById((int)$id);
+
+        if (!$cert) {
+            $this->error('Certificado no encontrado.', 404);
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+        $observations = trim($input['observations'] ?? '');
+
+        $db = \Config\Database::getInstance()->getConnection();
+        $stmt = $db->prepare("UPDATE certificates SET observations = :observations WHERE id = :id");
+        $stmt->execute(['observations' => $observations, 'id' => (int)$id]);
+
+        $this->json(['message' => 'Observación guardada correctamente.']);
+    }
+}
 }
