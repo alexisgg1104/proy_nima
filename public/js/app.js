@@ -126,7 +126,9 @@ class SAIIApp {
         if (matchingUser) {
             let teacherId = null;
             if (role === 'teacher') {
-                const teacher = mockData.teachers.find(t => t.email === matchingUser.email);
+                const teachersList = DataManager.getTeachers();
+                const teacher = teachersList.find(t => t.email === matchingUser.email) || 
+                                mockData.teachers.find(t => t.email === matchingUser.email);
                 teacherId = teacher ? teacher.id : null;
             }
             DataManager.currentUser = {

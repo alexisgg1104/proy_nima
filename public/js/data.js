@@ -1133,12 +1133,17 @@ const DataManager = {
         if (USE_MOCK) {
             return mockData.studentAttendanceByGroup;
         }
-        return this.cache.groups.map(g => ({
-            id: `AST-GRP-${g.id}`,
-            groupId: g.id,
-            teacherId: g.teacherId,
-            status: g.status === 'closed' || g.status === 'finished' ? 'cerrado' : 'borrador'
-        }));
+        return this.cache.groups.map(g => {
+            const dbLists = this.cache.attendanceLists.filter(l => l.groupId == g.id);
+            const isAnyClosed = dbLists.some(l => l.status === 'cerrada' || l.status === 'cerrado');
+            const globalStatus = (g.status === 'closed' || g.status === 'finished' || isAnyClosed) ? 'cerrado' : 'borrador';
+            return {
+                id: `AST-GRP-${g.id}`,
+                groupId: g.id,
+                teacherId: g.teacherId,
+                status: globalStatus
+            };
+        });
     },
 
     getStudentAttendanceById: function(id) {
