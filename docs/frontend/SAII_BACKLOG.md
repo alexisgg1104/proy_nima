@@ -670,16 +670,20 @@ El agente debe actualizar esta sección al terminar cada fase.
 
 - Fecha: 2026-07-06
 - Rama: main
-- Commit o mensaje sugerido: `fix: corregir flujo e integracion de asistencia de alumnos (Fase 5), bloqueo de edicion en boton ver, validacion de tardanza y exportacion Excel/CSV`
+- Commit o mensaje sugerido: `fix: corregir flujo e integracion de asistencia de alumnos (Fase 5), id de docente simulado, estado cerrado dinamico y validacion de tardanzas`
 - Estado final: **Completada**.
 - Archivos modificados:
   - `public/index.php`
   - `public/js/app.js`
+  - `public/js/data.js`
   - `docs/frontend/SAII_BACKLOG.md`
 - Funciones creadas o modificadas:
   - En `public/index.php`:
     - `/api/attendance/records` (modificada: remueve el filtro `status != 'borrador'` para que la caché del cliente cargue y persista los borradores de asistencia)
+  - En `public/js/data.js`:
+    - `getAllStudentAttendance()` (modificada: evalúa dinámicamente si hay listas cerradas en la base de datos para mostrar el estado 'cerrado' en la tabla general)
   - En `public/js/app.js`:
+    - `simulateRoleChange()` (modificada: corrige la asignación del ID del docente simulado consultando el caché real en vez del mock)
     - `setupAttendance()` (modificada: bifurca el flujo de carga mostrando la vista del docente o del administrador basado en el rol del usuario conectado)
     - `setupTeacherAttendanceView()` (creada: inicializa el selector de grupos asignados al docente)
     - `onTeacherGroupChange()` (creada: autopopula la fecha del día y carga la planilla)
@@ -695,12 +699,15 @@ El agente debe actualizar esta sección al terminar cada fase.
     - `closeAttendance()` (modificada: corrige el validador de cierre para admitir `'tarde'` como estado completo, y valida exclusivamente contra fechas realmente registradas en BD)
     - `printAttendance()` (modificada: redirige la impresión de asistencia del administrador para descargar directamente la matriz de asistencia en Excel)
 - Cambios principales:
+  - **Mapeo de Docente Simulado corregido:** Se solucionó el problema por el cual el selector de "Grupo asignado" se mostraba vacío al simular el rol de Docente (como Roberto Silva). Ahora, el simulador busca el ID correspondiente del docente en el listado real de la base de datos (por ejemplo, `1` en vez del ID mockeado `'TCH001'`).
+  - **Estado dinámico Cerrado:** El estado de las filas del listado de asistencias de alumnos del administrador se evalúa dinámicamente consultando si hay listas cerradas en la base de datos, en lugar de amarrarse únicamente al estado del grupo académico en sí.
   - **Flujo de Asistencia de Alumnos completo:** Integrada la vista del docente para la elección de grupo y fecha, posibilitando marcar estados, hora de entrada y observaciones individuales, con cálculo automático de estadísticas.
   - **Borradores e integración con Base de Datos:** Los registros se guardan y editan en MySQL. El endpoint de records de PHP fue actualizado para retornar borradores, evitando que la cuadrícula se muestre vacía al recargar.
   - **Inspección de Solo Lectura:** El botón de la lupa ("Ver") deshabilita los controles del modal para garantizar solo lectura.
   - **Validaciones de Cierre:** Corregida la regla de negocio que impedía cerrar planillas si había alumnos en estado "Tarde". Ahora se valida sobre fechas registradas y se permite el cierre.
   - **Exportación real a Excel:** Creadores de CSV de datos estructurados con BOM UTF-8 que permiten abrir plantillas con acentos directamente en Excel, tanto en la vista docente como en el listado del administrador.
 - Pruebas realizadas:
+  - Simular rol de docente e ingresar al módulo de asistencia para validar la carga de grupos asignados correspondientes al docente activo.
   - Login como docente, selección de grupo, carga automática de alumnos matriculados.
   - Guardado de borrador y persistencia en base de datos.
   - Clic en "Ver" en la vista del administrador abre el modal con selectores deshabilitados.
