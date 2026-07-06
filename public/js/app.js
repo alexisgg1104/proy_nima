@@ -4601,11 +4601,51 @@ class SAIIApp {
     }
 
     printCertificateSimulated(id) {
-        this.showToast('Enviando documento a la impresora (Simulado)', 'success');
+        const cert = (DataManager.getCertificates() || []).find(c => c.id == id);
+        if (!cert) return;
+        
+        // Open the view modal first to load the HTML in #certificatePreview, then print
+        this.viewCertificate(id);
+        setTimeout(() => {
+            const printContent = document.getElementById('certificatePreview').innerHTML;
+            const win = window.open('', '', 'width=900,height=650');
+            win.document.write('<html><head><title>Imprimir Documento</title>');
+            win.document.write('<style>');
+            win.document.write('body { font-family: "Georgia", serif; margin: 0; padding: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }');
+            win.document.write('</style></head><body>');
+            win.document.write(printContent);
+            win.document.write('</body></html>');
+            win.document.close();
+            win.focus();
+            setTimeout(() => {
+                win.print();
+                win.close();
+            }, 500);
+        }, 300);
     }
 
     downloadCertificatePDFSimulated(id) {
-        this.showToast('Descargando archivo PDF (Simulado)', 'success');
+        const cert = (DataManager.getCertificates() || []).find(c => c.id == id);
+        if (!cert) return;
+
+        // Open the view modal first to load the HTML in #certificatePreview, then print to PDF
+        this.viewCertificate(id);
+        setTimeout(() => {
+            const printContent = document.getElementById('certificatePreview').innerHTML;
+            const win = window.open('', '', 'width=900,height=650');
+            win.document.write('<html><head><title>Guardar como PDF</title>');
+            win.document.write('<style>');
+            win.document.write('body { font-family: "Georgia", serif; margin: 0; padding: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }');
+            win.document.write('</style></head><body>');
+            win.document.write(printContent);
+            win.document.write('</body></html>');
+            win.document.close();
+            win.focus();
+            setTimeout(() => {
+                win.print();
+                win.close();
+            }, 500);
+        }, 300);
     }
 
     viewCertificate(certificateId) {
@@ -4621,6 +4661,7 @@ class SAIIApp {
         const attPct = DataManager.calculateAttendancePercentage(student.id, group.id);
 
         const preview = document.getElementById('certificatePreview');
+        preview.dataset.certId = certificateId;
         const issueDateFormatted = this.formatDateToSpanish(cert.issueDate);
         const docType = cert.type || 'certificado';
         

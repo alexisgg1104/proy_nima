@@ -1200,8 +1200,8 @@
                 <div class="certificate-preview" id="certificatePreview">
                 </div>
                 <div class="modal-actions">
-                    <button class="btn btn-primary" onclick="printCertificate()">Imprimir</button>
-                    <button class="btn btn-secondary" onclick="downloadCertificatePDF()">Descargar PDF</button>
+                    <button class="btn btn-primary" onclick="app.printCertificateSimulated(document.getElementById('certificatePreview').dataset.certId)">Imprimir</button>
+                    <button class="btn btn-secondary" onclick="app.downloadCertificatePDFSimulated(document.getElementById('certificatePreview').dataset.certId)">Descargar PDF</button>
                     <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
                 </div>
             </div>
