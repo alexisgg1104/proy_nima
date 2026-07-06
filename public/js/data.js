@@ -1550,28 +1550,52 @@ const DataManager = {
                 const group = mockData.groups.find(g => g.id === enr.groupId);
                 if (!student || !group || group.status !== 'finished') return;
 
-                const hasCert = mockData.certificates.some(c => c.studentId === enr.studentId && c.groupId === enr.groupId && c.status !== 'annulled');
-                if (hasCert) return;
-
                 const gradeRecord = mockData.grades.find(g => g.groupId === enr.groupId && g.studentId === enr.studentId);
                 const course = mockData.courses.find(c => c.id === group.courseId);
                 const average = gradeRecord ? this.calculateAverage(gradeRecord.moduleGrades, course) : 0;
                 
                 if (average >= minPassingGrade) {
-                    const certId = 'CRT' + String(mockData.certificates.length + 1).padStart(3, '0');
-                    mockData.certificates.push({
-                        id: certId,
-                        code: `CERT-${new Date().getFullYear()}-${String(mockData.certificates.length + 1).padStart(5, '0')}`,
-                        studentId: enr.studentId,
-                        groupId: enr.groupId,
-                        type: 'certificado',
-                        status: 'toBeSigned',
-                        deanSigned: false,
-                        directorSigned: false,
-                        issueDate: new Date().toISOString().split('T')[0],
-                        observations: 'Emisión automática en lote'
-                    });
-                    count++;
+                    const isRegular = group.modality === 'regular';
+                    
+                    // 1. Certificado: Solo si es modalidad regular
+                    if (isRegular) {
+                        const hasCert = mockData.certificates.some(c => c.studentId === enr.studentId && c.groupId === enr.groupId && c.type === 'certificado' && c.status !== 'annulled');
+                        if (!hasCert) {
+                            const certId = 'CRT' + String(mockData.certificates.length + 1).padStart(3, '0');
+                            mockData.certificates.push({
+                                id: certId,
+                                code: `CERT-${new Date().getFullYear()}-${String(mockData.certificates.length + 1).padStart(5, '0')}`,
+                                studentId: enr.studentId,
+                                groupId: enr.groupId,
+                                type: 'certificado',
+                                status: 'toBeSigned',
+                                deanSigned: false,
+                                directorSigned: false,
+                                issueDate: new Date().toISOString().split('T')[0],
+                                observations: 'Emisión automática en lote'
+                            });
+                            count++;
+                        }
+                    }
+
+                    // 2. Constancia: Para ambas modalidades (regular y examen)
+                    const hasConst = mockData.certificates.some(c => c.studentId === enr.studentId && c.groupId === enr.groupId && c.type === 'constancia' && c.status !== 'annulled');
+                    if (!hasConst) {
+                        const certId = 'CRT' + String(mockData.certificates.length + 1).padStart(3, '0');
+                        mockData.certificates.push({
+                            id: certId,
+                            code: `CONS-${new Date().getFullYear()}-${String(mockData.certificates.length + 1).padStart(5, '0')}`,
+                            studentId: enr.studentId,
+                            groupId: enr.groupId,
+                            type: 'constancia',
+                            status: 'generated',
+                            deanSigned: true,
+                            directorSigned: true,
+                            issueDate: new Date().toISOString().split('T')[0],
+                            observations: 'Emisión automática en lote'
+                        });
+                        count++;
+                    }
                 }
             });
             return count;
@@ -1597,9 +1621,6 @@ const DataManager = {
             const course = courses.find(c => c.id == group.courseId);
             if (!course) continue;
 
-            const hasCert = certificates.some(c => c.studentId == enr.studentId && c.groupId == enr.groupId && c.type === 'certificado' && c.status !== 'annulled');
-            if (hasCert) continue;
-
             const gradeRecord = grades.find(g => g.groupId == enr.groupId && g.studentId == enr.studentId);
             const average = gradeRecord ? this.calculateAverage(gradeRecord.moduleGrades, course) : 0;
             const attPct = await this.calculateAttendancePercentage(enr.studentId, enr.groupId);
@@ -1610,19 +1631,46 @@ const DataManager = {
             }
 
             if (isApt) {
-                try {
-                    await APIClient.request('/certificates', {
-                        method: 'POST',
-                        body: {
-                            student_id: enr.studentId,
-                            group_id: enr.groupId,
-                            type: 'certificado',
-                            observations: 'Emisión automática en lote'
+                const isRegular = group.modality === 'regular';
+                
+                // 1. Emitir Certificado: Solo si es modalidad regular
+                if (isRegular) {
+                    const hasCert = certificates.some(c => c.studentId == enr.studentId && c.groupId == enr.groupId && c.type === 'certificado' && c.status !== 'annulled');
+                    if (!hasCert) {
+                        try {
+                            await APIClient.request('/certificates', {
+                                method: 'POST',
+                                body: {
+                                    student_id: enr.studentId,
+                                    group_id: enr.groupId,
+                                    type: 'certificado',
+                                    observations: 'Emisión automática en lote (Curso)'
+                                }
+                            });
+                            count++;
+                        } catch (e) {
+                            console.error("Error al emitir certificado en bulk:", e);
                         }
-                    });
-                    count++;
-                } catch (e) {
-                    console.error("Error al emitir certificado en bulk:", e);
+                    }
+                }
+                
+                // 2. Emitir Constancia: Para ambas modalidades (regular y examen)
+                const hasConst = certificates.some(c => c.studentId == enr.studentId && c.groupId == enr.groupId && c.type === 'constancia' && c.status !== 'annulled');
+                if (!hasConst) {
+                    try {
+                        await APIClient.request('/certificates', {
+                            method: 'POST',
+                            body: {
+                                student_id: enr.studentId,
+                                group_id: enr.groupId,
+                                type: 'constancia',
+                                observations: 'Emisión automática en lote (Constancia)'
+                            }
+                        });
+                        count++;
+                    } catch (e) {
+                        console.error("Error al emitir constancia en bulk:", e);
+                    }
                 }
             }
         }
