@@ -1,70 +1,49 @@
-# SAII - Sistema Administrativo del Instituto de Informática
+# SAII — Sistema Administrativo del Instituto de Informática
 
-> [!IMPORTANT]
-> ## INSTRUCCIÓN PRINCIPAL PARA ANTIGRAVITY / AGENTES DE IA
->
-> El punto de entrada oficial para trabajar con agentes es este archivo: `README.md`.
->
-> Cuando el usuario escriba:
->
-> ```text
-> Lee README.md y haz la Fase X.
-> ```
->
-> el agente debe interpretar que **no necesita que el usuario le repita todos los detalles de la fase**.
->
-> **Primera instrucción obligatoria:** leer los archivos `SAII_CONTEXTO_CONTINUIDAD.md`, `SAII_BACKLOG.md` y `SAII_ESTADO_Y_PROMPTS.md`. También debe leer `AGENTS.md` si existe en el proyecto, porque contiene reglas técnicas obligatorias para agentes.
->
-> Si la fase solicitada tiene un documento específico, el agente debe leerlo también aunque el usuario no lo mencione. Para la **Fase 5**, debe leer `SAII_ASISTENCIA_ALUMNOS.md`.
->
-> Después de leer la documentación, debe ejecutar **solo la Fase X**, respetar las restricciones del proyecto, probar los cambios y actualizar `SAII_BACKLOG.md` con el resumen que el propio agente elabore al terminar.
+**SAII** (Sistema Administrativo del Instituto de Informática) es una solución web integral diseñada para la gestión académica y administrativa del Instituto de Informática de la Facultad de Ingeniería Industrial de la Universidad Nacional de Piura (UNP). 
 
-## 🚀 Guía de Instalación y Ejecución del Proyecto
+El sistema implementa una arquitectura cliente-servidor robusta utilizando tecnologías nativas para garantizar un alto rendimiento, seguridad de nivel de producción y una interfaz de usuario fluida e institucional.
 
-Sigue estos pasos detallados para instalar, configurar y ejecutar el sistema **SAII** de manera local en tu máquina usando **XAMPP** y **Node.js**:
+---
 
-### Paso 1: Instalar dependencias del Frontend (Node.js)
-1. Descarga e instala **Node.js** (versión 18 o superior recomendada) desde su web oficial.
-2. Abre una consola de comandos (como VS Code Terminal, CMD o PowerShell) en el directorio raíz del proyecto y ejecuta:
+## 🚀 Guía de Instalación y Ejecución Local
+
+Sigue estos pasos para desplegar, configurar y ejecutar el sistema de manera local en tu máquina de pruebas:
+
+### 1. Requisitos Previos
+Asegúrate de tener instalado en tu máquina:
+* **Node.js** (versión 18 o superior recomendada)
+* **XAMPP** (con PHP 8.0+ y MySQL)
+* Un navegador web moderno (Chrome, Edge, Firefox, etc.)
+
+---
+
+### 2. Instalar Dependencias del Frontend (Puerto 3000)
+1. Abre una consola de comandos en el directorio raíz del proyecto y ejecuta:
    ```bash
    npm install
    ```
-3. Ejecuta el servidor del frontend con:
+2. Inicia el servidor de desarrollo del frontend con:
    ```bash
    npm run dev
    ```
-   *(El frontend estará disponible en la dirección **http://127.0.0.1:3000/index.html**).*
+   *(El frontend interactivo estará disponible en la dirección: **http://127.0.0.1:3000/index.html**)*.
 
 ---
 
-### Paso 2: Configurar la Base de Datos (MySQL)
+### 3. Configurar la Base de Datos (MySQL)
 1. Abre el panel de control de **XAMPP** e inicia los servicios de **Apache** y **MySQL**.
 2. Ingresa a **phpMyAdmin** en tu navegador: [http://localhost/phpmyadmin](http://localhost/phpmyadmin).
-3. Crea una base de datos nueva llamada:
-   `proy_nima` (usa la colación `utf8mb4_unicode_ci`).
-4. Haz clic sobre la base de datos `proy_nima`, ve a la pestaña **Importar** en la barra superior, selecciona el archivo **`database/schema.sql`** en la carpeta del proyecto y haz clic en **Importar**.
-5. Repite el mismo procedimiento de importación seleccionando ahora el archivo **`database/seeds.sql`** para poblar las tablas con los registros y usuarios de prueba.
+3. Crea una base de datos nueva llamada `proy_nima` (se recomienda usar la colación `utf8mb4_unicode_ci`).
+4. Haz clic en la base de datos `proy_nima` recién creada y ve a la pestaña **Importar** en el menú superior.
+5. Selecciona el archivo **`database/schema.sql`** ubicado en la carpeta del proyecto e impórtalo para crear las tablas.
+6. Repite el procedimiento de importación seleccionando ahora el archivo **`database/seeds.sql`** para poblar las tablas con los usuarios y datos semilla.
 
 ---
 
-### Paso 3: Configurar el Servidor del Backend (PHP)
-1. Abre otra consola en la raíz del proyecto.
-2. Corre el servidor de desarrollo CLI nativo de PHP apuntando al Front Controller `public/index.php`:
-   * **Si tienes XAMPP instalado en el Disco C (ruta por defecto):**
-     ```powershell
-     & C:\xampp\php\php.exe -S 127.0.0.1:8000 public/index.php
-     ```
-   * **Si tienes XAMPP en el Disco D (o configurado en tu variable de entorno PATH):**
-     ```powershell
-     php -S 127.0.0.1:8000 public/index.php
-     ```
-     *(El servidor backend estará corriendo y escuchando solicitudes en el puerto `8000`).*
-
----
-
-### Paso 4: Ajustar Variables de Entorno (`.env`)
-1. En la raíz del proyecto, renombra el archivo **`.env.example`** a **`.env`**.
-2. Abre el archivo `.env` en tu editor y asegúrate de que las credenciales de tu base de datos de XAMPP coincidan (por defecto el usuario es `root` y la contraseña está vacía):
+### 4. Configurar Variables de Entorno (`.env`)
+1. En el directorio raíz del proyecto, renombra el archivo **`.env.example`** a **`.env`**.
+2. Abre el archivo `.env` en tu editor y asegúrate de que las credenciales coincidan con las de tu MySQL local:
    ```ini
    DB_HOST=127.0.0.1
    DB_PORT=3306
@@ -76,518 +55,72 @@ Sigue estos pasos detallados para instalar, configurar y ejecutar el sistema **S
 
 ---
 
-### Paso 5: Iniciar Sesión y Probar
-Abre tu navegador y entra en la ruta oficial del frontend:
+### 5. Iniciar el Servidor Backend (PHP - Puerto 8000)
+1. Abre otra consola de comandos en la raíz del proyecto.
+2. Ejecuta el servidor de desarrollo CLI nativo de PHP:
+   * **Si tienes XAMPP instalado en el Disco C (ruta estándar):**
+     ```powershell
+     & C:\xampp\php\php.exe -S 127.0.0.1:8000 public/index.php
+     ```
+   * **Si tienes XAMPP en el Disco D (o configurado en tu variable de entorno PATH):**
+     ```powershell
+     php -S 127.0.0.1:8000 public/index.php
+     ```
+     *(El servidor backend procesará las solicitudes REST API de forma segura en el puerto `8000`).*
+
+---
+
+### 6. Acceder al Sistema
+Entra en tu navegador a la ruta del frontend:
 👉 **[http://127.0.0.1:3000/index.html](http://127.0.0.1:3000/index.html)**
 
-Inicia sesión con cualquiera de los siguientes usuarios cargados en los datos semilla:
+Inicia sesión utilizando cualquiera de los usuarios preconfigurados en la base de datos:
 * **Administrador:** Usuario: `admin` | Contraseña: `admin123`
 * **Docente:** Usuario: `docente1` | Contraseña: `docente123`
 * **Secretaria:** Usuario: `secretaria1` | Contraseña: `secretaria123`
 
 ---
 
-## Descripción General
+## 🛠 Arquitectura del Sistema
 
-SAII es un sistema web administrativo académico completo para el Instituto de Informática de la Universidad Nacional de Piura. Está diseñado bajo una arquitectura limpia cliente-servidor, con un frontend interactivo responsivo en JavaScript puro (Vanilla JS) y un backend real en PHP con arquitectura MVC y base de datos relacional MySQL.
-
-El sistema proporciona una solución profesional para la gestión integral de estudiantes, cursos, docentes, grupos académicos, matrículas, asistencia de alumnos, calificaciones, certificados académicos, reportes, usuarios, roles y configuración institucional.
-
----
-
-## Documentación para trabajar con agentes de IA
-
-El usuario **solo debe dar este prompt corto** en Antigravity:
+El sistema SAII está construido con una separación limpia de responsabilidades (Arquitectura de Capas) y patrón MVC (Modelo-Vista-Controlador):
 
 ```text
-Lee README.md y haz la Fase X.
+public/                     # Raíz pública (Servida en el servidor)
+├── css/styles.css          # Vista (Diseño responsivo institucional, variables HSL)
+├── js/api.js               # Cliente HTTP (APIClient para llamadas fetch asíncronas)
+├── js/data.js              # Modelo local (DataManager, mapeadores e inicializador de caché síncrona)
+├── js/app.js               # Controlador del Frontend (Manejadores de eventos y pintado dinámico del DOM)
+├── index.html              # Vista principal (Estructura SPA de una sola página)
+└── index.php               # Front Controller / Enrutador del Servidor PHP
 ```
 
-Con esa instrucción, el agente debe usar este `README.md` como puerta de entrada y, por obligación de este documento, leer los demás archivos de soporte:
+### Tecnologías Utilizadas
 
-*Documentación de la Etapa Frontend:*
-- `SAII_CONTEXTO_CONTINUIDAD.md` — contexto, estado actual, frontend actual, backend futuro y continuidad.
-- `SAII_BACKLOG.md` — mapa general de fases, estado de avance y bitácora de ejecución de fases frontend.
-- `SAII_ESTADO_Y_PROMPTS.md` — detalle operativo de cada fase y reglas para ejecutar `Haz la Fase X` en frontend.
-- `AGENTS.md` — reglas obligatorias para agentes de IA (frontend y backend).
-- `SAII_ASISTENCIA_ALUMNOS.md` — especificación completa de la Fase 5.
-
-*Documentación de la Etapa Backend y Base de Datos:*
-- `SAII_BACKEND_CONTEXTO.md` — contexto de la etapa backend, riesgos y estrategia de integración.
-- `SAII_BACKEND_BACKLOG.md` — backlog de fases backend (B0 a B10) y su respectiva bitácora.
-- `SAII_BACKEND_ESTADO_Y_PROMPTS.md` — prompts operativos detallados por cada fase backend.
-- `SAII_BACKEND_DB_SCHEMA.md` — diseño relacional de base de datos MySQL, diccionario de 17 tablas, scripts DDL y DML (seeds).
-- `SAII_BACKEND_API_CONTRATO.md` — contrato de endpoints JSON de la API PHP y mapeo de funciones de DataManager.
-- `SAII_BACKEND_SEGURIDAD.md` — checklist de seguridad, validación de variables, sesiones seguras, CSRF e inyección SQL.
-- `SAII_BACKEND_MIGRACION_MOCK.md` — mapeo, reestructuración y normalización de mockData en JS a registros SQL.
-- `README_BACKEND_SETUP.md` — guía paso a paso de instalación local, phpMyAdmin y ejecución del servidor.
-
-
-El agente debe ejecutar solo la fase solicitada, sin pedir que se le repitan detalles ya documentados.
-
-Para la Fase 5, el agente debe saber por este `README.md` que también debe leer:
-
-```text
-SAII_ASISTENCIA_ALUMNOS.md
-```
+* **Frontend (Cliente):** HTML5 Semántico, CSS3 Vanilla (flexbox, grid y transiciones fluidas), JavaScript moderno (ES6 Vanilla JS) y la librería Chart.js para renderizado de estadísticas.
+* **Backend (Servidor):** PHP 8+ nativo (sin frameworks) estructurado mediante enrutador de peticiones y controladores especializados.
+* **Base de Datos:** MySQL / MariaDB relacional con 17 tablas indexadas y llaves foráneas para garantizar integridad referencial.
 
 ---
 
-## Alcance por etapas
+## 🔑 Módulos y Funcionalidades Principales
 
-### Etapa actual: Frontend funcional con datos mock
-
-- HTML5.
-- CSS3.
-- JavaScript puro / Vanilla JS.
-- CSS personalizado propio.
-- Datos simulados en `public/js/data.js`.
-- Lógica principal en `public/js/app.js`.
-- Sin conexión real a backend durante estas fases frontend.
-
-### Etapa posterior: Backend real
-
-El proyecto final sí tendrá backend real con:
-
-- PHP 8+ y MySQL/MariaDB bajo arquitectura MVC estructurada por capas.
-- Persistencia de datos reales para todas las entidades en base de datos.
-- Login y sesiones seguras en el servidor, control de roles e integridad de datos.
-- Reemplazo progresivo de DataManager por peticiones fetch a la API PHP.
-- Para ver el plan completo, fases y prompts del backend, leer `SAII_BACKEND_CONTEXTO.md` y `SAII_BACKEND_BACKLOG.md`.
-
+1. **Control de Acceso por Roles (RBAC):** Sistema de autenticación con 4 roles (Administrador, Coordinador Académico, Secretaria Académica, Docente) y adaptación dinámica de barras de navegación laterales (Sidebar).
+2. **Gestión Académica Completa (CRUDs):** Creación, lectura, actualización y eliminación de Alumnos, Docentes, Cursos y Grupos.
+3. **Matrículas y Quotas:** Inscripción de alumnos a grupos académicos específicos con validación de capacidad máxima (vacantes) en el servidor.
+4. **Control de Asistencia:** Registro de asistencia por fecha y sesión para los alumnos matriculados en grupos académicos a cargo de cada docente.
+5. **Actas de Calificaciones:** Registro de notas por módulos académicos, cálculo automatizado de promedios ponderados y cierre de actas.
+6. **Emisión de Certificados:** Generación de constancias con flujo de firmas (Director e Instructor) y validación de promedio aprobatorio y porcentaje mínimo de asistencia.
+7. **Reportes y Dashboard:** Dashboard interactivo con indicadores clave de rendimiento (KPIs), filtros avanzados por ciclo y exportación real a Excel/CSV y PDF.
 
 ---
 
-## Características Principales
-
-### 1. **Autenticación y Roles**
-
-- Sistema de login con simulación de credenciales durante la etapa frontend.
-- 4 roles de usuario: Administrador, Secretaria Académica, Docente, Coordinador Académico.
-- Control de acceso basado en roles.
-- Menú adaptativo según permisos del usuario.
-
-### 2. **Dashboard Principal**
-
-- 8 KPI cards con métricas clave del sistema.
-- Gráficos de aprobados vs. desaprobados.
-- Barra de progreso de notas registradas.
-- Accesos rápidos a funciones principales.
-- Feed de actividad reciente.
-
-### 3. **Gestión de Alumnos**
-
-- CRUD completo de estudiantes.
-- Búsqueda avanzada por código, DNI y nombres.
-- Filtros por estado, ciclo y promoción.
-- Validación de datos: código de 10 dígitos y DNI de 8 dígitos.
-- Modal para crear/editar estudiantes.
-
-### 4. **Cursos y Módulos**
-
-- Vista de cursos en grid cards.
-- Información de módulos por curso.
-- Verificación de porcentajes, que deben sumar 100%.
-- Cursos predefinidos con módulos detallados:
-  - Computación Básica: Windows 20%, Word 40%, Excel 40%.
-  - Microsoft Office: 6 módulos.
-  - Computación para Ingenieros: 7 módulos.
-
-### 5. **Gestión de Docentes**
-
-- Tabla de docentes con especialidades.
-- Búsqueda y filtrado.
-- Estados activo/inactivo.
-- Especialidades como Ofimática, Programación, Diseño, Matemática/Matlab.
-
-### 6. **Grupos Académicos**
-
-- Creación de grupos por curso y modalidad.
-- Modalidades: Curso regular y Examen de suficiencia.
-- Estados: Abierto, En curso, Terminado, Cerrado.
-- Asignación de docentes y horarios.
-- Base para matrícula, asistencia de alumnos, registro de notas y certificados.
-
-### 7. **Matrículas**
-
-- Interfaz de doble panel para matrícula de alumnos.
-- Búsqueda de alumnos disponibles.
-- Control de cupo máximo.
-- Tabla de alumnos matriculados.
-- Función para remover o retirar alumnos.
-- Prevención de matrícula duplicada en el mismo grupo.
-
-### 8. **Control de Asistencia de Alumnos**
-
-- Registro realizado por el docente.
-- El docente solo ve sus grupos asignados.
-- La lista se genera desde los alumnos matriculados en el grupo.
-- Registro por grupo y fecha.
-- Estados por alumno:
-  - Presente.
-  - Tarde.
-  - Falta.
-  - Justificado.
-- Observaciones por alumno.
-- Resumen de asistencia:
-  - Total matriculados.
-  - Presentes.
-  - Tardes.
-  - Faltas.
-  - Justificados.
-  - Porcentaje de asistencia efectiva.
-- Vista Docente para registrar asistencia.
-- Vista Administrador para consultar, observar, cerrar, imprimir o exportar asistencias.
-- Vista Secretaria/Coordinador de consulta según permisos.
-
-### 9. **Registro de Notas**
-
-- Tabla tipo Excel académico.
-- Módulos como columnas con pesos porcentuales.
-- Cada alumno como fila.
-- Cálculo automático de promedio ponderado.
-- Validación de notas de 0 a 20.
-- Estados: Pendiente, Aprobado (>=11) y Desaprobado (<11).
-- Cerrar acta y exportar.
-
-### 10. **Certificados y Constancias**
-
-- Vista previa del certificado.
-- Dos tipos: Curso regular y Examen de suficiencia.
-- Datos completos: alumno, promedio, horas académicas, período.
-- Generación de código único.
-- Funciones de impresión y descarga simuladas.
-- Validación futura con nota aprobatoria y asistencia mínima de alumnos si aplica.
-
-### 11. **Reportes**
-
-- Tarjetas KPI con estadísticas.
-- Tabla de reporte detallado por grupo.
-- Conteos de aprobados/desaprobados.
-- Promedios generales.
-- Estadísticas de certificados.
-- Estadísticas de asistencia de alumnos.
-- Métricas futuras de asistencia por alumno, grupo, curso y docente.
-
-### 12. **Usuarios y Roles**
-
-- Gestión de usuarios del sistema.
-- Visualización de roles y permisos.
-- Último acceso de usuarios.
-- Control de estado activo/inactivo.
-- Roles principales:
-  - Administrador.
-  - Secretaria Académica.
-  - Docente.
-  - Coordinador Académico.
-
-### 13. **Configuración**
-
-- Datos del instituto.
-- Parámetros académicos:
-  - Nota mínima: 11.
-  - Asistencia mínima de alumnos si aplica.
-- Preferencias del sistema.
-- Período académico actual.
-- Datos de contacto y responsable académico.
-
----
-
-## Tecnología
-
-### Frontend actual
-
-- **Frontend:** HTML5, CSS3, JavaScript Puro (ES6+).
-- **Framework:** Ninguno. Proyecto en Vanilla JS.
-- **Diseño responsivo:** CSS personalizado propio.
-- **Datos:** Mock data en JavaScript.
-- **Almacenamiento:** LocalStorage para tema y configuraciones ligeras.
-
-### Backend futuro
-
-- **Backend:** PHP.
-- **Arquitectura:** Modelo-Vista-Controlador (MVC).
-- **Base de datos:** MySQL.
-- **Estado:** Pendiente para etapa posterior.
-
-> [!IMPORTANT]
-> Durante las fases actuales de frontend no usar React, Vue, Angular, Tailwind, Bootstrap ni librerías externas de estilos. Tampoco implementar backend real salvo instrucción explícita.
-
----
-
-## Estructura de Archivos
-
-```text
-/vercel/share/v0-project/
-├── public/
-│   ├── index.html          # HTML principal
-│   ├── css/
-│   │   └── styles.css      # Estilos completos
-│   └── js/
-│       ├── data.js         # Datos simulados y DataManager
-│       └── app.js          # Lógica de aplicación SAIIApp
-├── app/
-│   ├── layout.tsx          # Andamiaje de Next.js
-│   └── page.tsx            # Página que renderiza o sirve el HTML
-├── AGENTS.md
-├── SAII_CONTEXTO_CONTINUIDAD.md
-├── SAII_BACKLOG.md
-├── SAII_ESTADO_Y_PROMPTS.md
-├── SAII_ASISTENCIA_ALUMNOS.md
-└── README.md
-```
-
----
-
-## Características de Diseño
-
-### Paleta de Colores
-
-- **Primario:** #003d82 (Azul institucional - UNP).
-- **Primario Claro:** #1e5ba8.
-- **Secundario:** #00b4d8 (Celeste).
-- **Acentos:** Rojo (#d32f2f), Verde (#4caf50), Oro (#ffc93c).
-
-### Tipografía
-
-- Segoe UI, Tahoma, Geneva, Verdana, sans-serif.
-- Pesos: 400 regular, 600 semibold, 700 bold.
-
-### Modo Oscuro
-
-- Tema oscuro completo con paleta oscura.
-- Toggle en header.
-- Persistencia en localStorage.
-- Transiciones suaves.
-
-### Responsive Design
-
-- Desktop: sidebar completo.
-- Tablet: sidebar colapsable.
-- Mobile: menú hamburguesa.
-- Grid dinámico adaptable.
-
----
-
-## Mock Data
-
-### Estudiantes
-
-- Registros simulados.
-- Código institucional.
-- DNI.
-- Estado activo/inactivo.
-- Ciclo.
-- Promoción.
-
-### Docentes
-
-- Especialidades variadas.
-- Estado activo/inactivo.
-- Relación con grupos académicos.
-
-### Cursos
-
-- Cursos predefinidos.
-- Módulos configurados.
-- Porcentajes que deben sumar 100%.
-
-### Grupos Académicos
-
-- Curso regular.
-- Examen de suficiencia.
-- Docente asignado.
-- Horario.
-- Aula/laboratorio.
-- Cupo máximo.
-- Estado.
-
-### Matrículas
-
-- Relación entre alumnos y grupos.
-- Fuente para asistencia de alumnos y notas.
-
-### Asistencia de Alumnos
-
-- Colección recomendada: `studentAttendance[]`.
-- Una lista por grupo y fecha.
-- Registros por alumno en `records[]`.
-
-### Usuarios
-
-- Roles: admin, secretary, teacher, coordinator.
-- Datos mock para simular navegación por rol.
-
----
-
-## Funcionalidades Implementadas / Planeadas
-
-### Interactividad
-
-- Navegación entre módulos sin recargar página.
-- Login y simulación de sesión.
-- Cerrar sesión.
-- Cambio de tema claro/oscuro.
-- Búsqueda en tiempo real.
-- Filtros avanzados.
-- Validación de formularios.
-- Modales para crear/editar/ver detalle.
-- Cálculos automáticos.
-- Notificaciones toast.
-- Breadcrumbs de navegación.
-- Confirmaciones antes de acciones destructivas.
-
-### Tablas Dinámicas
-
-- Renderizado de datos.
-- Búsqueda integrada.
-- Estados con badges coloreados.
-- Acciones por fila con iconos.
-- Overflow horizontal cuando sea necesario.
-
-### Formularios
-
-- Validación de DNI de 8 dígitos.
-- Validación de código de 10 dígitos.
-- Validación de email.
-- Mensajes de error amigables.
-- Campos requeridos.
-- Ayuda en campos importantes.
-
-### Cálculos Académicos
-
-- Promedio ponderado automático.
-- Estado de aprobación: >=11 aprobado.
-- Validación de notas de 0 a 20.
-- Cálculos de asistencia de alumnos.
-- Cobertura de módulos.
-
----
-
-## Cómo Usar
-
-### Acceso Inicial
-
-1. Página de login: ingresar usuario, contraseña y seleccionar rol.
-2. Credenciales demo: cualquier combinación funciona durante etapa mock.
-3. Roles disponibles: Administrador, Secretaria, Docente, Coordinador.
-
-### Navegación
-
-- Sidebar izquierdo: menú de módulos.
-- Breadcrumbs: navegación rápida.
-- Accesos rápidos en dashboard.
-- Búsqueda global en header.
-
-### Módulos
-
-Cada módulo debe tener:
-
-- Tabla o grid con datos.
-- Búsqueda y filtros.
-- Botones de acción con iconos.
-- Validaciones integradas.
-- Feedback mediante toasts.
-
----
-
-## Performance y UX
-
-- Interfaz limpia y profesional.
-- Tipografía clara y legible.
-- Espaciado y alineación ordenada.
-- Bordes redondeados sutiles.
-- Sombras suaves.
-- Estados visuales claros.
-- Feedback inmediato.
-- Colores con buen contraste.
-- Responsive en todos los dispositivos.
-
----
-
-## Próximas Mejoras Sugeridas
-
-- [ ] Backend real PHP MVC.
-- [ ] Base de datos MySQL.
-- [ ] Autenticación real.
-- [ ] Exportación real a PDF/Excel.
-- [ ] Gráficos interactivos si se autoriza librería.
-- [ ] Notificaciones en tiempo real.
-- [ ] Auditoría de cambios.
-- [ ] Respaldos automáticos.
-- [ ] Estadísticas avanzadas.
-- [ ] Integración con sistemas externos, si se define en una etapa posterior.
-
----
-
-## Compatibilidad
-
-- Navegadores modernos: Chrome, Firefox, Safari, Edge.
-- Dispositivos: Desktop, Tablet, Mobile.
-- Resoluciones: 320px - 2560px+.
-- Lenguaje: Español.
-
----
-
-## Licencia
-
-Proyecto académico - Universidad Nacional de Piura.
-
----
-
-## Autor
-
-Generado y documentado para el proyecto SAII.  
-Fecha base: 29 de Junio, 2026.  
-Documentación corregida: 01 de Julio, 2026.
-
----
-
-## Guía Rápida de Uso
-
-### Login Demo
-
-- Usuario: admin.
-- Contraseña: cualquier valor.
-- Rol: Administrador, Secretaria, Docente o Coordinador.
-
-### Explorar Módulos
-
-1. **Dashboard:** Resumen de KPIs.
-2. **Alumnos:** Crear, buscar, editar estudiantes.
-3. **Cursos:** Ver estructura de cursos y módulos.
-4. **Docentes:** Gestión del personal académico.
-5. **Grupos:** Crear grupos de cursos.
-6. **Matrículas:** Asignar alumnos a grupos.
-7. **Asistencia:** Registrar asistencia de alumnos.
-8. **Notas:** Ingresar calificaciones.
-9. **Certificados:** Generar constancias.
-10. **Reportes:** Ver estadísticas académicas.
-11. **Usuarios:** Gestionar acceso.
-12. **Roles:** Gestionar permisos.
-13. **Configuración:** Parámetros del sistema.
-
----
-
-## Flujo para agentes
-
-Al trabajar con Antigravity, el usuario debe escribir únicamente:
-
-```text
-Lee README.md y haz la Fase X.
-```
-
-El agente debe:
-
-1. Leer este `README.md`.
-2. Obedecer la primera instrucción de este archivo y leer `SAII_CONTEXTO_CONTINUIDAD.md`, `SAII_BACKLOG.md`, `SAII_ESTADO_Y_PROMPTS.md` y `AGENTS.md` si existe.
-3. Leer el documento específico de la fase si corresponde. Para Fase 5: `SAII_ASISTENCIA_ALUMNOS.md`.
-4. Aplicar solo la fase solicitada.
-5. Probar la fase en `http://localhost:3000/index.html`.
-6. Revisar la consola del navegador.
-7. Actualizar `SAII_BACKLOG.md` con el resumen de ejecución.
-8. Sugerir commit, rama y Pull Request.
-
----
-
-**SAII v1.0** — Frontend funcional en evolución, con backend real planificado para etapa posterior.
+## 🛡 Seguridad de Nivel de Producción
+
+El sistema cuenta con un robusto esquema de seguridad implementado en el backend de PHP:
+
+* **Protección contra Inyección SQL:** Todas las consultas a la base de datos se ejecutan a través del Driver PDO utilizando estrictamente sentencias preparadas y placeholders.
+* **Cifrado de Contraseñas:** Las credenciales de usuario se almacenan en MySQL utilizando hashes Bcrypt unidireccionales generados con la función nativa `password_hash()`.
+* **Protección contra Ataques CSRF (Cross-Site Request Forgery):** Se valida un token criptográfico único por sesión (`X-CSRF-TOKEN`) en todas las solicitudes que modifican el estado de la base de datos (`POST`, `PUT`, `DELETE`).
+* **Protección contra Ataques XSS (Cross-Site Scripting):** Centralización de desinfección y sanitización recursiva automática (`htmlspecialchars` y `strip_tags`) para todas las cadenas de texto del payload JSON de salida.
+* **Manejo Seguro de Errores:** Excepciones técnicas y errores detallados de MySQL/PHP ocultos al cliente en producción (`display_errors = 0`) y redirigidos al archivo de auditoría interno `logs/php_errors.log`.
