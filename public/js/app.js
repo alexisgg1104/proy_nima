@@ -1815,7 +1815,7 @@ class SAIIApp {
         form.onsubmit = (e) => this.handleTeacherSubmit(e, teacherId);
     }
 
-    handleTeacherSubmit(e, teacherId) {
+    async handleTeacherSubmit(e, teacherId) {
         e.preventDefault();
         const data = {
             code: document.getElementById('teacherCode').value.trim(),
@@ -1830,18 +1830,20 @@ class SAIIApp {
 
         if (!this.validateTeacherData(data)) return;
 
-        if (teacherId) {
-            const teacher = DataManager.getTeacherById(teacherId);
-            if (teacher) {
-                Object.assign(teacher, data);
+        try {
+            if (teacherId) {
+                await DataManager.updateTeacher(teacherId, data);
                 this.showToast('Docente actualizado correctamente', 'success');
+            } else {
+                await DataManager.addTeacher(data);
+                this.showToast('Docente registrado correctamente', 'success');
             }
-        } else {
-            DataManager.addTeacher(data);
-            this.showToast('Docente registrado correctamente', 'success');
+            this.closeModal();
+            this.loadTeachers();
+        } catch (error) {
+            console.error("Error al guardar docente:", error);
+            this.showToast(error.message || 'Error al guardar el docente', 'error');
         }
-        this.closeModal();
-        this.loadTeachers();
     }
 
     validateTeacherData(data) {
@@ -1868,13 +1870,18 @@ class SAIIApp {
         return true;
     }
 
-    deleteTeacher(teacherId) {
+    async deleteTeacher(teacherId) {
         if (confirm('¿Desactivar este docente?')) {
             const teacher = DataManager.getTeacherById(teacherId);
             if (teacher) {
-                teacher.status = 'inactive';
-                this.showToast('Docente desactivado correctamente', 'success');
-                this.loadTeachers();
+                try {
+                    await DataManager.updateTeacher(teacherId, { status: 'inactive' });
+                    this.showToast('Docente desactivado correctamente', 'success');
+                    this.loadTeachers();
+                } catch (e) {
+                    console.error("Error al desactivar docente:", e);
+                    this.showToast('Error al desactivar el docente: ' + e.message, 'error');
+                }
             }
         }
     }
