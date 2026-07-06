@@ -36,7 +36,7 @@ CREATE TABLE students (
     last_name VARCHAR(80) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     phone VARCHAR(15) NULL,
-    cycle VARCHAR(10) NOT NULL,
+    cycle VARCHAR(10) NOT NULL DEFAULT 'I',
     promotion VARCHAR(4) NOT NULL,
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
     observations TEXT NULL,
