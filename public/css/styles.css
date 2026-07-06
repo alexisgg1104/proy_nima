@@ -43,6 +43,7 @@
 }
 
 html.dark-mode {
+    color-scheme: dark;
     --color-primary: #4a9eff;
     --color-primary-light: #6fb3ff;
     --color-primary-dark: #003d82;
@@ -1445,6 +1446,12 @@ body {
     font-size: 0.95rem;
     font-family: inherit;
     transition: border-color 0.3s;
+}
+
+.form-group select option,
+select option {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-primary);
 }
 
 .form-group input:focus,

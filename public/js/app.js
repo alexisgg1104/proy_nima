@@ -390,7 +390,8 @@ class SAIIApp {
         }
 
         // Update page header
-        const lang = mockData.settings.systemLanguage || 'es';
+        const settings = DataManager.getSettings() || mockData.settings;
+        const lang = settings.systemLanguage || 'es';
         const isEn = (lang === 'en');
         const titles = isEn ? {
             dashboard: { title: 'Dashboard', desc: 'General summary of the academic system' },
@@ -513,7 +514,8 @@ class SAIIApp {
     updateBreadcrumb(viewName) {
         const breadcrumbs = document.getElementById('breadcrumbs');
         if (!breadcrumbs) return;
-        const lang = mockData.settings.systemLanguage || 'es';
+        const settings = DataManager.getSettings() || mockData.settings;
+        const lang = settings.systemLanguage || 'es';
         const isEn = (lang === 'en');
         
         breadcrumbs.innerHTML = `<a href="#" class="breadcrumb-item" data-view="dashboard">${isEn ? 'Home' : 'Inicio'}</a>`;
@@ -575,10 +577,11 @@ class SAIIApp {
     }
 
     applyLanguage() {
-        const lang = mockData.settings.systemLanguage || 'es';
+        const settings = DataManager.getSettings() || mockData.settings;
+        const lang = settings.systemLanguage || 'es';
         const isEn = (lang === 'en');
-        const sysName = mockData.settings.systemName || 'SAII';
-        const instName = mockData.settings.instituteName || 'Instituto de Informática';
+        const sysName = settings.systemName || 'SAII';
+        const instName = settings.instituteName || 'Instituto de Informática';
 
         // Sidebar subtitle and university
         const logoSubtitle = document.querySelector('.logo-subtitle');
@@ -6215,7 +6218,7 @@ class SAIIApp {
         document.getElementById('settingsLanguage').value = sets.systemLanguage;
     }
 
-    saveSystemSettings() {
+    async saveSystemSettings() {
         const systemName = document.getElementById('settingsSystemName').value.trim();
         const instituteName = document.getElementById('settingsInstituteName').value.trim();
         const universityName = document.getElementById('settingsUniversityName').value.trim();
@@ -6240,7 +6243,7 @@ class SAIIApp {
             defaultTheme, systemLanguage: language
         };
 
-        DataManager.saveSettings(updatedSettings);
+        await DataManager.saveSettings(updatedSettings);
         this.showToast(language === 'en' ? 'Settings saved successfully' : 'Configuración guardada correctamente', 'success');
 
         // Apply visual updates immediately
@@ -6256,15 +6259,16 @@ class SAIIApp {
         this.loadSettings();
     }
 
-    restoreDefaultSettings() {
-        const lang = mockData.settings.systemLanguage || 'es';
+    async restoreDefaultSettings() {
+        const settings = DataManager.getSettings() || mockData.settings;
+        const lang = settings.systemLanguage || 'es';
         const isEn = (lang === 'en');
         const confirmMsg = isEn ? 
             'Restore all configuration parameters to default?' : 
             '¿Restaurar todos los valores de configuración por defecto?';
         
         if (confirm(confirmMsg)) {
-            const defaults = DataManager.restoreDefaultSettings();
+            const defaults = await DataManager.restoreDefaultSettings();
             this.applyLanguage();
             this.loadSettings();
             this.showToast(defaults.systemLanguage === 'en' ? 'Default values restored' : 'Valores restaurados por defecto', 'success');
