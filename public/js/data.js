@@ -1157,13 +1157,7 @@ const DataManager = {
 
         const dbLists = this.cache.attendanceLists.filter(l => l.groupId == groupId);
 
-        const start = new Date(group.startDate);
         const days = [];
-        for (let i = 0; i < 4; i++) {
-            const d = new Date(start);
-            d.setDate(start.getDate() + (i * 2));
-            days.push(d.toISOString().split('T')[0]);
-        }
         dbLists.forEach(l => {
             if (!days.includes(l.date)) {
                 days.push(l.date);
