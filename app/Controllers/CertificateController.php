@@ -173,4 +173,3 @@ class CertificateController extends BaseController {
         $this->json(['message' => 'Observación guardada correctamente.']);
     }
 }
-}
