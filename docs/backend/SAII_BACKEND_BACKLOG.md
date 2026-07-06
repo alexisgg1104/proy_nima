@@ -470,3 +470,21 @@ Estado: **Pendiente**.
   * Elaboración de guía detallada de despliegue local y VPS `DESPLIEGUE.md`.
 - **Siguiente fase sugerida:** Ninguna (Etapa de Backend de SAII completada exitosamente).
 
+### Ajustes de Estabilidad e Integración
+- **Fecha:** 2026-07-06
+- **Rama:** `main`
+- **Commit o mensaje sugerido:** `fix: estabilizacion de usuarios y roles y rutas de servidor cli`
+- **Estado final:** Completado
+- **Archivos modificados:**
+  * `public/index.php`
+  * `public/js/data.js`
+  * `public/js/app.js`
+  * `app/Models/Role.php`
+  * `app/Controllers/UserController.php`
+  * `docs/backend/SAII_BACKEND_BACKLOG.md`
+- **Cambios principales:**
+  * Servido de recursos estáticos en PHP CLI-server robustecido con mapeo de extensiones para evitar 404 al correr sin `-t public`.
+  * Persistencia de permisos de rol añadida a base de datos real (MySQL) en la tabla `roles` (columna `permissions`).
+  * Enrutador y controladores depurados de rutas anónimas redundantes que causaban fallos en la estructura de base de datos.
+  * Formulario de usuarios y permisos completamente asincronizados y mapeados a `full_name` y `role_id` para evitar fallos de almacenamiento en base de datos.
+
