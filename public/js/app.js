@@ -2379,7 +2379,7 @@ class SAIIApp {
         tbody.innerHTML = '';
 
         if (students.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 1rem; color:var(--color-text-secondary);">No se encontraron alumnos disponibles</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 1rem; color:var(--color-text-secondary);">No se encontraron alumnos disponibles</td></tr>';
             return;
         }
 
@@ -2389,7 +2389,6 @@ class SAIIApp {
                 <td>${student.code}</td>
                 <td><strong>${student.firstName} ${student.lastName}</strong></td>
                 <td>${student.dni}</td>
-                <td>Ciclo ${student.cycle}</td>
                 <td>Prom. ${student.promotion}</td>
                 <td>
                     <button class="icon-btn icon-add" onclick="app.addEnrollment('${groupId}', '${student.id}')" title="Agregar al grupo">&#43;&#10003;</button>
@@ -2418,7 +2417,7 @@ class SAIIApp {
         }
 
         if (enrollments.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2rem; color:var(--color-text-secondary);">No hay alumnos matriculados en este grupo</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem; color:var(--color-text-secondary);">No hay alumnos matriculados en este grupo</td></tr>';
             return;
         }
 
@@ -2432,15 +2431,16 @@ class SAIIApp {
                 <td>${student.code}</td>
                 <td><strong>${student.firstName} ${student.lastName}</strong></td>
                 <td>${student.dni}</td>
-                <td>Ciclo ${student.cycle}</td>
                 <td>Promoción ${student.promotion}</td>
                 <td>${enrollment.enrollmentDate}</td>
                 <td><span class="badge-status ${statusClass}">${statusLabel}</span></td>
                 <td>
                     <div class="action-icons">
                         <button class="icon-btn icon-view" onclick="app.viewEnrollmentDetail('${enrollment.id}', '${groupId}')" title="Ver matrícula">&#128269;</button>
-                        <button class="icon-btn icon-edit" onclick="app.editEnrollmentStatus('${enrollment.id}', '${groupId}')" title="Editar estado">&#9998;</button>
-                        <button class="icon-btn icon-delete" onclick="app.removeEnrollment('${enrollment.id}', '${groupId}')" title="Retirar alumno">&#128683;</button>
+                        ${enrollment.status === 'active' ? 
+                            `<button class="icon-btn icon-delete" onclick="app.toggleEnrollmentStatus('${enrollment.id}', '${groupId}', 'inactive')" title="Retirar alumno">&#128683;</button>` :
+                            `<button class="icon-btn" style="background-color: var(--color-success-light); color: var(--color-success); padding: 2px 6px; border-radius: 4px; font-weight: bold;" onclick="app.toggleEnrollmentStatus('${enrollment.id}', '${groupId}', 'active')" title="Reactivar alumno">&#10003;</button>`
+                        }
                     </div>
                 </td>
             `;
@@ -2449,7 +2449,7 @@ class SAIIApp {
     }
 
     viewEnrollmentDetail(enrollmentId, groupId) {
-        const enrollment = DataManager.getEnrollments(groupId).find(e => e.id === enrollmentId);
+        const enrollment = DataManager.getEnrollments(groupId).find(e => e.id == enrollmentId);
         if (!enrollment) return;
         const student = DataManager.getStudentById(enrollment.studentId);
         const group = DataManager.getGroupById(groupId);
@@ -2463,7 +2463,6 @@ class SAIIApp {
                 <div class="detail-item"><span class="detail-label">Código alumno</span><span class="detail-value">${student.code}</span></div>
                 <div class="detail-item"><span class="detail-label">DNI</span><span class="detail-value">${student.dni}</span></div>
                 <div class="detail-item detail-full"><span class="detail-label">Alumno</span><span class="detail-value">${student.firstName} ${student.lastName}</span></div>
-                <div class="detail-item"><span class="detail-label">Ciclo</span><span class="detail-value">Ciclo ${student.cycle}</span></div>
                 <div class="detail-item"><span class="detail-label">Promoción</span><span class="detail-value">Promoción ${student.promotion}</span></div>
                 <div class="detail-item"><span class="detail-label">Grupo</span><span class="detail-value">${group.code}</span></div>
                 <div class="detail-item"><span class="detail-label">Curso</span><span class="detail-value">${group.courseName}</span></div>
@@ -2480,16 +2479,16 @@ class SAIIApp {
         document.getElementById('studentDetailModal').style.display = 'block';
     }
 
-    async editEnrollmentStatus(enrollmentId, groupId) {
+    async toggleEnrollmentStatus(enrollmentId, groupId, newStatus) {
         const enrollment = DataManager.getEnrollments(groupId).find(e => e.id == enrollmentId);
         if (!enrollment) return;
         const student = DataManager.getStudentById(enrollment.studentId);
-        const newStatus = enrollment.status === 'active' ? 'inactive' : 'active';
-        const label = newStatus === 'active' ? 'reactivar' : 'suspender';
-        if (confirm(`¿Desea ${label} la matrícula de ${student ? student.firstName + ' ' + student.lastName : 'este alumno'}?`)) {
+        const isRetire = newStatus === 'inactive';
+        const label = isRetire ? 'retirar al alumno de este grupo' : 'reactivar la matrícula del alumno en este grupo';
+        if (confirm(`¿Desea ${label} a ${student ? student.firstName + ' ' + student.lastName : 'este alumno'}?`)) {
             try {
                 await DataManager.updateEnrollment(enrollmentId, { status: newStatus });
-                this.showToast(`Matrícula ${newStatus === 'active' ? 'reactivada' : 'suspendida'} correctamente`, 'success');
+                this.showToast(isRetire ? 'Alumno retirado correctamente' : 'Matrícula reactivada correctamente', 'success');
                 this.loadEnrollmentGroup(groupId);
             } catch (e) {
                 console.error("Error al actualizar matrícula:", e);

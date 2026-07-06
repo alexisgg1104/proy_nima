@@ -52,8 +52,8 @@ class Enrollment extends BaseModel {
     // Registrar matrícula
     public function create($data) {
         $stmt = $this->db->prepare("
-            INSERT INTO enrollments (student_id, group_id, status)
-            VALUES (:student_id, :group_id, :status)
+            INSERT INTO enrollments (student_id, group_id, enrollment_date, status)
+            VALUES (:student_id, :group_id, CURRENT_DATE, :status)
         ");
         $stmt->execute([
             'student_id' => $data['student_id'],
