@@ -189,16 +189,16 @@ Estado: **Completada**.
 
 ## Fase B8: Reportes, gráficos y exportaciones
 
-Estado: **Pendiente**.
+Estado: **Completada**.
 
 ### Objetivos
 * Generar KPIs, reportes estadísticos y descargas en formatos imprimibles y de hoja de cálculo con datos reales.
 
 ### Tareas
-- [ ] Crear endpoints para KPIs del dashboard (alumnos activos, docentes activos, grupos abiertos, aprobados vs desaprobados, etc.).
-- [ ] Implementar la generación y CRUD de consultas/reportes personalizados guardados.
-- [ ] Desarrollar la exportación real de reportes y actas a formato CSV/Excel estructurado.
-- [ ] Desarrollar la generación de certificados y reportes en PDF utilizando una librería ligera nativa en PHP (como FPDF o Dompdf) o mediante formato de impresión optimizado del navegador.
+- [x] Crear endpoints para KPIs del dashboard (alumnos activos, docentes activos, grupos abiertos, aprobados vs desaprobados, etc.).
+- [x] Implementar la generación y CRUD de consultas/reportes personalizados guardados.
+- [x] Desarrollar la exportación real de reportes y actas a formato CSV/Excel estructurado.
+- [x] Desarrollar la generación de certificados y reportes en PDF utilizando una librería ligera nativa en PHP (como FPDF o Dompdf) o mediante formato de impresión optimizado del navegador.
 
 ### Criterios de Aceptación
 * Los KPIs cambian reactivamente de acuerdo con las inserciones reales en la base de datos.
@@ -208,21 +208,21 @@ Estado: **Pendiente**.
 
 ## Fase B9: Integración frontend-backend
 
-Estado: **Pendiente**.
+Estado: **Completada**.
 
 ### Objetivos
 * Conectar la interfaz de usuario existente con los endpoints de la API de PHP, reemplazando la carga de datos mock.
 
 ### Tareas
-- [ ] Crear la librería cliente `public/js/api.js` que centralice todas las peticiones `fetch`.
-- [ ] Integrar progresivamente los módulos en el siguiente orden recomendado:
+- [x] Crear la librería cliente `public/js/api.js` que centralice todas las peticiones `fetch`.
+- [x] Integrar progresivamente los módulos en el siguiente orden recomendado:
   1. Login y autenticación de sesión de inicio.
   2. Módulos base (Alumnos, Docentes, Cursos).
   3. Matrículas y Grupos.
   4. Asistencia y Notas.
   5. Certificados, Configuración y Reportes.
-- [ ] Implementar animaciones de carga (spinners) para mejorar la UX durante las peticiones asíncronas.
-- [ ] Asegurar que el toggle de modo claro/oscuro y el simulador de roles funcionen de manera integrada.
+- [x] Implementar animaciones de carga (spinners) para mejorar la UX durante las peticiones asíncronas.
+- [x] Asegurar que el toggle de modo claro/oscuro y el simulador de roles funcionen de manera integrada.
 
 ### Criterios de Aceptación
 * El frontend realiza peticiones de red reales al servidor local.
