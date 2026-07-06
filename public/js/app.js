@@ -5070,6 +5070,7 @@ class SAIIApp {
             'reportPromotionFilter', 
             'reportCycleFilter', 
             'reportStatusFilter', 
+            'reportYearFilter', 
             'reportMonthFilter', 
             'reportViewModeFilter'
         ];
@@ -5161,6 +5162,7 @@ class SAIIApp {
         const promotion = document.getElementById('reportPromotionFilter').value;
         const cycle = document.getElementById('reportCycleFilter').value;
         const status = document.getElementById('reportStatusFilter').value;
+        const year = document.getElementById('reportYearFilter').value;
         const month = document.getElementById('reportMonthFilter').value;
         const viewMode = document.getElementById('reportViewModeFilter').value;
 
@@ -5202,7 +5204,9 @@ class SAIIApp {
 
             const groupsList = DataManager.getGroups() || [];
             groupsList.forEach(group => {
-                if (courseId && group.courseId !== courseId) return;
+                if (courseId && group.courseId != courseId) return;
+
+                if (year && group.startDate.split('-')[0] !== year) return;
 
                 if (month && group.startDate.split('-')[1] !== month) return;
 
@@ -5330,7 +5334,8 @@ class SAIIApp {
                     const group = DataManager.getGroupById(enr.groupId);
                     if (!student || !group) return;
 
-                    if (courseId && group.courseId !== courseId) return;
+                    if (courseId && group.courseId != courseId) return;
+                    if (year && group.startDate.split('-')[0] !== year) return;
                     if (promotion && student.promotion !== promotion) return;
                     if (cycle && student.cycle !== cycle) return;
 
@@ -5414,7 +5419,8 @@ class SAIIApp {
                     const group = DataManager.getGroupById(enr.groupId);
                     if (!student || !group) return;
 
-                    if (courseId && group.courseId !== courseId) return;
+                    if (courseId && group.courseId != courseId) return;
+                    if (year && group.startDate.split('-')[0] !== year) return;
                     if (promotion && student.promotion !== promotion) return;
                     if (cycle && student.cycle !== cycle) return;
 
@@ -5479,7 +5485,11 @@ class SAIIApp {
                     const group = DataManager.getGroupById(cert.groupId);
                     if (!student || !group) return;
 
-                    if (courseId && group.courseId !== courseId) return;
+                    if (courseId && group.courseId != courseId) return;
+                    
+                    const certYear = cert.issueDate ? cert.issueDate.split('-')[0] : (group ? group.startDate.split('-')[0] : '');
+                    if (year && certYear !== year) return;
+
                     if (promotion && student.promotion !== promotion) return;
                     if (cycle && student.cycle !== cycle) return;
 
@@ -5557,7 +5567,8 @@ class SAIIApp {
                     const group = DataManager.getGroupById(enr.groupId);
                     if (!student || !group) return;
 
-                    if (courseId && group.courseId !== courseId) return;
+                    if (courseId && group.courseId != courseId) return;
+                    if (year && enr.enrollmentDate.split('-')[0] !== year) return;
                     if (promotion && student.promotion !== promotion) return;
                     if (cycle && student.cycle !== cycle) return;
 
@@ -5690,6 +5701,7 @@ class SAIIApp {
                 document.getElementById('reportPromotionFilter').value = rep.queryConfig.promotion || '';
                 document.getElementById('reportCycleFilter').value = rep.queryConfig.cycle || '';
                 document.getElementById('reportStatusFilter').value = rep.queryConfig.status || '';
+                document.getElementById('reportYearFilter').value = rep.queryConfig.year || '';
                 document.getElementById('reportMonthFilter').value = rep.queryConfig.month || '';
                 document.getElementById('reportViewModeFilter').value = rep.queryConfig.viewMode || 'detailed';
             }
@@ -5717,6 +5729,7 @@ class SAIIApp {
         const promotion = document.getElementById('reportPromotionFilter').value;
         const cycle = document.getElementById('reportCycleFilter').value;
         const status = document.getElementById('reportStatusFilter').value;
+        const year = document.getElementById('reportYearFilter').value;
         const month = document.getElementById('reportMonthFilter').value;
         const viewMode = document.getElementById('reportViewModeFilter').value;
 
@@ -5729,6 +5742,7 @@ class SAIIApp {
                 promotion,
                 cycle,
                 status,
+                year,
                 month,
                 viewMode
             }
