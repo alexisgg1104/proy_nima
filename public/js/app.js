@@ -250,12 +250,41 @@ class SAIIApp {
             });
         }
 
+        // My Profile
+        const myProfileBtn = document.getElementById('myProfileBtn');
+        if (myProfileBtn) {
+            myProfileBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                userDropdown.style.display = 'none';
+                this.openProfileModal();
+            });
+        }
+
+        // Change Password
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+        if (changePasswordBtn) {
+            changePasswordBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                userDropdown.style.display = 'none';
+                this.openChangePasswordModal(DataManager.currentUser ? DataManager.currentUser.id : null);
+            });
+        }
+
         // Logout
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.logout();
+            });
+        }
+
+        // Forgot Password
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.openForgotPasswordModal();
             });
         }
 
@@ -6230,6 +6259,38 @@ class SAIIApp {
         }
     }
 
+    openProfileModal() {
+        const user = DataManager.currentUser;
+        if (!user) return;
+        
+        document.getElementById('profileUsername').value = user.username || '';
+        document.getElementById('profileFullName').value = user.fullName || '';
+        document.getElementById('profileEmail').value = user.email || '';
+        
+        const roleLabels = {
+            admin: 'Administrador',
+            secretary: 'Secretaria Académica',
+            teacher: 'Docente',
+            coordinator: 'Coordinador Académico',
+            dean: 'Decano'
+        };
+        const lang = DataManager.getSettings() ? DataManager.getSettings().systemLanguage : 'es';
+        const isEn = (lang === 'en');
+        const roleLabelsEn = {
+            admin: 'Administrator',
+            secretary: 'Academic Secretary',
+            teacher: 'Teacher',
+            coordinator: 'Academic Coordinator',
+            dean: 'Dean'
+        };
+        
+        const label = isEn ? (roleLabelsEn[user.role] || user.role) : (roleLabels[user.role] || user.role);
+        document.getElementById('profileRole').value = label;
+        
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('profileModal').style.display = 'block';
+    }
+
     openChangePasswordModal(userId) {
         this._editingUserIdForPassword = userId;
         const form = document.getElementById('changePasswordForm');
@@ -6257,6 +6318,79 @@ class SAIIApp {
         } catch (error) {
             console.error("Error al cambiar contraseña:", error);
             this.showToast('Error al cambiar contraseña: ' + error.message, 'error');
+        }
+    }
+
+    openForgotPasswordModal() {
+        const form = document.getElementById('forgotPasswordForm');
+        if (form) form.reset();
+        
+        const resetForm = document.getElementById('resetPasswordForm');
+        if (resetForm) {
+            resetForm.reset();
+            resetForm.style.display = 'none';
+        }
+        
+        const forgotForm = document.getElementById('forgotPasswordForm');
+        if (forgotForm) forgotForm.style.display = 'block';
+
+        const tokenHint = document.getElementById('recoveryTokenHint');
+        if (tokenHint) tokenHint.innerText = '';
+        
+        document.getElementById('forgotPasswordModal').style.display = 'block';
+    }
+
+    async handleForgotPasswordSubmit(e) {
+        if (e) e.preventDefault();
+        
+        const email = document.getElementById('forgotPasswordEmail').value;
+        if (!email) {
+            this.showToast('Por favor, ingrese su correo electrónico.', 'error');
+            return;
+        }
+        
+        try {
+            const token = await DataManager.requestForgotPasswordCode(email);
+            
+            // Show reset step
+            const forgotForm = document.getElementById('forgotPasswordForm');
+            if (forgotForm) forgotForm.style.display = 'none';
+            
+            const resetForm = document.getElementById('resetPasswordForm');
+            if (resetForm) resetForm.style.display = 'block';
+            
+            const tokenHint = document.getElementById('recoveryTokenHint');
+            if (tokenHint) {
+                tokenHint.innerText = `[Simulación] Código generado: ${token}`;
+            }
+            
+            this.showToast('Código de recuperación enviado. Revisa tu correo.', 'success');
+        } catch (error) {
+            console.error("Error al solicitar código:", error);
+            this.showToast(error.message, 'error');
+        }
+    }
+
+    async handleResetPasswordSubmit(e) {
+        if (e) e.preventDefault();
+        
+        const code = document.getElementById('resetPasswordCode').value;
+        const newPassword = document.getElementById('resetNewPassword').value;
+        
+        if (!code || !newPassword) {
+            this.showToast('Por favor, complete todos los campos.', 'error');
+            return;
+        }
+        
+        try {
+            await DataManager.resetUserPasswordWithCode(code, newPassword);
+            this.showToast('Contraseña actualizada correctamente. Ya puede iniciar sesión.', 'success');
+            
+            // Cerrar el modal
+            document.getElementById('forgotPasswordModal').style.display = 'none';
+        } catch (error) {
+            console.error("Error al restablecer contraseña:", error);
+            this.showToast(error.message, 'error');
         }
     }
 

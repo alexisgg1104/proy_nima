@@ -179,7 +179,13 @@ class UserController extends BaseController {
 
     // Cambiar contraseña de un usuario (PUT /api/users/{id}/password)
     public function changePassword($id) {
-        $this->requireAuth(['admin']);
+        if (!isset($_SESSION['user'])) {
+            $this->error('No autorizado.', 401);
+        }
+        $currentUser = $_SESSION['user'];
+        if ($currentUser['role'] !== 'admin' && (int)$currentUser['id'] !== (int)$id) {
+            $this->error('Acceso denegado.', 403);
+        }
         $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
         
         $currentPassword = $input['current_password'] ?? '';

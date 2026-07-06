@@ -143,6 +143,8 @@ use App\Controllers\UserController;
 $router->addRoute('POST', '/api/auth/login', [AuthController::class, 'login']);
 $router->addRoute('POST', '/api/auth/logout', [AuthController::class, 'logout']);
 $router->addRoute('GET', '/api/auth/me', [AuthController::class, 'me']);
+$router->addRoute('POST', '/api/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+$router->addRoute('POST', '/api/auth/reset-password', [AuthController::class, 'resetPassword']);
 $router->addRoute('GET', '/api/auth/csrf', function() {
     \App\Core\BaseController::sendJson([
         'csrfToken' => $_SESSION['csrf_token']

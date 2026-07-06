@@ -1,2 +1,6 @@
 [06-Jul-2026 02:25:28 Europe/Berlin] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'root'@'localhost' (using password: YES)
 [06-Jul-2026 02:25:28 Europe/Berlin] Uncaught Exception: Error de conexión a la base de datos. in C:\Users\manue\Downloads\saii-frontend-development (2)\config\Database.php on line 34
+[06-Jul-2026 18:04:46 Europe/Berlin] Connection failed: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+[06-Jul-2026 18:04:58 Europe/Berlin] Connection failed: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+[06-Jul-2026 18:05:00 Europe/Berlin] Connection failed: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+[06-Jul-2026 18:05:02 Europe/Berlin] Connection failed: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión

@@ -1841,6 +1841,44 @@ const DataManager = {
         return defaults;
     },
 
+    requestForgotPasswordCode: async function(email) {
+        if (USE_MOCK) {
+            const user = mockData.users.find(u => u.email === email);
+            if (!user) throw new Error("No se encontró ningún usuario con ese correo electrónico.");
+            const token = Math.floor(100000 + Math.random() * 900000).toString();
+            this._mockRecoveryToken = token;
+            this._mockRecoveryEmail = email;
+            return token;
+        }
+        const res = await APIClient.request('/auth/forgot-password', {
+            method: 'POST',
+            body: { email }
+        });
+        return res.code;
+    },
+
+    resetUserPasswordWithCode: async function(code, newPassword) {
+        if (USE_MOCK) {
+            if (code !== this._mockRecoveryToken) {
+                throw new Error("El código de recuperación es incorrecto.");
+            }
+            const user = mockData.users.find(u => u.email === this._mockRecoveryEmail);
+            if (user) {
+                user.password = newPassword;
+                return true;
+            }
+            throw new Error("Usuario no encontrado.");
+        }
+        await APIClient.request('/auth/reset-password', {
+            method: 'POST',
+            body: {
+                code,
+                new_password: newPassword
+            }
+        });
+        return true;
+    },
+
     getTeacherIdForUser: function(user) {
         if (!user) return null;
         return user.teacherId;
