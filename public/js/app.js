@@ -2038,10 +2038,12 @@ class SAIIApp {
         const courseSelect = document.getElementById('groupCourse');
         courseSelect.innerHTML = '<option value="">-- Seleccione un curso --</option>';
         DataManager.getCourses().forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id;
-            opt.textContent = c.name;
-            courseSelect.appendChild(opt);
+            if (c.status !== 'inactive') {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                courseSelect.appendChild(opt);
+            }
         });
 
         // Set hours inputs as readOnly
