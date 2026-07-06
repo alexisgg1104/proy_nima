@@ -4,6 +4,13 @@ namespace App\Controllers;
 
 use App\Core\BaseController;
 use App\Models\User;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+// Incluir manualmente la librería (sin composer)
+require_once __DIR__ . '/../../lib/PHPMailer/Exception.php';
+require_once __DIR__ . '/../../lib/PHPMailer/PHPMailer.php';
+require_once __DIR__ . '/../../lib/PHPMailer/SMTP.php';
 
 class AuthController extends BaseController {
     
@@ -100,17 +107,54 @@ class AuthController extends BaseController {
             $this->error('No se encontró ningún usuario con ese correo electrónico.', 404);
         }
         
-        // Simular token de recuperación
+        // Generar token de recuperación
         $token = strval(rand(100000, 999999));
         
-        // Almacenar el token y el email en la sesión para poder validarlo luego
+        // Almacenar el token y el email en la sesión
         $_SESSION['recovery_email'] = $email;
         $_SESSION['recovery_token'] = $token;
         
-        $this->json([
-            'message' => 'Código de recuperación enviado.',
-            'code' => $token // Lo retornamos para que el frontend lo pueda mostrar en modo simulación
-        ]);
+        // Cargar variables de entorno para SMTP
+        $env = parse_ini_file(__DIR__ . '/../../.env');
+        
+        // Enviar correo real usando PHPMailer
+        $mail = new PHPMailer(true);
+        try {
+            $mail->isSMTP();
+            $mail->Host       = $env['SMTP_HOST'] ?? 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = $env['SMTP_USER'] ?? '';
+            $mail->Password   = $env['SMTP_PASS'] ?? '';
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = $env['SMTP_PORT'] ?? 587;
+            
+            $mail->setFrom($env['SMTP_FROM'] ?? 'noreply@saii.edu', $env['SMTP_FROM_NAME'] ?? 'SAII');
+            $mail->addAddress($email);
+            
+            $mail->isHTML(true);
+            $mail->CharSet = 'UTF-8';
+            $mail->Subject = 'Código de recuperación de contraseña - SAII';
+            $mail->Body    = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>
+                    <h2 style='color: #0d6efd;'>Recuperación de Contraseña</h2>
+                    <p>Hola,</p>
+                    <p>Has solicitado restablecer tu contraseña en el Sistema SAII.</p>
+                    <p>Tu código de seguridad es: <strong>{$token}</strong></p>
+                    <p>Ingresa este código en la pantalla de recuperación para crear tu nueva contraseña.</p>
+                    <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
+                    <p style='font-size: 12px; color: #777;'>Si no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>
+                </div>
+            ";
+            
+            $mail->send();
+            
+            $this->json([
+                'message' => 'Código de recuperación enviado. Por favor, revisa tu bandeja de entrada o spam.',
+                'code' => $token // Lo mantenemos en modo desarrollo, se puede quitar en producción.
+            ]);
+        } catch (Exception $e) {
+            $this->error('Error al enviar el correo: ' . $mail->ErrorInfo, 500);
+        }
     }
 
     // Restablecer contraseña con el código (POST /api/auth/reset-password)
