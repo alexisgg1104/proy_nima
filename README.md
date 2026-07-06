@@ -89,7 +89,9 @@ El sistema SAII está construido con una separación limpia de responsabilidades
 docs/                       # Documentación de desarrollo del proyecto
 ├── frontend/               # Planificación y bitácoras de la etapa de interfaz (Fases 1-7)
 ├── backend/                # Planificación de API, esquema de base de datos MySQL y logs
-└── misc/                   # Auditorías y correcciones generales de soporte
+├── rules/                  # Reglas y restricciones de desarrollo (AGENTS.md)
+├── misc/                   # Auditorías y correcciones generales de soporte
+└── DESPLIEGUE.md           # Manual de instalación y puesta en producción
 public/                     # Raíz pública (Servida en el servidor)
 ├── css/styles.css          # Vista (Diseño responsivo institucional, variables HSL)
 ├── images/                 # Recursos gráficos y logotipos institucionales
