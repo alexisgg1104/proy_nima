@@ -743,7 +743,10 @@ const DataManager = {
             last_name: studentData.lastName,
             email: studentData.email,
             phone: studentData.phone,
-            status: studentData.status
+            status: studentData.status,
+            cycle: studentData.cycle,
+            promotion: studentData.promotion,
+            observations: studentData.observations || ''
         };
         const res = await APIClient.request('/students', {
             method: 'POST',
@@ -773,6 +776,8 @@ const DataManager = {
             email: updates.email !== undefined ? updates.email : existing.email,
             phone: updates.phone !== undefined ? updates.phone : existing.phone,
             status: updates.status !== undefined ? updates.status : existing.status,
+            cycle: updates.cycle !== undefined ? updates.cycle : existing.cycle,
+            promotion: updates.promotion !== undefined ? updates.promotion : existing.promotion,
             observations: updates.observations !== undefined ? updates.observations : existing.observations
         };
         const res = await APIClient.request(`/students/${id}`, {
