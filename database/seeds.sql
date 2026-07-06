@@ -19,7 +19,7 @@ INSERT INTO roles (id, name, key_name) VALUES
 -- Contraseña encriptada por defecto: admin123 / secretaria123 / docente123 / coordinador123 / decano123
 -- Utiliza hashes reales PHP compatible: password_hash('...', PASSWORD_DEFAULT)
 INSERT INTO users (id, username, password, full_name, email, role_id, status) VALUES 
-(1, 'admin', '$2y$10$ZfnjIbCSmg6OwSocj2LsLuvGBoySkaw/.5UQjis0cVfF.rpkP9ova', 'DR. JONATHAN DAVID NIMA RAMOS', 'admin@institutoinformatica.edu.pe', 1, 'active'),
+(1, 'admin', '$2y$10$ZfnjIbCSmg6OwSocj2LsLuvGBoySkaw/.5UQjis0cVfF.rpkP9ova', 'DR. JONATHAN DAVID NIMA RAMOS', 'manuelalexissandovalcarrasco@gmail.com', 1, 'active'),
 (2, 'secretaria', '$2y$10$GuGGcL2vEugjZOHYzOsImuwkdYCRwQ2VDtt22RLwjC/NUdAWchj1G', 'Juan María Secretaria', 'secretaria@institutoinformatica.edu.pe', 2, 'active'),
 (3, 'roberto.silva', '$2y$10$Lu5pHmYtNQ5YuOxWr8hDJ.S56i2XbB3h.s0wHDgbn4rW9BkJpMw.C', 'Roberto Silva', 'roberto.silva@institutoinformatica.edu.pe', 3, 'active'),
 (4, 'coordinador', '$2y$10$CLZvo9hP8IV5C8ZhMTsyuOp8HauLvzkpr3JU5NMMOmzkiK2i9/H..', 'Carlos Coordinador Académico', 'coordinador@institutoinformatica.edu.pe', 4, 'active'),

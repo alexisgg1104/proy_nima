@@ -5,7 +5,7 @@ const mockData = {
         id: 'USR001',
         username: 'admin',
         fullName: 'Administrador Principal',
-        email: 'admin@institutoinformatica.edu.pe',
+        email: 'manuelalexissandovalcarrasco@gmail.com',
         role: 'admin',
         lastLogin: new Date()
     },
@@ -308,7 +308,7 @@ const mockData = {
 
     // System Users
     users: [
-        { id: 'USR001', username: 'admin', password: 'admin123', fullName: 'DR. JONATHAN DAVID NIMA RAMOS', role: 'admin', email: 'admin@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-15 10:30' },
+        { id: 'USR001', username: 'admin', password: 'admin123', fullName: 'DR. JONATHAN DAVID NIMA RAMOS', role: 'admin', email: 'manuelalexissandovalcarrasco@gmail.com', status: 'active', lastLogin: '2024-02-15 10:30' },
         { id: 'USR002', username: 'secretaria', password: 'secretaria123', fullName: 'Juan María Secretaria', role: 'secretary', email: 'secretaria@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-14 09:15' },
         { id: 'USR003', username: 'roberto.silva', password: 'docente123', fullName: 'Roberto Silva', role: 'teacher', email: 'roberto.silva@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-15 08:00' },
         { id: 'USR004', username: 'coordinador', password: 'coordinador123', fullName: 'Carlos Coordinador Académico', role: 'coordinator', email: 'coordinador@institutoinformatica.edu.pe', status: 'active', lastLogin: '2024-02-13 14:45' },
