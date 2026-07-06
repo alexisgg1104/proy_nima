@@ -40,12 +40,12 @@ El detalle operativo completo de cada fase está en `SAII_ESTADO_Y_PROMPTS.md`.
 |---|---|---|---|
 | Fase 1 | Ajustes globales | Completada | `SAII_ESTADO_Y_PROMPTS.md` |
 | Fase 2 | Alumnos, Docentes, Cursos y Módulos | Completada | `SAII_ESTADO_Y_PROMPTS.md` |
-| Fase 3 | Grupos Académicos | Pendiente / siguiente fase sugerida | `SAII_ESTADO_Y_PROMPTS.md` |
-| Fase 4 | Rediseño de Matrículas | Pendiente | `SAII_ESTADO_Y_PROMPTS.md` |
+| Fase 3 | Grupos Académicos | Completada | `SAII_ESTADO_Y_PROMPTS.md` |
+| Fase 4 | Rediseño de Matrículas | Completada | `SAII_ESTADO_Y_PROMPTS.md` |
 | Fase 5 | Control de Asistencia de Alumnos | **Completada (corregida)** | `SAII_ESTADO_Y_PROMPTS.md` + `SAII_ASISTENCIA_ALUMNOS.md` |
 | Fase 6 | Registro de Notas | **Completada** | `SAII_ESTADO_Y_PROMPTS.md` |
 | Fase 7 | Certificados, Reportes, Usuarios, Roles y Configuración | **Completada** | `SAII_ESTADO_Y_PROMPTS.md` |
-| Etapa Backend | Backend PHP MVC + MySQL (Fases B0 a B10) | **Planificada / En Ejecución** | [SAII_BACKEND_BACKLOG.md](file:///c:/Users/manue/Downloads/saii-frontend-development%20(2)/SAII_BACKEND_BACKLOG.md) |
+| Etapa Backend | Backend PHP MVC + MySQL (Fases B0 a B10) | **Completada** | [SAII_BACKEND_BACKLOG.md](file:///c:/Users/manue/Downloads/saii-frontend-development%20(2)/SAII_BACKEND_BACKLOG.md) |
 
 
 ---

@@ -8,7 +8,7 @@ Este archivo define el mapa general de fases de desarrollo para la etapa del bac
 
 | Fase | Nombre | Estado | Fuente Operativa |
 |---|---|---|---|
-| **Fase B0** | Auditoría y estabilización previa del frontend | **En Ejecución** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
+| **Fase B0** | Auditoría y estabilización previa del frontend | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B1** | Diseño de base de datos | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B2** | Estructura PHP MVC | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B3** | Autenticación, sesiones, usuarios y roles | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |

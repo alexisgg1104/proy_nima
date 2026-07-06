@@ -18,52 +18,23 @@ El proyecto final será un sistema completo con:
 - Documentación académica y exposición final.
 
 > [!IMPORTANT]
-> Sí existirá backend en el proyecto final. Sin embargo, la etapa actual se centra en terminar el **frontend funcional interactivo con datos mock**. El agente no debe improvisar backend real dentro de una fase frontend, salvo instrucción explícita del usuario o fase backend definida.
+> El backend en PHP MVC y la base de datos relacional MySQL han sido completamente implementados e integrados con el frontend, reemplazando el uso de datos mock.
 
 ---
 
 ## Etapa actual
 
-Actualmente se está desarrollando y culminando la etapa de:
+Actualmente se ha culminado con éxito tanto la etapa de frontend como la de backend real:
 
 ```text
-Frontend funcional interactivo con datos mock en memoria
+Frontend Vanilla JS + Backend PHP MVC + Base de Datos MySQL (Totalmente Integrados y Asegurados)
 ```
 
 Esto significa:
-
-- Las pantallas deben funcionar visual e interactivamente.
-- Los datos viven en `public/js/data.js`.
-- La lógica principal vive en `public/js/app.js`.
-- Las acciones CRUD pueden ser simuladas sobre arreglos mock.
-- Todavía no se exige conexión a MySQL ni PHP para estas fases.
-
----
-
-## Etapa posterior de backend
-
-La etapa backend deberá implementarse más adelante con:
-
-```text
-PHP + MVC + MySQL
-```
-
-Esa etapa deberá convertir los módulos mock en módulos persistentes reales:
-
-- Autenticación y sesiones.
-- Alumnos.
-- Docentes.
-- Cursos.
-- Módulos.
-- Grupos académicos.
-- Matrículas.
-- Asistencia de alumnos.
-- Registro de notas.
-- Certificados.
-- Reportes.
-- Usuarios.
-- Roles.
-- Configuración.
+- La aplicación se comunica dinámicamente con una API REST real en PHP que expone endpoints JSON.
+- Los datos se almacenan en una base de datos MySQL relacional con integridad de datos y llaves foráneas.
+- La lógica de cliente en `public/js/app.js` interactúa a través de `public/js/api.js` (`APIClient`) con persistencia nativa de sesiones de PHP y caché relacional en `public/js/data.js`.
+- Se han implementado defensas contra XSS y CSRF, logs de errores seguros de producción y políticas de control de sesiones.
 
 ---
 
@@ -118,24 +89,20 @@ http://localhost:3000/index.html
 
 ## Historial de Git y estado del proyecto
 
-Ya se han realizado con éxito los commits de:
+Se han completado todas las fases de desarrollo del proyecto SAII:
 
-1. Commit inicial.
-2. **Fase 1:** Ajustes globales y sidebar.
-3. **Fase 2:** Alumnos, Docentes y Cursos/Módulos.
-4. **Fase 3:** Grupos Académicos.
-5. **Fase 4:** Rediseño de Matrículas.
-6. **Fase 5:** Control de Asistencia de Alumnos.
-7. **Fase 6:** Registro de Calificaciones (Actas de Notas).
-8. **Fase 7:** Certificados (Flujo de Firmas), Reportes (Dashboard Dinámico), Usuarios y Roles (Permisos Dashboard y IDs de Rol), y Configuración (Traducción i18n Universal por DOM y CSS Grid).
+### Etapa Frontend:
+* **Fases 1 a 7:** Construcción y optimización del diseño interactivo responsivo de todos los módulos del sistema académico con datos mock localizados en memoria.
 
-Próximo paso documentado:
+### Etapa Backend (Fases B0 a B10):
+* **Fases B1 a B8:** Diseño de la base de datos MySQL (17 tablas), migración de semillas y lógica de controladores y modelos en PHP con patrón MVC estricto y consultas PDO seguras para todos los módulos.
+* **Fase B9:** Integración de la UI a la API REST desactivando mocks y controlando la latencia de red mediante caching local en memoria síncrono.
+* **Fase B10:** Implementación del middleware CSRF, sanitización recursiva de JSON saliente en `BaseController`, redirección segura de logs detallados a `/logs/php_errors.log` y manual `DESPLIEGUE.md`.
 
+Próximo paso:
 ```text
-Revisión final de frontend mock y planificación de la etapa posterior (Backend PHP MVC + MySQL)
+Entrega del software SAII listo para su puesta en marcha o mantenimiento
 ```
-
-salvo que el usuario indique otra fase.
 
 ---
 
