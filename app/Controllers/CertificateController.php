@@ -8,46 +8,50 @@ use App\Models\Student;
 use App\Models\Group;
 use Exception;
 
-class CertificateController extends BaseController {
+class CertificateController extends BaseController
+{
 
     // Listar todos los certificados (GET /api/certificates)
-    public function index() {
+    public function index()
+    {
         $this->requireAuth(['admin', 'secretary', 'dean']);
 
         $certModel = new Certificate();
         $certs = $certModel->getAll();
 
         foreach ($certs as &$cert) {
-            $cert['signatures'] = $certModel->getSignatures((int)$cert['id']);
+            $cert['signatures'] = $certModel->getSignatures((int) $cert['id']);
         }
 
         $this->json($certs);
     }
 
     // Obtener detalles de un certificado y sus firmas (GET /api/certificates/{id})
-    public function show($id) {
+    public function show($id)
+    {
         $this->requireAuth(['admin', 'secretary', 'dean']);
 
         $certModel = new Certificate();
-        $cert = $certModel->getById((int)$id);
+        $cert = $certModel->getById((int) $id);
 
         if (!$cert) {
             $this->error('Certificado no encontrado.', 404);
         }
 
-        $cert['signatures'] = $certModel->getSignatures((int)$id);
+        $cert['signatures'] = $certModel->getSignatures((int) $id);
 
         $this->json($cert);
     }
 
     // Emitir un nuevo certificado (POST /api/certificates)
-    public function create() {
+    public function create()
+    {
         $this->requireAuth(['admin', 'secretary']);
 
         $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 
-        $studentId = isset($input['student_id']) ? (int)$input['student_id'] : null;
-        $groupId = isset($input['group_id']) ? (int)$input['group_id'] : null;
+        $studentId = isset($input['student_id']) ? (int) $input['student_id'] : null;
+        $groupId = isset($input['group_id']) ? (int) $input['group_id'] : null;
         $type = trim($input['type'] ?? ''); // 'certificado' o 'constancia'
 
         if (!$studentId || !$groupId || empty($type)) {
@@ -92,7 +96,7 @@ class CertificateController extends BaseController {
         // 5. Generar código único para el certificado (Ej. CERT-CB-2024-01-S01-12345)
         $cleanGroupCode = preg_replace('/[^A-Za-z0-9\-]/', '', $group['code']);
         $uniqueCode = strtoupper(substr($type, 0, 4)) . '-' . $cleanGroupCode . '-' . $student['code'];
-        
+
         // Comprobar que no exista duplicado del código (por seguridad)
         $counter = 1;
         $finalCode = $uniqueCode;
@@ -112,7 +116,7 @@ class CertificateController extends BaseController {
             ]);
 
             $this->json([
-                'id' => (int)$certId,
+                'id' => (int) $certId,
                 'code' => $finalCode,
                 'message' => 'Certificado generado en estado pendiente de firmas.'
             ], 201);
@@ -122,11 +126,12 @@ class CertificateController extends BaseController {
     }
 
     // Registrar firma de certificado (POST /api/certificates/{id}/sign)
-    public function sign($id) {
+    public function sign($id)
+    {
         $this->requireAuth(['admin', 'secretary', 'dean']);
 
         $certModel = new Certificate();
-        $cert = $certModel->getById((int)$id);
+        $cert = $certModel->getById((int) $id);
 
         if (!$cert) {
             $this->error('Certificado no encontrado.', 404);
@@ -145,7 +150,7 @@ class CertificateController extends BaseController {
         }
 
         try {
-            $certModel->sign((int)$id, $role, $signerName);
+            $certModel->sign((int) $id, $role, $signerName);
             $this->json(['message' => "Firma del $role registrada de manera exitosa."]);
         } catch (Exception $e) {
             $this->error('Ocurrió un error al registrar la firma electrónica en el servidor.', 500);
@@ -153,11 +158,12 @@ class CertificateController extends BaseController {
     }
 
     // Registrar observación de certificado (POST /api/certificates/{id}/observation)
-    public function saveObservation($id) {
+    public function saveObservation($id)
+    {
         $this->requireAuth(['admin', 'secretary', 'dean']);
 
         $certModel = new Certificate();
-        $cert = $certModel->getById((int)$id);
+        $cert = $certModel->getById((int) $id);
 
         if (!$cert) {
             $this->error('Certificado no encontrado.', 404);
@@ -168,7 +174,7 @@ class CertificateController extends BaseController {
 
         $db = \Config\Database::getInstance()->getConnection();
         $stmt = $db->prepare("UPDATE certificates SET observations = :observations WHERE id = :id");
-        $stmt->execute(['observations' => $observations, 'id' => (int)$id]);
+        $stmt->execute(['observations' => $observations, 'id' => (int) $id]);
 
         $this->json(['message' => 'Observación guardada correctamente.']);
     }

@@ -5171,6 +5171,8 @@ class SAIIApp {
         tableHead.innerHTML = '';
         tableBody.innerHTML = '';
 
+        const settings = DataManager.getSettings();
+
         let results = [];
         let totalSt = 0;
         let approved = 0;
@@ -5198,7 +5200,8 @@ class SAIIApp {
                 </tr>
             `;
 
-            mockData.groups.forEach(group => {
+            const groupsList = DataManager.getGroups() || [];
+            groupsList.forEach(group => {
                 if (courseId && group.courseId !== courseId) return;
 
                 if (month && group.startDate.split('-')[1] !== month) return;
@@ -5231,7 +5234,7 @@ class SAIIApp {
                     if (avg > 0) {
                         groupSumAverage += avg;
                         groupAverageCount++;
-                        if (avg >= mockData.settings.minPassingGrade) groupApproved++;
+                        if (avg >= settings.minPassingGrade) groupApproved++;
                         else groupDisapproved++;
                     }
 
@@ -5321,7 +5324,8 @@ class SAIIApp {
                     </tr>
                 `;
 
-                mockData.enrollments.forEach(enr => {
+                const enrollmentsList = DataManager.getEnrollments() || [];
+                enrollmentsList.forEach(enr => {
                     const student = DataManager.getStudentById(enr.studentId);
                     const group = DataManager.getGroupById(enr.groupId);
                     if (!student || !group) return;
@@ -5338,7 +5342,7 @@ class SAIIApp {
                     const course = DataManager.getCourseById(group.courseId);
                     const gradeRecord = (DataManager.getGrades() || []).find(g => g.groupId == enr.groupId && g.studentId == enr.studentId);
                     const average = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
-                    const isApproved = average >= mockData.settings.minPassingGrade;
+                    const isApproved = average >= settings.minPassingGrade;
 
                     if (status === 'approved' && !isApproved) return;
                     if (status === 'disapproved' && isApproved) return;
@@ -5360,18 +5364,24 @@ class SAIIApp {
                     const hasCert = (DataManager.getCertificates() || []).some(c => c.studentId == r.student.id && c.groupId == r.group.id && c.status === 'generated');
                     if (hasCert) certsCount++;
 
-                    const attData = mockData.studentAttendanceByGroup.find(a => a.groupId === r.group.id);
-                    if (attData) {
-                        const studentAtt = attData.students.find(s => s.studentId === r.student.id);
-                        if (studentAtt) {
-                            attData.days.forEach(d => {
-                                totalAttDays++;
-                                const sVal = studentAtt.attendance[d];
-                                if (sVal === 'presente' || sVal === 'tarde') {
-                                    totalPresentDays++;
-                                }
-                            });
+                    if (USE_MOCK) {
+                        const attData = mockData.studentAttendanceByGroup.find(a => a.groupId === r.group.id);
+                        if (attData) {
+                            const studentAtt = attData.students.find(s => s.studentId === r.student.id);
+                            if (studentAtt) {
+                                attData.days.forEach(d => {
+                                    totalAttDays++;
+                                    const sVal = studentAtt.attendance[d];
+                                    if (sVal === 'presente' || sVal === 'tarde') {
+                                        totalPresentDays++;
+                                    }
+                                });
+                            }
                         }
+                    } else {
+                        const attPct = DataManager.calculateAttendancePercentage(r.student.id, r.group.id);
+                        totalAttDays += 100;
+                        totalPresentDays += attPct;
                     }
 
                     const row = document.createElement('tr');
@@ -5398,7 +5408,8 @@ class SAIIApp {
                     </tr>
                 `;
 
-                mockData.enrollments.forEach(enr => {
+                const enrollmentsList = DataManager.getEnrollments() || [];
+                enrollmentsList.forEach(enr => {
                     const student = DataManager.getStudentById(enr.studentId);
                     const group = DataManager.getGroupById(enr.groupId);
                     if (!student || !group) return;
@@ -5413,7 +5424,7 @@ class SAIIApp {
                     }
 
                     const attPct = DataManager.calculateAttendancePercentage(student.id, group.id);
-                    const isSatisfactory = attPct >= mockData.settings.minAttendanceRequired;
+                    const isSatisfactory = attPct >= settings.minAttendanceRequired;
 
                     if (status === 'satisfactory' && !isSatisfactory) return;
                     if (status === 'atRisk' && isSatisfactory) return;
@@ -5429,7 +5440,7 @@ class SAIIApp {
                     if (average > 0) {
                         totalAvg += average;
                         totalAvgCount++;
-                        if (average >= mockData.settings.minPassingGrade) approved++;
+                        if (average >= settings.minPassingGrade) approved++;
                         else disapproved++;
                     }
                     const hasCert = (DataManager.getCertificates() || []).some(c => c.studentId == r.student.id && c.groupId == r.group.id && c.status === 'generated');
@@ -5490,7 +5501,7 @@ class SAIIApp {
                     if (average > 0) {
                         totalAvg += average;
                         totalAvgCount++;
-                        if (average >= mockData.settings.minPassingGrade) approved++;
+                        if (average >= settings.minPassingGrade) approved++;
                         else disapproved++;
                     }
 
@@ -5540,7 +5551,8 @@ class SAIIApp {
                     </tr>
                 `;
 
-                mockData.enrollments.forEach(enr => {
+                const enrollmentsList = DataManager.getEnrollments() || [];
+                enrollmentsList.forEach(enr => {
                     const student = DataManager.getStudentById(enr.studentId);
                     const group = DataManager.getGroupById(enr.groupId);
                     if (!student || !group) return;
@@ -5567,7 +5579,7 @@ class SAIIApp {
                     if (average > 0) {
                         totalAvg += average;
                         totalAvgCount++;
-                        if (average >= mockData.settings.minPassingGrade) approved++;
+                        if (average >= settings.minPassingGrade) approved++;
                         else disapproved++;
                     }
 
