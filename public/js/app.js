@@ -2563,6 +2563,12 @@ class SAIIApp {
         const teacherView = document.getElementById('attendanceTeacherView');
         const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
 
+        // Ocultar botón "Volver al listado" para docentes
+        const backBtn = document.getElementById('btnBackToAttendanceAdmin');
+        if (backBtn) {
+            backBtn.style.display = (role === 'teacher') ? 'none' : 'inline-block';
+        }
+
         if (role === 'teacher') {
             if (adminView) adminView.style.display = 'none';
             if (teacherView) teacherView.style.display = 'block';
@@ -2662,7 +2668,7 @@ class SAIIApp {
 
             // 2. Renderizar matriz (cabecera y cuerpo)
             const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
-            const canEdit = lista.status !== 'cerrado' && (role === 'admin' || role === 'teacher');
+            const canEdit = lista.status !== 'cerrado' && lista.status !== 'cerrada' && (role === 'admin' || role === 'teacher');
 
             // Cabecera (Columnas de Fechas)
             let headerCols = '<th class="attendance-code-cell">Código</th><th class="attendance-student-cell">Alumno</th>';
@@ -2726,7 +2732,7 @@ class SAIIApp {
             const actionsDiv = document.getElementById('attPlanillaActions');
             actionsDiv.innerHTML = `
                 ${canEdit ? `<button class="btn btn-secondary" onclick="app.saveMatrixAsDraft()">&#128190; Guardar borrador</button>` : ''}
-                ${canEdit && role === 'admin' ? `<button class="btn btn-primary" onclick="app.closeAttendance('${lista.id}')">&#128274; Cerrar Asistencia</button>` : ''}
+                ${canEdit && (role === 'admin' || role === 'teacher') ? `<button class="btn btn-primary" onclick="app.closeAttendance('${lista.id}')">&#128274; Cerrar Asistencia</button>` : ''}
                 <button class="btn btn-secondary" onclick="app.exportAttendanceToExcel('${lista.id}')">📥 Exportar Excel</button>
             `;
 
@@ -3136,7 +3142,7 @@ class SAIIApp {
         }
     }
 
-    closeAttendance(attendanceId) {
+    async closeAttendance(attendanceId) {
         const lista = DataManager.getStudentAttendanceById(attendanceId);
         if (!lista) return;
 
@@ -3166,9 +3172,20 @@ class SAIIApp {
         }
 
         if (confirm('¿Cerrar esta asistencia? Una vez cerrada ya no podrá ser editada.')) {
-            DataManager.updateStudentAttendanceStatus(attendanceId, 'cerrado');
-            this.showToast('Asistencia cerrada correctamente', 'success');
-            this.renderAdminAttendanceTable();
+            this.showToast('Cerrando asistencia...', 'info');
+            try {
+                await DataManager.updateStudentAttendanceStatus(attendanceId, 'cerrado');
+                this.showToast('Asistencia cerrada correctamente', 'success');
+                const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
+                if (role === 'teacher') {
+                    this.loadTeacherAttendanceMatrix();
+                } else {
+                    this.renderAdminAttendanceTable();
+                }
+            } catch (error) {
+                console.error("Error al cerrar asistencia:", error);
+                this.showToast('Error al cerrar asistencia: ' + error.message, 'error');
+            }
         }
     }
 

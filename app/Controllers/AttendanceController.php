@@ -266,7 +266,7 @@ class AttendanceController extends BaseController {
 
     // Cambiar estado administrativamente (POST /api/attendance/{id}/status)
     public function updateStatus($id) {
-        $this->requireAuth(['admin', 'secretary']);
+        $this->requireAuth(['admin', 'secretary', 'teacher']);
 
         $attendanceModel = new Attendance();
         $list = $attendanceModel->getListById((int)$id);
