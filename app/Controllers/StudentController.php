@@ -10,7 +10,7 @@ class StudentController extends BaseController {
 
     // Listar todos los estudiantes (GET /api/students)
     public function index() {
-        $this->requireAuth(['admin', 'secretary']);
+        $this->requireAuth(['admin', 'secretary', 'teacher', 'dean']);
 
         $studentModel = new Student();
         $students = $studentModel->getAll();

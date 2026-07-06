@@ -10,7 +10,7 @@ class CourseController extends BaseController {
 
     // Listar todos los cursos (GET /api/courses)
     public function index() {
-        $this->requireAuth(['admin', 'secretary']);
+        $this->requireAuth(['admin', 'secretary', 'teacher', 'dean']);
 
         $courseModel = new Course();
         $courses = $courseModel->getAll();

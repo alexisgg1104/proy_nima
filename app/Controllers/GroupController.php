@@ -12,7 +12,7 @@ class GroupController extends BaseController {
 
     // Listar todos los grupos académicos (GET /api/groups)
     public function index() {
-        $this->requireAuth(['admin', 'secretary']);
+        $this->requireAuth(['admin', 'secretary', 'teacher', 'dean']);
 
         $groupModel = new Group();
         $groups = $groupModel->getAll();

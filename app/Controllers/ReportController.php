@@ -131,7 +131,7 @@ class ReportController extends BaseController {
 
     // Obtener KPIs generales del Dashboard (GET /api/reports/dashboard)
     public function dashboard() {
-        $this->requireAuth(['admin', 'secretary']);
+        $this->requireAuth(['admin', 'secretary', 'teacher', 'dean']);
 
         $reportModel = new Report();
         $kpis = $reportModel->getDashboardKPIs();
@@ -141,7 +141,7 @@ class ReportController extends BaseController {
 
     // Listar reportes guardados (GET /api/reports/saved)
     public function listSaved() {
-        $this->requireAuth(['admin', 'secretary']);
+        $this->requireAuth(['admin', 'secretary', 'teacher', 'dean']);
 
         $reportModel = new Report();
         $reports = $reportModel->getSavedReports();
@@ -156,7 +156,7 @@ class ReportController extends BaseController {
 
     // Obtener detalles de un reporte guardado (GET /api/reports/saved/{id})
     public function showSaved($id) {
-        $this->requireAuth(['admin', 'secretary']);
+        $this->requireAuth(['admin', 'secretary', 'teacher', 'dean']);
 
         $reportModel = new Report();
         $report = $reportModel->getSavedReportById((int)$id);

@@ -14,7 +14,7 @@ class CertificateController extends BaseController
     // Listar todos los certificados (GET /api/certificates)
     public function index()
     {
-        $this->requireAuth(['admin', 'secretary', 'dean']);
+        $this->requireAuth(['admin', 'secretary', 'dean', 'teacher']);
 
         $certModel = new Certificate();
         $certs = $certModel->getAll();

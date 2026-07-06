@@ -10,7 +10,7 @@ class TeacherController extends BaseController {
 
     // Listar todos los docentes (GET /api/teachers)
     public function index() {
-        $this->requireAuth(['admin', 'secretary']);
+        $this->requireAuth(['admin', 'secretary', 'teacher', 'dean']);
 
         $teacherModel = new Teacher();
         $teachers = $teacherModel->getAll();

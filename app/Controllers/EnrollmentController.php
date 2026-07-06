@@ -12,7 +12,7 @@ class EnrollmentController extends BaseController {
 
     // Listar todas las matrículas (GET /api/enrollments)
     public function index() {
-        $this->requireAuth(['admin', 'secretary']);
+        $this->requireAuth(['admin', 'secretary', 'teacher', 'dean']);
 
         $enrollmentModel = new Enrollment();
         $enrollments = $enrollmentModel->getAll();
