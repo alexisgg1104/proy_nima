@@ -670,9 +670,10 @@ El agente debe actualizar esta sección al terminar cada fase.
 
 - Fecha: 2026-07-06
 - Rama: main
-- Commit o mensaje sugerido: `fix: corregir flujo e integracion de asistencia de alumnos (Fase 5), id de docente simulado, estado cerrado dinamico y validacion de tardanzas`
+- Commit o mensaje sugerido: `fix: rediseñar control de asistencia docente como matriz completa de sesiones con adicion dinamica de columnas y autoguardado`
 - Estado final: **Completada**.
 - Archivos modificados:
+  - `public/index.html`
   - `public/index.php`
   - `public/js/app.js`
   - `public/js/data.js`
@@ -685,31 +686,30 @@ El agente debe actualizar esta sección al terminar cada fase.
   - En `public/js/app.js`:
     - `simulateRoleChange()` (modificada: corrige la asignación del ID del docente simulado consultando el caché real en vez del mock)
     - `setupAttendance()` (modificada: bifurca el flujo de carga mostrando la vista del docente o del administrador basado en el rol del usuario conectado)
-    - `setupTeacherAttendanceView()` (creada: inicializa el selector de grupos asignados al docente)
-    - `onTeacherGroupChange()` (creada: autopopula la fecha del día y carga la planilla)
-    - `loadAttendanceByDate()` (creada: descarga o instancia el borrador local/base de datos para la fecha elegida de alumnos matriculados)
-    - `renderStudentAttendancePlanilla()` (creada: renderiza cabecera, resumen de asistencia, filas editables de alumnos y botones de acción correspondientes)
-    - `onStudentStatusChange()`, `onStudentTimeChange()`, `onStudentObsChange()` (creadas: controlan los inputs de cada alumno actualizando el estado local en tiempo real)
-    - `updateStudentAttendanceSummaryBar()` (creada: actualiza dinámicamente los contadores de presentes, tardanzas, faltas, justificados y porcentaje de asistencia del día)
-    - `markAllPresent()` (creada: marca a todos los alumnos como Presente en un clic)
-    - `saveStudentAttendance()` (creada: persiste el borrador o registro oficial mediante POST/PUT al servidor de base de datos)
-    - `exportStudentAttendanceExcel()` (creada: exporta la sesión de asistencia del día actual en formato CSV/Excel con cabeceras e información del curso)
-    - `exportAttendanceToExcel()` (creada: compila y exporta la matriz completa de asistencia del grupo del administrador a un archivo CSV/Excel BOM)
+    - `setupTeacherAttendanceView()` (modificada: inicializa el selector de grupos asignados al docente y expone el botón Cargar al seleccionar un grupo)
+    - `loadTeacherAttendanceMatrix()` (creada: carga la cuadrícula de matriz completa del grupo con alumnos y columnas de fechas)
+    - `onMatrixStatusChange()` (creada: actualiza la celda modificada en la base de datos real asíncronamente con autoguardado en vivo)
+    - `saveMatrixAsDraft()` (creada: sincroniza y recarga el estado del borrador de asistencia)
+    - `addNewAttendanceDateCol()` (creada: permite ingresar una nueva fecha y registrar una nueva sesión/columna de asistencia de forma interactiva en la matriz)
+    - `exportAttendanceToExcel()` (creada: compila y exporta la matriz completa de asistencia del grupo a un archivo CSV/Excel BOM)
     - `viewAttendanceDetail()` (modificada: establece `canEdit = false` para forzar que el botón de inspección "Ver" (lupa) sea estrictamente de solo lectura)
     - `closeAttendance()` (modificada: corrige el validador de cierre para admitir `'tarde'` como estado completo, y valida exclusivamente contra fechas realmente registradas en BD)
     - `printAttendance()` (modificada: redirige la impresión de asistencia del administrador para descargar directamente la matriz de asistencia en Excel)
 - Cambios principales:
+  - **Rediseño a Vista Matriz de Asistencia:** Se eliminó el selector de fecha individual de la planilla docente. Ahora, al seleccionar el grupo y presionar "Cargar", se pinta la matriz completa de asistencia (idéntica a la vista de detalle del administrador), donde cada fecha registrada es una columna y cada fila un estudiante.
+  - **Autoguardado en vivo:** Los cambios en las celdas se guardan en la base de datos real automáticamente al cambiar el selector en la tabla, proporcionando una experiencia rápida sin parpadeo de pantalla.
+  - **Adición Dinámica de Sesiones:** Se añadió el botón "➕ Agregar Fecha" en la cuadrícula del docente, permitiendo ingresar una fecha válida del curso para crear de forma automática y asíncrona una nueva columna en la matriz.
   - **Mapeo de Docente Simulado corregido:** Se solucionó el problema por el cual el selector de "Grupo asignado" se mostraba vacío al simular el rol de Docente (como Roberto Silva). Ahora, el simulador busca el ID correspondiente del docente en el listado real de la base de datos (por ejemplo, `1` en vez del ID mockeado `'TCH001'`).
   - **Estado dinámico Cerrado:** El estado de las filas del listado de asistencias de alumnos del administrador se evalúa dinámicamente consultando si hay listas cerradas en la base de datos, en lugar de amarrarse únicamente al estado del grupo académico en sí.
-  - **Flujo de Asistencia de Alumnos completo:** Integrada la vista del docente para la elección de grupo y fecha, posibilitando marcar estados, hora de entrada y observaciones individuales, con cálculo automático de estadísticas.
   - **Borradores e integración con Base de Datos:** Los registros se guardan y editan en MySQL. El endpoint de records de PHP fue actualizado para retornar borradores, evitando que la cuadrícula se muestre vacía al recargar.
   - **Inspección de Solo Lectura:** El botón de la lupa ("Ver") deshabilita los controles del modal para garantizar solo lectura.
   - **Validaciones de Cierre:** Corregida la regla de negocio que impedía cerrar planillas si había alumnos en estado "Tarde". Ahora se valida sobre fechas registradas y se permite el cierre.
   - **Exportación real a Excel:** Creadores de CSV de datos estructurados con BOM UTF-8 que permiten abrir plantillas con acentos directamente en Excel, tanto en la vista docente como en el listado del administrador.
 - Pruebas realizadas:
   - Simular rol de docente e ingresar al módulo de asistencia para validar la carga de grupos asignados correspondientes al docente activo.
-  - Login como docente, selección de grupo, carga automática de alumnos matriculados.
-  - Guardado de borrador y persistencia en base de datos.
+  - Seleccionar grupo, hacer clic en "Cargar" y constatar la visualización de la matriz de alumnos y fechas registradas en MySQL.
+  - Cambiar el selector de estado en una celda de la matriz y corroborar que el toast informe el guardado automático persistente en base de datos.
+  - Hacer clic en "➕ Agregar Fecha", introducir una fecha dentro del período del grupo y validar que aparezca como nueva columna interactiva en la matriz.
   - Clic en "Ver" en la vista del administrador abre el modal con selectores deshabilitados.
   - Clic en "Cerrar" en grupo con tardanzas y asistencias completas procesa la petición exitosamente.
   - Clic en "Imprimir" del administrador y "Exportar" del docente descarga el reporte CSV/Excel correctamente.
