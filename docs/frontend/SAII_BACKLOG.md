@@ -628,6 +628,44 @@ El agente debe actualizar esta sección al terminar cada fase.
   - Comprobar que los campos conservan sus IDs y que las acciones de Guardar y Restaurar por defecto funcionan correctamente.
 - Pendientes o riesgos: ninguno.
 
+#### Ajustes de Matrículas y Backend de Registro
+
+- Fecha: 2026-07-06
+- Rama: main
+- Commit o mensaje sugerido: `fix: resolver fecha matricula, columnas obsoletas, roles de grupo en curso y persistencia withdrawn en base de datos`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `app/Models/Enrollment.php`
+  - `public/index.html`
+  - `public/js/app.js`
+  - `public/js/data.js`
+  - `docs/frontend/SAII_BACKLOG.md`
+- Funciones creadas o modificadas:
+  - En `app/Models/Enrollment.php`:
+    - `create()` (modificada: inserta `enrollment_date` como `CURRENT_DATE`)
+  - En `public/js/data.js`:
+    - `updateEnrollment()` (creada: envía petición `PUT /api/enrollments/{id}`)
+  - En `public/js/app.js`:
+    - `setupEnrollments()` (modificada: filtra grupos para mostrar solo activos o en curso)
+    - `renderAvailableStudents()` (modificada: removido el campo ciclo)
+    - `renderEnrolledStudents()` (modificada: removido el campo ciclo y enlazado botón retirar/reactivar a base de datos)
+    - `viewEnrollmentDetail()` (modificada: arreglado matching `==` de ID y removido ciclo)
+    - `toggleEnrollmentStatus()` (creada: cambia estado a `withdrawn` o `active` en la base de datos)
+    - `addEnrollment()` (modificada: validación de rol de administrador en grupos en curso)
+- Cambios principales:
+  - **Fecha de Matrícula**: Se solucionó el problema donde la fecha de matrícula se guardaba como `0000-00-00` en MySQL al insertar la fecha actual mediante `CURRENT_DATE` en el query.
+  - **Eliminación de la columna Ciclo**: Removida la columna de Ciclo de las tablas de estudiantes disponibles y estudiantes matriculados en concordancia con la eliminación global del ciclo.
+  - **Botón "Ver" de Alumno**: Corregido bug de tipo de dato en la comparación del ID que causaba que el modal de detalle no se abriera.
+  - **Botón Retirar Alumno con estado "withdrawn"**: Se quitó el botón de edición y el botón retirar se enlazó para cambiar el estado de matrícula a `'withdrawn'` (valor esperado por la columna `status` ENUM en MySQL) en lugar de `'inactive'`, solucionando el bug del campo vacío en base de datos, y habilitando reactivación directa en UI.
+  - **Grupos Cerrados/En curso**: Filtrados los grupos en selección de matrículas para omitir terminados y cerrados. Restringido el alta de alumnos en grupos en curso únicamente a usuarios administradores previa confirmación.
+- Pruebas realizadas:
+  - Selección de grupos cargando únicamente grupos con estado `open` o `inprogress`.
+  - Matricular alumno como secretaria en grupo `inprogress` muestra toast de error.
+  - Matricular alumno como administrador en grupo `inprogress` pide confirmación y crea registro con fecha actual.
+  - Clic en botón "Ver" de alumno abre el modal correctamente sin ciclo.
+  - Clic en botón "Retirar" de alumno actualiza el estado a `withdrawn` en la base de datos MySQL de forma persistente.
+- Pendientes o riesgos: ninguno.
+
 ---
 
 ## Regla final del backlog
