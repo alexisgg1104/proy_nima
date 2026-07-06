@@ -1598,7 +1598,7 @@
                     </div>
                     <div class="form-group">
                         <label>Contraseña *</label>
-                        <input type="password" id="userPassword" required placeholder="Contraseña de acceso">
+                        <input type="password" id="userPassword" required placeholder="Contraseña de acceso" autocomplete="new-password">
                     </div>
                     <div class="form-group">
                         <label>Correo Electrónico *</label>
@@ -1639,13 +1639,13 @@
             </div>
             <div class="modal-body">
                 <form id="changePasswordForm" class="form-modal" onsubmit="app.handleChangePasswordSubmit(event)">
-                    <div class="form-group">
+                    <div class="form-group" id="currentPasswordGroup">
                         <label>Contraseña Actual *</label>
-                        <input type="password" id="userCurrentPassword" required placeholder="Contraseña actual del usuario">
+                        <input type="password" id="userCurrentPassword" required placeholder="Contraseña actual del usuario" autocomplete="new-password">
                     </div>
                     <div class="form-group">
                         <label>Nueva Contraseña *</label>
-                        <input type="password" id="userNewPassword" required placeholder="Nueva contraseña de acceso">
+                        <input type="password" id="userNewPassword" required placeholder="Nueva contraseña de acceso" autocomplete="new-password">
                     </div>
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Guardar</button>

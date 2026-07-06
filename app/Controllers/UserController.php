@@ -191,8 +191,17 @@ class UserController extends BaseController {
         $currentPassword = $input['current_password'] ?? '';
         $newPassword = $input['new_password'] ?? '';
         
-        if (empty($currentPassword) || empty($newPassword)) {
-            $this->error('La contraseña actual y la nueva son obligatorias.', 400);
+        $isOwnPassword = (int)$currentUser['id'] === (int)$id;
+        $isAdminBypass = $currentUser['role'] === 'admin' && !$isOwnPassword;
+
+        if ($isAdminBypass) {
+            if (empty($newPassword)) {
+                $this->error('La nueva contraseña es obligatoria.', 400);
+            }
+        } else {
+            if (empty($currentPassword) || empty($newPassword)) {
+                $this->error('La contraseña actual y la nueva son obligatorias.', 400);
+            }
         }
         
         $db = \Config\Database::getInstance()->getConnection();
@@ -204,9 +213,11 @@ class UserController extends BaseController {
             $this->error('Usuario no encontrado.', 404);
         }
         
-        // Verificar contraseña actual
-        if (!password_verify($currentPassword, $user['password'])) {
-            $this->error('La contraseña actual es incorrecta.', 400);
+        // Verificar contraseña actual solo si no es admin bypass
+        if (!$isAdminBypass) {
+            if (!password_verify($currentPassword, $user['password'])) {
+                $this->error('La contraseña actual es incorrecta.', 400);
+            }
         }
         
         // Actualizar contraseña

@@ -6368,6 +6368,20 @@ class SAIIApp {
         const form = document.getElementById('changePasswordForm');
         if (form) form.reset();
         
+        const currentPasswordGroup = document.getElementById('currentPasswordGroup');
+        const userCurrentPassword = document.getElementById('userCurrentPassword');
+        
+        const isOwnPassword = DataManager.currentUser && DataManager.currentUser.id == userId;
+        const isAdminBypass = DataManager.currentUser && DataManager.currentUser.role === 'admin' && !isOwnPassword;
+        
+        if (isAdminBypass) {
+            if (currentPasswordGroup) currentPasswordGroup.style.display = 'none';
+            if (userCurrentPassword) userCurrentPassword.removeAttribute('required');
+        } else {
+            if (currentPasswordGroup) currentPasswordGroup.style.display = 'block';
+            if (userCurrentPassword) userCurrentPassword.setAttribute('required', 'true');
+        }
+        
         document.getElementById('modalOverlay').style.display = 'block';
         document.getElementById('changePasswordModal').style.display = 'block';
     }
@@ -6375,11 +6389,14 @@ class SAIIApp {
     async handleChangePasswordSubmit(e) {
         if (e) e.preventDefault();
         
-        const currentPassword = document.getElementById('userCurrentPassword').value;
+        const userCurrentPassword = document.getElementById('userCurrentPassword');
+        const currentPassword = userCurrentPassword ? userCurrentPassword.value : '';
         const newPassword = document.getElementById('userNewPassword').value;
         
-        if (!currentPassword || !newPassword) {
-            this.showToast('Por favor complete todos los campos', 'error');
+        const isRequired = userCurrentPassword && userCurrentPassword.hasAttribute('required');
+        
+        if ((isRequired && !currentPassword) || !newPassword) {
+            this.showToast('Por favor complete todos los campos requeridos', 'error');
             return;
         }
         
