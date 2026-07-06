@@ -196,7 +196,6 @@ $router->addRoute('GET', '/api/attendance/records', function() {
         SELECT ar.student_id, ar.status, al.group_id, al.date
         FROM student_attendance_records ar
         JOIN student_attendance_lists al ON ar.attendance_list_id = al.id
-        WHERE al.status != 'borrador'
     ");
     $records = $stmt->fetchAll(\PDO::FETCH_ASSOC);
     http_response_code(200);

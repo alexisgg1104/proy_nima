@@ -2555,11 +2555,449 @@ class SAIIApp {
         this.setupAdminAttendanceView();
     }
 
+    // ========== ATTENDANCE MODULE — Control de Asistencia de Alumnos (Fase 5 CORREGIDA) ==========
+    setupAttendance() {
+        const adminView = document.getElementById('attendanceAdminView');
+        const teacherView = document.getElementById('attendanceTeacherView');
+        const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
+
+        if (role === 'teacher') {
+            if (adminView) adminView.style.display = 'none';
+            if (teacherView) teacherView.style.display = 'block';
+            this.setupTeacherAttendanceView();
+        } else {
+            if (adminView) adminView.style.display = 'block';
+            if (teacherView) teacherView.style.display = 'none';
+            this.setupAdminAttendanceView();
+        }
+    }
+
+    setupTeacherAttendanceView() {
+        const teacherId = DataManager.getTeacherIdForUser(DataManager.currentUser);
+        const groupSelect = document.getElementById('attendanceGroupSelect');
+        groupSelect.innerHTML = '<option value="">-- Seleccione un grupo --</option>';
+
+        // Solo muestra grupos del docente
+        DataManager.getGroups().forEach(g => {
+            if (!teacherId || g.teacherId == teacherId || teacherId === 'USR999') {
+                const opt = document.createElement('option');
+                opt.value = g.id;
+                opt.textContent = `${g.code} – ${g.courseName} (${g.modality === 'regular' ? 'Regular' : 'Suficiencia'})`;
+                groupSelect.appendChild(opt);
+            }
+        });
+
+        groupSelect.onchange = () => this.onTeacherGroupChange();
+        
+        // Esconder contenedor de fecha y planilla por defecto
+        document.getElementById('attendanceDateContainer').style.display = 'none';
+        document.getElementById('attendanceContent').style.display = 'none';
+    }
+
+    onTeacherGroupChange() {
+        const groupId = document.getElementById('attendanceGroupSelect').value;
+        const dateContainer = document.getElementById('attendanceDateContainer');
+        const content = document.getElementById('attendanceContent');
+
+        if (!groupId) {
+            dateContainer.style.display = 'none';
+            content.style.display = 'none';
+            return;
+        }
+
+        dateContainer.style.display = 'inline-flex';
+        
+        // Autopopular con la fecha actual del sistema
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('attendanceDateSelect').value = today;
+
+        this.loadAttendanceByDate();
+    }
+
+    async loadAttendanceByDate() {
+        const groupId = document.getElementById('attendanceGroupSelect').value;
+        const date = document.getElementById('attendanceDateSelect').value;
+        if (!groupId) return;
+        if (!date) {
+            this.showToast('Seleccione la fecha de asistencia', 'error');
+            return;
+        }
+
+        const group = DataManager.getGroupById(groupId);
+        if (!group) return;
+
+        if (date < group.startDate || date > group.endDate) {
+            this.showToast(`La fecha debe pertenecer al período del grupo (${group.startDate} a ${group.endDate})`, 'error');
+            return;
+        }
+
+        try {
+            const matchingList = DataManager.cache.attendanceLists.find(l => l.groupId == groupId && l.date === date);
+            let list = null;
+
+            if (matchingList) {
+                // Si existe en la base de datos, obtenemos sus registros completos
+                const res = await APIClient.request(`/attendance/${matchingList.id}`);
+                list = {
+                    id: matchingList.id,
+                    groupId: groupId,
+                    date: date,
+                    status: matchingList.status,
+                    records: res.data.records.map(r => ({
+                        studentId: r.student_id,
+                        attendanceStatus: r.status,
+                        arrivalTime: r.arrival_time || '',
+                        observation: r.observation || ''
+                    }))
+                };
+            } else {
+                // Si no existe, creamos un borrador local con todos los alumnos matriculados
+                const students = DataManager.getEnrolledStudentsByGroup(groupId);
+                list = {
+                    id: null,
+                    groupId: groupId,
+                    date: date,
+                    status: 'borrador',
+                    records: students.map(s => ({
+                        studentId: s.id,
+                        attendanceStatus: '',
+                        arrivalTime: '',
+                        observation: ''
+                    }))
+                };
+            }
+
+            this._currentAttendanceList = list;
+            document.getElementById('attendanceContent').style.display = 'block';
+            this.renderStudentAttendancePlanilla();
+        } catch (error) {
+            console.error("Error al cargar asistencia:", error);
+            this.showToast("Error al cargar la asistencia: " + error.message, 'error');
+        }
+    }
+
+    renderStudentAttendancePlanilla() {
+        const list = this._currentAttendanceList;
+        const group = DataManager.getGroupById(list.groupId);
+        if (!group) return;
+
+        const isExam = group.modality === 'exam';
+        const modalityLabel = isExam ? 'Examen de suficiencia' : 'Curso regular';
+
+        // Header HTML
+        document.getElementById('attPlanillaHeader').innerHTML = `
+            <div class="att-institution-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding-bottom: 0.3rem; margin-bottom: 0.5rem;">
+                <div style="text-align: left;">
+                    <span style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-primary);">Universidad Nacional de Piura</span>
+                    <span style="font-size: 0.8rem; color: var(--color-text-secondary); margin-left: 0.5rem;">| Facultad de Ingeniería Industrial</span>
+                </div>
+                <div style="text-align: right; font-weight: bold; color: var(--color-primary); font-size: 0.85rem;">
+                    Instituto de Informática
+                </div>
+            </div>
+            <div style="text-align: center; margin-bottom: 0.4rem;">
+                <h3 style="margin: 0; font-size: 1rem; font-weight: bold; letter-spacing: 0.5px; color: var(--color-text-primary);">CONTROL DE ASISTENCIA DE ALUMNOS</h3>
+            </div>
+            <div class="att-planilla-meta-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; font-size: 0.82rem;">
+                <div class="att-meta-item"><strong>Modalidad:</strong> <span>${modalityLabel}</span></div>
+                <div class="att-meta-item"><strong>Grupo:</strong> <span>${group.code}</span></div>
+                <div class="att-meta-item"><strong>Curso:</strong> <span>${group.courseName}</span></div>
+                <div class="att-meta-item"><strong>Docente:</strong> <span>${group.teacherName}</span></div>
+                <div class="att-meta-item"><strong>Horario:</strong> <span>${group.schedule || 'No especificado'}</span></div>
+                <div class="att-meta-item"><strong>Aula:</strong> <span>${group.classroom || 'No asignada'}</span></div>
+                <div class="att-meta-item"><strong>Fecha de inicio:</strong> <span>${group.startDate}</span></div>
+                <div class="att-meta-item"><strong>Fecha final:</strong> <span>${group.endDate || '-'}</span></div>
+                <div class="att-meta-item"><strong>Estado de lista:</strong> <span class="badge-status ${list.status === 'cerrada' || list.status === 'cerrado' ? 'badge-closed' : 'badge-pending'}" style="padding: 0.1rem 0.4rem; font-size: 0.75rem;">${list.status.toUpperCase()}</span></div>
+            </div>
+        `;
+
+        this.updateStudentAttendanceSummaryBar();
+
+        const canEdit = list.status === 'borrador' || list.status === 'observada';
+        const tbody = document.getElementById('attendanceStudentsBody');
+        tbody.innerHTML = '';
+
+        if (list.records.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem; color:var(--color-text-secondary);">No hay alumnos matriculados en este grupo</td></tr>';
+            return;
+        }
+
+        list.records.forEach((record, index) => {
+            const student = DataManager.getStudentById(record.studentId);
+            if (!student) return;
+
+            const row = document.createElement('tr');
+
+            const statuses = [
+                { value: '', label: '-- Seleccione --' },
+                { value: 'presente', label: 'Presente' },
+                { value: 'tarde', label: 'Tarde' },
+                { value: 'falta', label: 'Falta' },
+                { value: 'justificado', label: 'Justificado' }
+            ];
+
+            let selectHtml = `<select class="filter-select" style="width:100%;" ${!canEdit ? 'disabled' : ''} onchange="app.onStudentStatusChange('${record.studentId}', this.value)">`;
+            statuses.forEach(st => {
+                selectHtml += `<option value="${st.value}" ${record.attendanceStatus === st.value ? 'selected' : ''}>${st.label}</option>`;
+            });
+            selectHtml += `</select>`;
+
+            const timeHtml = `<input type="time" class="filter-select" style="width:100%;" ${!canEdit ? 'disabled' : ''} value="${record.arrivalTime || ''}" onchange="app.onStudentTimeChange('${record.studentId}', this.value)">`;
+
+            const obsHtml = `<input type="text" class="filter-select" style="width:100%;" ${!canEdit ? 'disabled' : ''} maxlength="255" value="${record.observation || ''}" onchange="app.onStudentObsChange('${record.studentId}', this.value)" placeholder="Observación (opcional)">`;
+
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${student.code}</td>
+                <td><strong>${student.firstName} ${student.lastName}</strong></td>
+                <td>${student.dni}</td>
+                <td>${selectHtml}</td>
+                <td>${timeHtml}</td>
+                <td>${obsHtml}</td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        // Render actions
+        const actionsDiv = document.getElementById('attPlanillaActions');
+        actionsDiv.innerHTML = `
+            ${canEdit ? `<button class="btn btn-secondary" onclick="app.saveStudentAttendance('borrador')">&#128190; Guardar borrador</button>` : ''}
+            ${canEdit ? `<button class="btn btn-primary" onclick="app.saveStudentAttendance('registrada')">&#9993; Registrar asistencia</button>` : ''}
+            ${list.id ? `<button class="btn btn-secondary" onclick="app.exportStudentAttendanceExcel()">📥 Exportar Excel</button>` : ''}
+        `;
+
+        const markAllBtn = document.getElementById('attMarkAllPresentBtn');
+        if (markAllBtn) {
+            markAllBtn.style.display = canEdit ? 'inline-block' : 'none';
+        }
+    }
+
+    onStudentStatusChange(studentId, value) {
+        if (!this._currentAttendanceList) return;
+        const rec = this._currentAttendanceList.records.find(r => r.studentId == studentId);
+        if (rec) {
+            rec.attendanceStatus = value;
+            if (value !== 'tarde') {
+                rec.arrivalTime = '';
+                // Redibujar planilla para limpiar input hora de llegada
+                this.renderStudentAttendancePlanilla();
+            } else {
+                this.updateStudentAttendanceSummaryBar();
+            }
+        }
+    }
+
+    onStudentTimeChange(studentId, value) {
+        if (!this._currentAttendanceList) return;
+        const rec = this._currentAttendanceList.records.find(r => r.studentId == studentId);
+        if (rec) {
+            rec.arrivalTime = value;
+        }
+    }
+
+    onStudentObsChange(studentId, value) {
+        if (!this._currentAttendanceList) return;
+        const rec = this._currentAttendanceList.records.find(r => r.studentId == studentId);
+        if (rec) {
+            rec.observation = value;
+        }
+    }
+
+    updateStudentAttendanceSummaryBar() {
+        const list = this._currentAttendanceList;
+        if (!list) return;
+
+        const total = list.records.length;
+        const present = list.records.filter(r => r.attendanceStatus === 'presente').length;
+        const tardy = list.records.filter(r => r.attendanceStatus === 'tarde').length;
+        const absent = list.records.filter(r => r.attendanceStatus === 'falta').length;
+        const justified = list.records.filter(r => r.attendanceStatus === 'justificado').length;
+        const unmarked = list.records.filter(r => !r.attendanceStatus).length;
+        const pct = total > 0 ? Math.round(((present + tardy) / total) * 100) : 0;
+
+        document.getElementById('attSummaryBar').innerHTML = `
+            <div class="att-summary-item"><strong>Total Matriculados:</strong> <span>${total}</span></div>
+            <div class="att-summary-item" style="color: var(--color-success);"><strong>Presentes:</strong> <span>${present}</span></div>
+            <div class="att-summary-item" style="color: var(--color-warning);"><strong>Tardes:</strong> <span>${tardy}</span></div>
+            <div class="att-summary-item" style="color: var(--color-danger);"><strong>Faltas:</strong> <span>${absent}</span></div>
+            <div class="att-summary-item" style="color: var(--color-info);"><strong>Justificados:</strong> <span>${justified}</span></div>
+            <div class="att-summary-item" style="color: var(--color-text-secondary);"><strong>Por marcar:</strong> <span>${unmarked}</span></div>
+            <div class="att-summary-item" style="background: var(--color-primary-light); color: var(--color-primary); font-weight: bold;"><strong>Asistencia del día:</strong> <span>${pct}%</span></div>
+        `;
+    }
+
+    markAllPresent() {
+        if (!this._currentAttendanceList || this._currentAttendanceList.status === 'registrada' || this._currentAttendanceList.status === 'cerrada') return;
+        this._currentAttendanceList.records.forEach(r => {
+            r.attendanceStatus = 'presente';
+        });
+        this.renderStudentAttendancePlanilla();
+        this.showToast('Todos los alumnos marcados como Presente', 'success');
+    }
+
+    async saveStudentAttendance(status) {
+        const list = this._currentAttendanceList;
+        if (!list) return;
+
+        if (status === 'registrada') {
+            const incomplete = list.records.some(r => !r.attendanceStatus);
+            if (incomplete) {
+                this.showToast('Debe marcar la asistencia de todos los alumnos antes de registrar', 'error');
+                return;
+            }
+        }
+
+        try {
+            const payload = {
+                group_id: parseInt(list.groupId),
+                date: list.date,
+                status: status,
+                records: list.records.map(r => ({
+                    student_id: parseInt(r.studentId),
+                    status: r.attendanceStatus || 'presente',
+                    arrival_time: r.arrivalTime || null,
+                    observation: r.observation || null
+                }))
+            };
+
+            if (list.id) {
+                await APIClient.request(`/attendance/${list.id}`, {
+                    method: 'PUT',
+                    body: payload
+                });
+            } else {
+                const res = await APIClient.request('/attendance', {
+                    method: 'POST',
+                    body: payload
+                });
+                list.id = res.data.id;
+            }
+
+            this._currentAttendanceList.status = status;
+            await DataManager.preload();
+            this.showToast(status === 'borrador' ? 'Borrador guardado correctamente' : 'Asistencia registrada correctamente', 'success');
+            this.renderStudentAttendancePlanilla();
+        } catch (error) {
+            console.error("Error al guardar asistencia:", error);
+            this.showToast("Error al guardar asistencia: " + error.message, 'error');
+        }
+    }
+
+    exportStudentAttendanceExcel() {
+        const list = this._currentAttendanceList;
+        if (!list) return;
+        
+        const group = DataManager.getGroupById(list.groupId);
+        if (!group) return;
+
+        let csvContent = "\uFEFF";
+        csvContent += `"CONTROL DE ASISTENCIA DE ALUMNOS"\n`;
+        csvContent += `"Grupo:","${group.code}","Curso:","${group.courseName}"\n`;
+        csvContent += `"Fecha:","${list.date}","Estado de lista:","${list.status.toUpperCase()}"\n\n`;
+
+        csvContent += `"Código","Alumno","DNI","Estado de Asistencia","Hora de llegada","Observación"\n`;
+
+        list.records.forEach(r => {
+            const student = DataManager.getStudentById(r.studentId);
+            if (!student) return;
+            const statusLabels = {
+                presente: 'Presente',
+                tarde: 'Tarde',
+                falta: 'Falta',
+                justificado: 'Justificado'
+            };
+            const statusText = statusLabels[r.attendanceStatus] || '-';
+            csvContent += `"${student.code}","${student.firstName} ${student.lastName}","${student.dni}","${statusText}","${r.arrivalTime || ''}","${(r.observation || '').replace(/"/g, '""')}"\n`;
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        const filename = `Asistencia_${group.code}_${list.date}.csv`;
+        link.setAttribute("download", filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        this.showToast(`Asistencia de la fecha exportada como ${filename}`, 'success');
+    }
+
+    exportAttendanceToExcel(attendanceId) {
+        const lista = DataManager.getStudentAttendanceById(attendanceId);
+        if (!lista) {
+            this.showToast('No se encontró la asistencia', 'error');
+            return;
+        }
+        const group = DataManager.getGroupById(lista.groupId);
+        if (!group) return;
+
+        let csvContent = "\uFEFF";
+
+        csvContent += `"CONTROL DE ASISTENCIA DE ALUMNOS"\n`;
+        csvContent += `"Grupo:","${group.code}","Curso:","${group.courseName}"\n`;
+        csvContent += `"Docente:","${group.teacherName}","Modalidad:","${group.modality === 'regular' ? 'Curso regular' : 'Examen suficiencia'}"\n\n`;
+
+        let headers = ["Código", "Alumno", "DNI"];
+        lista.days.forEach(d => {
+            headers.push(d);
+        });
+        csvContent += headers.map(h => `"${h}"`).join(",") + "\n";
+
+        lista.students.forEach(s => {
+            const student = DataManager.getStudentById(s.studentId);
+            if (!student) return;
+
+            let row = [
+                student.code,
+                `${student.firstName} ${student.lastName}`,
+                student.dni
+            ];
+
+            lista.days.forEach(d => {
+                const status = s.attendance[d] || '';
+                const statusLabels = {
+                    presente: 'Presente',
+                    tarde: 'Tarde',
+                    falta: 'Falta',
+                    justificado: 'Justificado'
+                };
+                row.push(statusLabels[status] || '-');
+            });
+
+            csvContent += row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(",") + "\n";
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        const filename = `Asistencia_${group.code}_${new Date().toISOString().split('T')[0]}.csv`;
+        link.setAttribute("download", filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        this.showToast(`Asistencia exportada con éxito como ${filename}`, 'success');
+    }
+
+    showAdminAttendanceList() {
+        const adminView = document.getElementById('attendanceAdminView');
+        const teacherView = document.getElementById('attendanceTeacherView');
+
+        if (adminView) adminView.style.display = 'block';
+        if (teacherView) teacherView.style.display = 'none';
+
+        this.setupAdminAttendanceView();
+    }
+
     setupAdminAttendanceView() {
         const teacherFilter = document.getElementById('attFilterTeacher');
         const groupFilter = document.getElementById('attFilterGroup');
         const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
-        const teacherId = DataManager.currentUser ? DataManager.currentUser.id : null;
+        const teacherId = DataManager.getTeacherIdForUser(DataManager.currentUser);
 
         teacherFilter.innerHTML = '<option value="">Todos los docentes</option>';
         DataManager.getTeachers().forEach(t => {
@@ -2571,7 +3009,7 @@ class SAIIApp {
 
         groupFilter.innerHTML = '<option value="">Todos los grupos</option>';
         DataManager.getGroups().forEach(g => {
-            if (role === 'teacher' && teacherId && g.teacherId !== teacherId && teacherId !== 'USR999') return;
+            if (role === 'teacher' && teacherId && g.teacherId != teacherId && teacherId !== 'USR999') return;
             const opt = document.createElement('option');
             opt.value = g.id;
             opt.textContent = `${g.code} – ${g.courseName}`;
@@ -2678,7 +3116,7 @@ class SAIIApp {
         if (!group) return;
 
         const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
-        const canEdit = lista.status !== 'cerrado' && (role === 'admin' || role === 'teacher');
+        const canEdit = false; // El botón Ver es estrictamente de solo lectura
         const statusMap = { borrador: 'Borrador', cerrado: 'Cerrado' };
         const modalityLabel = group.modality === 'regular' ? 'Curso regular' : 'Examen de suficiencia';
 
@@ -2798,18 +3236,28 @@ class SAIIApp {
         const lista = DataManager.getStudentAttendanceById(attendanceId);
         if (!lista) return;
 
+        // Solo validamos las fechas que están realmente registradas en la base de datos
+        const registeredDates = DataManager.cache.attendanceLists
+            .filter(l => l.groupId == lista.groupId)
+            .map(l => l.date);
+
+        if (registeredDates.length === 0) {
+            this.showToast('No hay asistencias registradas para cerrar en este grupo', 'error');
+            return;
+        }
+
         let complete = true;
         lista.students.forEach(s => {
-            lista.days.forEach(d => {
+            registeredDates.forEach(d => {
                 const status = s.attendance[d];
-                if (!status || (status !== 'presente' && status !== 'falta' && status !== 'justificado')) {
+                if (!status || (status !== 'presente' && status !== 'tarde' && status !== 'falta' && status !== 'justificado')) {
                     complete = false;
                 }
             });
         });
 
         if (!complete) {
-            this.showToast('Complete la asistencia de todos los alumnos en todos los días antes de cerrar', 'error');
+            this.showToast('Complete la asistencia de todos los alumnos en todas las sesiones registradas antes de cerrar', 'error');
             return;
         }
 
@@ -2821,8 +3269,7 @@ class SAIIApp {
     }
 
     printAttendance(attendanceId) {
-        this.viewAttendanceDetail(attendanceId);
-        this.showToast('Detalle abierto para impresión simulada. Use Ctrl+P para imprimir.', 'info');
+        this.exportAttendanceToExcel(attendanceId);
     }
 
 
