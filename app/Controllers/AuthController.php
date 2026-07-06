@@ -30,6 +30,15 @@ class AuthController extends BaseController {
         $userModel = new User();
         $user = $userModel->findByUsername($username);
 
+        error_log("LOGIN_DEBUG: username=[$username], password_length=" . strlen($password) . ", requested_role=[$requestedRole]");
+        if (!$user) {
+            error_log("LOGIN_DEBUG: user not found or inactive for [$username]");
+        } else {
+            error_log("LOGIN_DEBUG: user found in DB: id={$user['id']}, role_key={$user['role_key']}, password_hash={$user['password']}");
+            $verify = password_verify($password, $user['password']);
+            error_log("LOGIN_DEBUG: password_verify result=" . ($verify ? "TRUE" : "FALSE"));
+        }
+
         // Validar existencia del usuario y contraseña
         if (!$user || !password_verify($password, $user['password'])) {
             $this->error('Usuario o contraseña incorrectos.', 401);
