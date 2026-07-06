@@ -601,7 +601,7 @@ const DataManager = {
             const [
                 studentsRes, teachersRes, coursesRes, groupsRes, 
                 enrollmentsRes, settingsRes, reportsRes, certificatesRes,
-                gradesRes, attendanceListsRes, attendanceRecordsRes, usersRes
+                gradesRes, gradesSheetsRes, attendanceListsRes, attendanceRecordsRes, usersRes
             ] = await Promise.all([
                 APIClient.request('/students'),
                 APIClient.request('/teachers'),
@@ -612,6 +612,7 @@ const DataManager = {
                 APIClient.request('/reports/saved'),
                 APIClient.request('/certificates'),
                 APIClient.request('/grades'),
+                APIClient.request('/grades/sheets'),
                 APIClient.request('/attendance'),
                 APIClient.request('/attendance/records'),
                 APIClient.request('/users').catch(() => ({ data: [] }))
@@ -625,6 +626,7 @@ const DataManager = {
             this.cache.settings = mappers.settings(settingsRes.data);
             this.cache.reports = (reportsRes.data || []).map(mappers.savedReport);
             this.cache.certificates = (certificatesRes.data || []).map(mappers.certificate);
+            this.cache.gradeSheets = gradesSheetsRes.data || [];
             
             // Map grades
             const groupedGrades = {};
@@ -1306,16 +1308,23 @@ const DataManager = {
         if (USE_MOCK) {
             return mockData.gradeSheets.find(gs => gs.groupId === groupId) || null;
         }
-        const found = this.cache.grades.find(g => g.groupId == groupId);
+        const sheet = (this.cache.gradeSheets || []).find(s => s.group_id == groupId);
         return {
             groupId: groupId,
-            status: found ? 'cerrada' : 'borrador',
-            updatedAt: new Date().toISOString().split('T')[0]
+            status: sheet ? sheet.status : 'borrador',
+            updatedAt: sheet ? sheet.updated_at.split(' ')[0] : new Date().toISOString().split('T')[0]
         };
     },
 
     updateGradeSheetStatus: async function(groupId, newStatus) {
-        return true;
+        if (USE_MOCK) return;
+        await APIClient.request(`/grades/group/${groupId}/status`, {
+            method: 'POST',
+            body: {
+                status: newStatus
+            }
+        });
+        await this.preload();
     },
 
     saveGrades: async function(groupId, records, status) {

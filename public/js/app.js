@@ -3644,6 +3644,7 @@ class SAIIApp {
     // --- VISTA ADMINISTRADOR ---
     setupAdminGradesView() {
         const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
+        const teacherId = DataManager.getTeacherIdForUser(DataManager.currentUser);
         
         // Populate course filter
         const courseFilter = document.getElementById('gradesAdminFilterCourse');
@@ -3659,6 +3660,7 @@ class SAIIApp {
         const groupFilter = document.getElementById('gradesAdminFilterGroup');
         groupFilter.innerHTML = '<option value="">Todos los grupos</option>';
         DataManager.getGroups().forEach(g => {
+            if (role === 'teacher' && teacherId && g.teacherId != teacherId && teacherId !== 'USR999') return;
             const opt = document.createElement('option');
             opt.value = g.id;
             opt.textContent = g.code;
@@ -3677,7 +3679,10 @@ class SAIIApp {
 
         // Hide/Show teacher filter depending on role
         if (role === 'teacher') {
-            if (teacherFilter) teacherFilter.style.display = 'none';
+            if (teacherFilter) {
+                teacherFilter.value = teacherId || '';
+                teacherFilter.style.display = 'none';
+            }
         } else {
             if (teacherFilter) teacherFilter.style.display = 'inline-block';
         }
@@ -3712,9 +3717,9 @@ class SAIIApp {
         const teacherId = DataManager.getTeacherIdForUser(DataManager.currentUser);
 
         if (role === 'teacher' && teacherId) {
-            filteredGroups = filteredGroups.filter(g => g.teacherId === teacherId);
+            filteredGroups = filteredGroups.filter(g => g.teacherId == teacherId);
         } else {
-            if (teacherFilter) filteredGroups = filteredGroups.filter(g => g.teacherId === teacherFilter);
+            if (teacherFilter) filteredGroups = filteredGroups.filter(g => g.teacherId == teacherFilter);
         }
 
         if (courseFilter) filteredGroups = filteredGroups.filter(g => g.courseId === courseFilter);
@@ -3752,7 +3757,7 @@ class SAIIApp {
             let groupSum = 0;
             
             enrolled.forEach(student => {
-                const gradeRecord = mockData.grades.find(g => g.groupId === group.id && g.studentId === student.id);
+                const gradeRecord = (DataManager.getGrades() || []).find(g => g.groupId == group.id && g.studentId == student.id);
                 if (gradeRecord && course) {
                     let complete = true;
                     course.modules.forEach(m => {
@@ -3815,7 +3820,7 @@ class SAIIApp {
 
         let rows = '';
         enrolled.forEach(student => {
-            const gradeRecord = mockData.grades.find(g => g.groupId === groupId && g.studentId === student.id);
+            const gradeRecord = (DataManager.getGrades() || []).find(g => g.groupId == groupId && g.studentId == student.id);
             const moduleGrades = gradeRecord ? gradeRecord.moduleGrades : {};
             
             let isComplete = true;
@@ -3869,7 +3874,7 @@ class SAIIApp {
         let completeGradesCount = 0;
         let groupSum = 0;
         enrolled.forEach(student => {
-            const gradeRecord = mockData.grades.find(g => g.groupId === groupId && g.studentId === student.id);
+            const gradeRecord = (DataManager.getGrades() || []).find(g => g.groupId == groupId && g.studentId == student.id);
             if (gradeRecord && course) {
                 let complete = true;
                 course.modules.forEach(m => {
@@ -3984,49 +3989,58 @@ class SAIIApp {
         }
     }
 
-    saveModalGrades(groupId) {
-        const body = document.getElementById('gradesDetailBody');
-        const rows = body.querySelectorAll('tbody tr');
-        const course = DataManager.getCourseById(DataManager.getGroupById(groupId).courseId);
-
-        let hasError = false;
-        rows.forEach(row => {
-            const studentId = row.getAttribute('data-student-id');
-            const inputs = row.querySelectorAll('.modal-grade-input');
-            const moduleGrades = {};
-
-            inputs.forEach(inp => {
-                const modId = inp.getAttribute('data-module-id');
-                const val = inp.value;
-                if (val !== '') {
-                    const num = parseFloat(val);
-                    if (num < 0 || num > 20 || isNaN(num)) {
-                        hasError = true;
-                    } else {
-                        moduleGrades[modId] = num;
-                    }
-                }
-            });
-
-            if (!hasError) {
-                DataManager.saveGrade(groupId, studentId, moduleGrades);
-            }
-        });
-
-        if (hasError) {
-            this.showToast('Algunas notas tienen valores inválidos y no se guardaron. Deben estar entre 0 y 20.', 'error');
-        } else {
+    async saveModalGrades(groupId) {
+        const success = await this.saveGradesData(groupId, 'borrador');
+        if (success) {
             this.showToast('Calificaciones del acta guardadas correctamente', 'success');
-            
-            // Reload the list table in the background
             this.renderAdminGradesTable();
-
-            // Refresh modal to show updated values and recalculate status classes
             this.viewGradeSheetDetail(groupId);
         }
     }
 
-    closeModalGradeSheetFromModal(groupId) {
+    async saveGradesData(groupId, status) {
+        const body = document.getElementById('gradesDetailBody');
+        if (!body) return false;
+        const rows = body.querySelectorAll('tbody tr');
+        const records = [];
+        let hasError = false;
+
+        rows.forEach(row => {
+            const studentId = parseInt(row.getAttribute('data-student-id'));
+            const inputs = row.querySelectorAll('.modal-grade-input');
+
+            inputs.forEach(inp => {
+                const modId = parseInt(inp.getAttribute('data-module-id'));
+                const val = inp.value;
+                const num = val === '' ? 0 : parseFloat(val);
+                if (num < 0 || num > 20 || isNaN(num)) {
+                    hasError = true;
+                } else {
+                    records.push({
+                        student_id: studentId,
+                        course_module_id: modId,
+                        grade: num
+                    });
+                }
+            });
+        });
+
+        if (hasError) {
+            this.showToast('Algunas notas tienen valores inválidos. Deben estar entre 0 y 20.', 'error');
+            return false;
+        }
+
+        try {
+            await DataManager.saveGrades(groupId, records, status);
+            return true;
+        } catch (error) {
+            console.error("Error al guardar calificaciones:", error);
+            this.showToast("Error al guardar: " + error.message, 'error');
+            return false;
+        }
+    }
+
+    async closeModalGradeSheetFromModal(groupId) {
         const body = document.getElementById('gradesDetailBody');
         const inputs = body.querySelectorAll('.modal-grade-input');
 
@@ -4043,35 +4057,102 @@ class SAIIApp {
         }
 
         if (confirm('¿Cerrar acta de notas? Una vez cerrada no podrá modificar las calificaciones.')) {
-            // First save modal grades
-            this.saveModalGrades(groupId);
-
-            // Then update state
-            DataManager.updateGradeSheetStatus(groupId, 'cerrada');
-            this.showToast('Acta de notas cerrada correctamente. Calificaciones consolidadas.', 'success');
-
-            // Reload the list table in the background
-            this.renderAdminGradesTable();
-
-            // Refresh modal which will now be read-only
-            this.viewGradeSheetDetail(groupId);
+            this.showToast('Cerrando acta de notas...', 'info');
+            const success = await this.saveGradesData(groupId, 'cerrada');
+            if (success) {
+                this.showToast('Acta de notas cerrada correctamente. Calificaciones consolidadas.', 'success');
+                this.renderAdminGradesTable();
+                this.viewGradeSheetDetail(groupId);
+            }
         }
     }
 
-    reopenGradeSheet(groupId) {
+    async reopenGradeSheet(groupId) {
         if (confirm('¿Está seguro de reabrir esta acta? El docente podrá editar las notas nuevamente.')) {
-            DataManager.updateGradeSheetStatus(groupId, 'borrador');
-            this.showToast('Acta de notas reabierta correctamente', 'success');
-            this.renderAdminGradesTable();
+            try {
+                await DataManager.updateGradeSheetStatus(groupId, 'borrador');
+                this.showToast('Acta de notas reabierta correctamente', 'success');
+                this.renderAdminGradesTable();
+            } catch (error) {
+                console.error("Error al reabrir el acta:", error);
+                this.showToast("Error al reabrir: " + error.message, 'error');
+            }
         }
     }
 
     printGradeSheet(groupId) {
-        this.showToast('Vista de impresión de acta abierta. Use Ctrl+P para imprimir.', 'info');
+        this.exportGradeSheet(groupId);
     }
 
     exportGradeSheet(groupId) {
-        this.showToast('Acta exportada correctamente en formato XLS (Simulado)', 'success');
+        const group = DataManager.getGroupById(groupId);
+        if (!group) {
+            this.showToast('Grupo no encontrado', 'error');
+            return;
+        }
+        const course = DataManager.getCourseById(group.courseId);
+        if (!course) {
+            this.showToast('Curso no encontrado', 'error');
+            return;
+        }
+        const enrolled = DataManager.getEnrolledStudentsByGroup(groupId);
+        const sheet = DataManager.getGradeSheetByGroup(groupId);
+        const status = sheet ? sheet.status : 'borrador';
+
+        let csvContent = '\uFEFF'; // BOM UTF-8 para compatibilidad con Excel
+        csvContent += `ACTA DE CALIFICACIONES\n`;
+        csvContent += `Curso:;${group.courseName}\n`;
+        csvContent += `Grupo:;${group.code}\n`;
+        csvContent += `Docente:;${group.teacherName}\n`;
+        csvContent += `Modalidad:;${group.modality === 'regular' ? 'Curso regular' : 'Examen de suficiencia'}\n`;
+        csvContent += `Estado del Acta:;${status.toUpperCase()}\n\n`;
+
+        // Cabeceras
+        let headers = ['Código', 'Alumno'];
+        course.modules.forEach(m => {
+            headers.push(`${m.name} (${m.percentage}%)`);
+        });
+        headers.push('Promedio', 'Estado');
+        csvContent += headers.map(h => `"${h}"`).join(';') + '\n';
+
+        // Filas de alumnos
+        enrolled.forEach(student => {
+            const gradeRecord = (DataManager.getGrades() || []).find(g => g.groupId == groupId && g.studentId == student.id);
+            const moduleGrades = gradeRecord ? gradeRecord.moduleGrades : {};
+
+            let isComplete = true;
+            const rowData = [student.code, `"${student.firstName} ${student.lastName}"`];
+
+            course.modules.forEach(m => {
+                const val = moduleGrades[m.id];
+                if (val === undefined || val === null || val === '') {
+                    isComplete = false;
+                    rowData.push('-');
+                } else {
+                    rowData.push(val);
+                }
+            });
+
+            const avg = isComplete ? DataManager.calculateAverage(moduleGrades, course) : null;
+            const avgStr = avg !== null ? avg.toFixed(1) : '-';
+            const statusLabel = isComplete ? (avg >= 11 ? 'Aprobado' : 'Desaprobado') : 'Pendiente';
+
+            rowData.push(avgStr, statusLabel);
+            csvContent += rowData.join(';') + '\n';
+        });
+
+        // Crear enlace y descargar
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `Acta_Calificaciones_${group.code}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        this.showToast('Acta exportada correctamente a Excel', 'success');
     }
 
 
@@ -4537,7 +4618,7 @@ class SAIIApp {
         const group = DataManager.getGroupById(cert.groupId);
         const course = DataManager.getCourseById(group.courseId);
 
-        const gradeRecord = mockData.grades.find(g => g.groupId === group.id && g.studentId === student.id);
+        const gradeRecord = (DataManager.getGrades() || []).find(g => g.groupId == group.id && g.studentId == student.id);
         const average = DataManager.calculateAverage(gradeRecord?.moduleGrades || {}, course);
         const attPct = DataManager.calculateAttendancePercentage(student.id, group.id);
 
@@ -5106,7 +5187,7 @@ class SAIIApp {
 
                 students.forEach(student => {
                     const course = DataManager.getCourseById(group.courseId);
-                    const gradeRecord = mockData.grades.find(g => g.groupId === group.id && g.studentId === student.id);
+                    const gradeRecord = (DataManager.getGrades() || []).find(g => g.groupId == group.id && g.studentId == student.id);
                     const avg = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
                     
                     if (avg > 0) {
@@ -5217,7 +5298,7 @@ class SAIIApp {
                     }
 
                     const course = DataManager.getCourseById(group.courseId);
-                    const gradeRecord = mockData.grades.find(g => g.groupId === enr.groupId && g.studentId === enr.studentId);
+                    const gradeRecord = (DataManager.getGrades() || []).find(g => g.groupId == enr.groupId && g.studentId == enr.studentId);
                     const average = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
                     const isApproved = average >= mockData.settings.minPassingGrade;
 
@@ -5305,7 +5386,7 @@ class SAIIApp {
                 totalSt = results.length;
                 results.forEach(r => {
                     const course = DataManager.getCourseById(r.group.courseId);
-                    const gradeRecord = mockData.grades.find(g => g.groupId === r.group.id && g.studentId === r.student.id);
+                    const gradeRecord = (DataManager.getGrades() || []).find(g => g.groupId == r.group.id && g.studentId == r.student.id);
                     const average = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
                     if (average > 0) {
                         totalAvg += average;
@@ -5366,7 +5447,7 @@ class SAIIApp {
                 totalSt = results.length;
                 results.forEach(r => {
                     const course = DataManager.getCourseById(r.group.courseId);
-                    const gradeRecord = mockData.grades.find(g => g.groupId === r.group.id && g.studentId === r.student.id);
+                    const gradeRecord = (DataManager.getGrades() || []).find(g => g.groupId == r.group.id && g.studentId == r.student.id);
                     const average = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
                     if (average > 0) {
                         totalAvg += average;
@@ -5443,7 +5524,7 @@ class SAIIApp {
                 totalSt = results.length;
                 results.forEach(r => {
                     const course = DataManager.getCourseById(r.group.courseId);
-                    const gradeRecord = mockData.grades.find(g => g.groupId === r.group.id && g.studentId === r.student.id);
+                    const gradeRecord = (DataManager.getGrades() || []).find(g => g.groupId == r.group.id && g.studentId == r.student.id);
                     const average = gradeRecord ? DataManager.calculateAverage(gradeRecord.moduleGrades, course) : 0;
                     if (average > 0) {
                         totalAvg += average;

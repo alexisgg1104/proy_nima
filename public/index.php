@@ -216,6 +216,41 @@ use App\Controllers\CertificateController;
 // Rutas de Calificaciones (Fase B7)
 $router->addRoute('GET', '/api/grades/group/{groupId}', [GradeController::class, 'showGroupGrades']);
 $router->addRoute('POST', '/api/grades/group/{groupId}', [GradeController::class, 'saveGroupGrades']);
+$router->addRoute('POST', '/api/grades/group/{groupId}/status', [GradeController::class, 'updateStatus']);
+$router->addRoute('GET', '/api/grades', function() {
+    if (!isset($_SESSION['user'])) {
+        http_response_code(401);
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'message' => 'No autenticado.']);
+        exit;
+    }
+    $db = \Config\Database::getInstance()->getConnection();
+    $stmt = $db->query("
+        SELECT gs.group_id, gr.student_id, gr.course_module_id, gr.grade
+        FROM grade_records gr
+        JOIN grade_sheets gs ON gr.grade_sheet_id = gs.id
+    ");
+    $records = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    http_response_code(200);
+    header('Content-Type: application/json');
+    echo json_encode(['status' => 'success', 'data' => $records]);
+    exit;
+});
+$router->addRoute('GET', '/api/grades/sheets', function() {
+    if (!isset($_SESSION['user'])) {
+        http_response_code(401);
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'message' => 'No autenticado.']);
+        exit;
+    }
+    $db = \Config\Database::getInstance()->getConnection();
+    $stmt = $db->query("SELECT id, group_id, status, updated_at FROM grade_sheets");
+    $sheets = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    http_response_code(200);
+    header('Content-Type: application/json');
+    echo json_encode(['status' => 'success', 'data' => $sheets]);
+    exit;
+});
 
 // Rutas de Certificados y Constancias (Fase B7)
 $router->addRoute('GET', '/api/certificates', [CertificateController::class, 'index']);

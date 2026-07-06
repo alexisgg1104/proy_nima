@@ -169,4 +169,40 @@ class GradeController extends BaseController {
             $this->error($e->getMessage(), 400);
         }
     }
+
+    // Actualizar estado del acta (POST /api/grades/group/{groupId}/status)
+    public function updateStatus($groupId) {
+        $this->requireAuth(['admin', 'secretary', 'teacher']);
+
+        $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+        $status = trim($input['status'] ?? 'borrador');
+
+        if ($status !== 'borrador' && $status !== 'cerrada') {
+            $this->error('El estado debe ser "borrador" o "cerrada".', 400);
+        }
+
+        $groupModel = new Group();
+        $group = $groupModel->getById((int)$groupId);
+        if (!$group) {
+            $this->error('Grupo no encontrado.', 404);
+        }
+
+        // Si es docente, verificar que sea el propietario del grupo
+        $teacherId = $this->getTeacherIdForUser();
+        if ($teacherId !== null && (int)$group['teacher_id'] !== $teacherId) {
+            $this->error('Acceso denegado. No está autorizado para este grupo.', 403);
+        }
+
+        $gradeModel = new Grade();
+        $sheet = $gradeModel->getGradeSheetByGroup((int)$groupId);
+        if (!$sheet) {
+            $this->error('Acta de notas no encontrada para este grupo.', 404);
+        }
+
+        $db = \Config\Database::getInstance()->getConnection();
+        $stmt = $db->prepare("UPDATE grade_sheets SET status = :status WHERE id = :id");
+        $stmt->execute(['status' => $status, 'id' => (int)$sheet['id']]);
+
+        $this->json(['message' => 'Estado del acta actualizado exitosamente.']);
+    }
 }
