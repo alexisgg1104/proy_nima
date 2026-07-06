@@ -12,4 +12,13 @@ class Role extends BaseModel {
         $stmt->execute();
         return $stmt->fetchAll();
     }
+
+    // Actualizar los permisos de un rol
+    public function updatePermissions($keyName, $permissions) {
+        $stmt = $this->db->prepare("UPDATE roles SET permissions = :permissions WHERE key_name = :key_name");
+        return $stmt->execute([
+            'permissions' => json_encode($permissions),
+            'key_name' => $keyName
+        ]);
+    }
 }

@@ -356,6 +356,18 @@ const USE_MOCK = false;
 
 // Mappers to translate snake_case from DB into camelCase for UI, and vice versa
 const mappers = {
+    user: function(u) {
+        if (!u) return null;
+        return {
+            id: u.id,
+            username: u.username,
+            fullName: u.full_name || u.fullName,
+            role: u.role_key || u.role,
+            email: u.email,
+            status: u.status,
+            lastLogin: u.last_login || u.lastLogin || '-'
+        };
+    },
     student: function(s) {
         if (!s) return null;
         return {
@@ -575,6 +587,24 @@ const settingsToAPI = function(s) {
     };
 };
 
+const userToAPI = function(u) {
+    const roleNumericIds = {
+        admin: 1,
+        secretary: 2,
+        teacher: 3,
+        coordinator: 4,
+        dean: 5
+    };
+    return {
+        username: u.username,
+        password: u.password,
+        full_name: u.fullName,
+        email: u.email,
+        role_id: roleNumericIds[u.role] || u.role,
+        status: u.status
+    };
+};
+
 const DataManager = {
     currentUser: null,
 
@@ -591,7 +621,8 @@ const DataManager = {
         grades: [],
         attendanceLists: [],
         attendanceRecords: [],
-        users: []
+        users: [],
+        roles: []
     },
 
     // Preload all backend API data into local memory cache
@@ -601,7 +632,7 @@ const DataManager = {
             const [
                 studentsRes, teachersRes, coursesRes, groupsRes, 
                 enrollmentsRes, settingsRes, reportsRes, certificatesRes,
-                gradesRes, gradesSheetsRes, attendanceListsRes, attendanceRecordsRes, usersRes
+                gradesRes, gradesSheetsRes, attendanceListsRes, attendanceRecordsRes, usersRes, rolesRes
             ] = await Promise.all([
                 APIClient.request('/students'),
                 APIClient.request('/teachers'),
@@ -615,7 +646,8 @@ const DataManager = {
                 APIClient.request('/grades/sheets'),
                 APIClient.request('/attendance'),
                 APIClient.request('/attendance/records'),
-                APIClient.request('/users').catch(() => ({ data: [] }))
+                APIClient.request('/users').catch(() => ({ data: [] })),
+                APIClient.request('/roles').catch(() => ({ data: [] }))
             ]);
 
             this.cache.students = (studentsRes.data || []).map(mappers.student);
@@ -651,7 +683,8 @@ const DataManager = {
                 groupId: Number(r.group_id),
                 date: r.date
             }));
-            this.cache.users = usersRes.data || [];
+            this.cache.users = (usersRes.data || []).map(mappers.user);
+            this.cache.roles = rolesRes.data || [];
         } catch (e) {
             console.error("Error preloading SAII REST API cache:", e);
             throw e;
@@ -1685,7 +1718,7 @@ const DataManager = {
         }
         const res = await APIClient.request('/users', {
             method: 'POST',
-            body: userData
+            body: userToAPI(userData)
         });
         await this.preload();
         return res.data;
@@ -1702,34 +1735,46 @@ const DataManager = {
         }
         await APIClient.request(`/users/${id}`, {
             method: 'PUT',
-            body: data
+            body: userToAPI(data)
         });
         await this.preload();
         return true;
     },
 
     getRoles: function() {
-        return Object.keys(mockData.rolePermissions).map(roleKey => {
-            const roleLabels = {
-                admin: 'Administrador',
-                secretary: 'Secretaria Académica',
-                teacher: 'Docente',
-                coordinator: 'Coordinador Académico'
-            };
-            return {
-                id: roleKey,
-                name: roleLabels[roleKey] || roleKey,
-                permissions: mockData.rolePermissions[roleKey]
-            };
-        });
+        if (USE_MOCK) {
+            return Object.keys(mockData.rolePermissions).map(roleKey => {
+                const roleLabels = {
+                    admin: 'Administrador',
+                    secretary: 'Secretaria Académica',
+                    teacher: 'Docente',
+                    coordinator: 'Coordinador Académico',
+                    dean: 'Decano'
+                };
+                return {
+                    id: roleKey,
+                    name: roleLabels[roleKey] || roleKey,
+                    permissions: mockData.rolePermissions[roleKey]
+                };
+            });
+        }
+        return this.cache.roles;
     },
 
-    updateRolePermissions: function(roleKey, permissions) {
-        if (mockData.rolePermissions[roleKey]) {
-            mockData.rolePermissions[roleKey] = permissions;
-            return true;
+    updateRolePermissions: async function(roleKey, permissions) {
+        if (USE_MOCK) {
+            if (mockData.rolePermissions[roleKey]) {
+                mockData.rolePermissions[roleKey] = permissions;
+                return true;
+            }
+            return false;
         }
-        return false;
+        await APIClient.request(`/roles/${roleKey}/permissions`, {
+            method: 'PUT',
+            body: { permissions }
+        });
+        await this.preload();
+        return true;
     },
 
     // Settings operations

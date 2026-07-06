@@ -5972,31 +5972,44 @@ class SAIIApp {
 
         const userData = { username, fullName, password, email, role, status };
 
-        if (this._editingUserId) {
-            DataManager.updateUser(this._editingUserId, userData);
-            this.showToast('Usuario actualizado correctamente', 'success');
-        } else {
-            // Check duplicate username
-            const duplicate = mockData.users.some(u => u.username.toLowerCase() === username.toLowerCase());
-            if (duplicate) {
-                this.showToast('El nombre de usuario ya está registrado', 'error');
-                return;
+        try {
+            if (this._editingUserId) {
+                await DataManager.updateUser(this._editingUserId, userData);
+                this.showToast('Usuario actualizado correctamente', 'success');
+            } else {
+                // Check duplicate username
+                const users = DataManager.getUsers() || [];
+                const duplicate = users.some(u => u.username.toLowerCase() === username.toLowerCase());
+                if (duplicate) {
+                    this.showToast('El nombre de usuario ya está registrado', 'error');
+                    return;
+                }
+                await DataManager.createUser(userData);
+                this.showToast('Usuario creado correctamente', 'success');
             }
-            DataManager.createUser(userData);
-            this.showToast('Usuario creado correctamente', 'success');
-        }
 
-        this.closeModal();
-        this.loadUsers();
+            this.closeModal();
+            await this.loadUsers();
+        } catch (error) {
+            console.error("Error al guardar usuario:", error);
+            this.showToast('Error al guardar usuario: ' + error.message, 'error');
+        }
     }
 
-    deleteUser(userId) {
+    async deleteUser(userId) {
         if (confirm('¿Desactivar este usuario?')) {
-            const user = mockData.users.find(u => u.id === userId);
-            if (user) {
-                user.status = 'inactive';
-                this.showToast('Usuario desactivado correctamente', 'success');
-                this.loadUsers();
+            try {
+                const users = DataManager.getUsers() || [];
+                const user = users.find(u => u.id == userId);
+                if (user) {
+                    user.status = 'inactive';
+                    await DataManager.updateUser(userId, user);
+                    this.showToast('Usuario desactivado correctamente', 'success');
+                    await this.loadUsers();
+                }
+            } catch (error) {
+                console.error("Error al desactivar usuario:", error);
+                this.showToast('Error al desactivar usuario: ' + error.message, 'error');
             }
         }
     }
@@ -6079,7 +6092,7 @@ class SAIIApp {
         document.getElementById('roleModal').style.display = 'block';
     }
 
-    handleRoleSubmit(e) {
+    async handleRoleSubmit(e) {
         e.preventDefault();
         const roleId = this._editingRoleId;
         const checkboxes = document.querySelectorAll('#rolePermissionsList input[type="checkbox"]');
@@ -6090,18 +6103,23 @@ class SAIIApp {
             }
         });
 
-        const success = DataManager.updateRolePermissions(roleId, selectedPermissions);
-        if (success) {
-            this.showToast('Permisos de rol actualizados', 'success');
-            this.closeModal();
-            this.loadRoles();
-            
-            // Reapply permissions immediately if current active role is the edited one
-            if (DataManager.currentUser && DataManager.currentUser.role === roleId) {
-                this.setRolePermissions(roleId);
+        try {
+            const success = await DataManager.updateRolePermissions(roleId, selectedPermissions);
+            if (success) {
+                this.showToast('Permisos de rol actualizados', 'success');
+                this.closeModal();
+                this.loadRoles();
+                
+                // Reapply permissions immediately if current active role is the edited one
+                if (DataManager.currentUser && DataManager.currentUser.role === roleId) {
+                    this.setRolePermissions(roleId);
+                }
+            } else {
+                this.showToast('Error al actualizar permisos', 'error');
             }
-        } else {
-            this.showToast('Error al actualizar permisos', 'error');
+        } catch (error) {
+            console.error("Error al actualizar permisos:", error);
+            this.showToast('Error al actualizar permisos: ' + error.message, 'error');
         }
     }
 

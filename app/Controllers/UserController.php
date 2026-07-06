@@ -130,4 +130,50 @@ class UserController extends BaseController {
             $this->error('No se puede eliminar el usuario porque tiene registros dependientes (alumnos o docentes).', 400);
         }
     }
+
+    // Listar todos los roles con sus permisos (GET /api/roles)
+    public function getRoles() {
+        $this->requireAuth(['admin']);
+        $roleModel = new \App\Models\Role();
+        $roles = $roleModel->getAll();
+        
+        $result = [];
+        $roleLabels = [
+            'admin' => 'Administrador',
+            'secretary' => 'Secretaria Académica',
+            'teacher' => 'Docente',
+            'coordinator' => 'Coordinador Académico',
+            'dean' => 'decano'
+        ];
+        
+        foreach ($roles as $r) {
+            $perms = json_decode($r['permissions'] ?? '[]', true);
+            $result[] = [
+                'id' => $r['key_name'],
+                'name' => $roleLabels[$r['key_name']] ?? $r['name'],
+                'permissions' => $perms
+            ];
+        }
+        
+        $this->json($result);
+    }
+
+    // Actualizar permisos de un rol (PUT /api/roles/{key}/permissions)
+    public function updateRolePermissions($key) {
+        $this->requireAuth(['admin']);
+        $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+        
+        $permissions = $input['permissions'] ?? [];
+        if (!is_array($permissions)) {
+            $this->error('Formato de permisos inválido.', 400);
+        }
+        
+        $roleModel = new \App\Models\Role();
+        try {
+            $roleModel->updatePermissions($key, $permissions);
+            $this->json(['message' => 'Permisos actualizados correctamente.']);
+        } catch (Exception $e) {
+            $this->error('Error al actualizar permisos en el servidor.', 500);
+        }
+    }
 }

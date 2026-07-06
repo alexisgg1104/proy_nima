@@ -271,62 +271,9 @@ $router->addRoute('DELETE', '/api/reports/saved/{id}', [ReportController::class,
 $router->addRoute('GET', '/api/reports/export/csv', [ReportController::class, 'exportCSV']);
 $router->addRoute('GET', '/api/reports/pdf/certificate/{id}', [ReportController::class, 'exportPDF']);
 
-// Rutas de Gestión de Usuarios y Roles (Fase B9)
-$router->addRoute('GET', '/api/users', function() {
-    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-        \App\Core\BaseController::sendError('Acceso denegado.', 403);
-    }
-    $db = \Config\Database::getInstance()->getConnection();
-    $stmt = $db->query("SELECT id, username, full_name as fullName, email, role, status, last_login as lastLogin FROM users ORDER BY id ASC");
-    $users = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    \App\Core\BaseController::sendJson($users);
-});
-
-$router->addRoute('POST', '/api/users', function() {
-    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-        \App\Core\BaseController::sendError('Acceso denegado.', 403);
-    }
-    $input = json_decode(file_get_contents('php://input'), true);
-    $db = \Config\Database::getInstance()->getConnection();
-    $stmt = $db->prepare("INSERT INTO users (username, password, full_name, email, role, status) VALUES (:username, :password, :full_name, :email, :role, :status)");
-    $stmt->execute([
-        'username' => trim($input['username']),
-        'password' => password_hash($input['password'] ?? 'admin123', PASSWORD_DEFAULT),
-        'full_name' => trim($input['fullName']),
-        'email' => trim($input['email']),
-        'role' => trim($input['role']),
-        'status' => $input['status'] ?? 'active'
-    ]);
-    $userId = $db->lastInsertId();
-    \App\Core\BaseController::sendJson(['id' => (int)$userId], 201);
-});
-
-$router->addRoute('PUT', '/api/users/{id}', function($id) {
-    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-        \App\Core\BaseController::sendError('Acceso denegado.', 403);
-    }
-    $input = json_decode(file_get_contents('php://input'), true);
-    $db = \Config\Database::getInstance()->getConnection();
-    
-    $sql = "UPDATE users SET username = :username, full_name = :full_name, email = :email, role = :role, status = :status";
-    $params = [
-        'username' => trim($input['username']),
-        'full_name' => trim($input['fullName']),
-        'email' => trim($input['email']),
-        'role' => trim($input['role']),
-        'status' => trim($input['status']),
-        'id' => (int)$id
-    ];
-    if (!empty($input['password'])) {
-        $sql .= ", password = :password";
-        $params['password'] = password_hash($input['password'], PASSWORD_DEFAULT);
-    }
-    $sql .= " WHERE id = :id";
-    
-    $stmt = $db->prepare($sql);
-    $stmt->execute($params);
-    \App\Core\BaseController::sendJson(['message' => 'Usuario actualizado exitosamente.']);
-});
+// Rutas de Gestión de Roles y Permisos (Fase B9)
+$router->addRoute('GET', '/api/roles', [UserController::class, 'getRoles']);
+$router->addRoute('PUT', '/api/roles/{key}/permissions', [UserController::class, 'updateRolePermissions']);
 
 $router->addRoute('DELETE', '/api/certificates/{id}', function($id) {
     if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
