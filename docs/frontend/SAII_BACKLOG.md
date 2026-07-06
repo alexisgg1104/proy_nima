@@ -673,29 +673,35 @@ El agente debe actualizar esta sección al terminar cada fase.
 - Commit o mensaje sugerido: `fix: rediseñar control de asistencia docente como matriz completa de sesiones con adicion dinamica de columnas y autoguardado`
 - Estado final: **Completada**.
 - Archivos modificados:
+  - `app/Controllers/AttendanceController.php`
   - `public/index.html`
   - `public/index.php`
   - `public/js/app.js`
   - `public/js/data.js`
   - `docs/frontend/SAII_BACKLOG.md`
 - Funciones creadas o modificadas:
+  - En `app/Controllers/AttendanceController.php`:
+    - `updateStatus()` (modificada: autoriza al rol `'teacher'` a realizar llamadas al endpoint de actualización de estado para cerrar las asistencias)
   - En `public/index.php`:
     - `/api/attendance/records` (modificada: remueve el filtro `status != 'borrador'` para que la caché del cliente cargue y persista los borradores de asistencia)
   - En `public/js/data.js`:
     - `getAllStudentAttendance()` (modificada: evalúa dinámicamente si hay listas cerradas en la base de datos para mostrar el estado 'cerrado' en la tabla general)
   - En `public/js/app.js`:
     - `simulateRoleChange()` (modificada: corrige la asignación del ID del docente simulado consultando el caché real en vez del mock)
-    - `setupAttendance()` (modificada: bifurca el flujo de carga mostrando la vista del docente o del administrador basado en el rol del usuario conectado)
+    - `setupAttendance()` (modificada: bifurca el flujo de carga mostrando la vista del docente o del administrador basado en el rol del usuario conectado y oculta el botón "Volver al listado" si el rol es docente)
     - `setupTeacherAttendanceView()` (modificada: inicializa el selector de grupos asignados al docente y expone el botón Cargar al seleccionar un grupo)
-    - `loadTeacherAttendanceMatrix()` (creada: carga la cuadrícula de matriz completa del grupo con alumnos y columnas de fechas)
+    - `loadTeacherAttendanceMatrix()` (creada: carga la cuadrícula de matriz completa del grupo con alumnos y columnas de fechas, deshabilitando selectores y botones de edición si el estado es 'cerrado' o 'cerrada')
     - `onMatrixStatusChange()` (creada: actualiza la celda modificada en la base de datos real asíncronamente con autoguardado en vivo)
     - `saveMatrixAsDraft()` (creada: sincroniza y recarga el estado del borrador de asistencia)
     - `addNewAttendanceDateCol()` (creada: permite ingresar una nueva fecha y registrar una nueva sesión/columna de asistencia de forma interactiva en la matriz)
     - `exportAttendanceToExcel()` (creada: compila y exporta la matriz completa de asistencia del grupo a un archivo CSV/Excel BOM)
     - `viewAttendanceDetail()` (modificada: establece `canEdit = false` para forzar que el botón de inspección "Ver" (lupa) sea estrictamente de solo lectura)
-    - `closeAttendance()` (modificada: corrige el validador de cierre para admitir `'tarde'` como estado completo, y valida exclusivamente contra fechas realmente registradas en BD)
+    - `closeAttendance()` (modificada: corrige el validador de cierre para admitir `'tarde'` como estado completo, valida exclusivamente contra fechas realmente registradas en BD, y utiliza await para evitar la condición de carrera al recargar)
     - `printAttendance()` (modificada: redirige la impresión de asistencia del administrador para descargar directamente la matriz de asistencia en Excel)
 - Cambios principales:
+  - **Cierre de Asistencia por el Docente:** Se habilitó el botón de "Cerrar Asistencia" en la planilla del docente. Se actualizó el middleware de seguridad en `AttendanceController::updateStatus` para autorizar peticiones del rol `'teacher'`, permitiendo que el docente guarde con éxito el estado de cierre en la base de datos.
+  - **Bloqueo estricto de edición:** Una vez que la lista está en estado `'cerrado'` o `'cerrada'`, el sistema bloquea inmediatamente todos los selectores de la cuadrícula de asistencia del docente e impide la adición de nuevas fechas de clase.
+  - **Quitar botón de navegación para Docentes:** Se ocultó el botón "Volver al listado" en la vista del docente, puesto que no tiene un listado global al cual retornar.
   - **Rediseño a Vista Matriz de Asistencia:** Se eliminó el selector de fecha individual de la planilla docente. Ahora, al seleccionar el grupo y presionar "Cargar", se pinta la matriz completa de asistencia (idéntica a la vista de detalle del administrador), donde cada fecha registrada es una columna y cada fila un estudiante.
   - **Autoguardado en vivo:** Los cambios en las celdas se guardan en la base de datos real automáticamente al cambiar el selector en la tabla, proporcionando una experiencia rápida sin parpadeo de pantalla.
   - **Adición Dinámica de Sesiones:** Se añadió el botón "➕ Agregar Fecha" en la cuadrícula del docente, permitiendo ingresar una fecha válida del curso para crear de forma automática y asíncrona una nueva columna en la matriz.
@@ -707,9 +713,10 @@ El agente debe actualizar esta sección al terminar cada fase.
   - **Exportación real a Excel:** Creadores de CSV de datos estructurados con BOM UTF-8 que permiten abrir plantillas con acentos directamente en Excel, tanto en la vista docente como en el listado del administrador.
 - Pruebas realizadas:
   - Simular rol de docente e ingresar al módulo de asistencia para validar la carga de grupos asignados correspondientes al docente activo.
-  - Seleccionar grupo, hacer clic en "Cargar" y constatar la visualización de la matriz de alumnos y fechas registradas en MySQL.
+  - Seleccionar grupo, hacer clic en "Cargar" y constatar la visualización de la matriz de alumnos y fechas registradas en MySQL, verificando que el botón "Volver al listado" se encuentre oculto.
   - Cambiar el selector de estado en una celda de la matriz y corroborar que el toast informe el guardado automático persistente en base de datos.
   - Hacer clic en "➕ Agregar Fecha", introducir una fecha dentro del período del grupo y validar que aparezca como nueva columna interactiva en la matriz.
+  - Presionar el botón "Cerrar Asistencia" como docente, verificar que se actualice a `'cerrada'` en MySQL, y constatar que los selectores y el botón de adición queden inmediatamente deshabilitados/ocultos.
   - Clic en "Ver" en la vista del administrador abre el modal con selectores deshabilitados.
   - Clic en "Cerrar" en grupo con tardanzas y asistencias completas procesa la petición exitosamente.
   - Clic en "Imprimir" del administrador y "Exportar" del docente descarga el reporte CSV/Excel correctamente.
