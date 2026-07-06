@@ -19,9 +19,77 @@
 >
 > Después de leer la documentación, debe ejecutar **solo la Fase X**, respetar las restricciones del proyecto, probar los cambios y actualizar `SAII_BACKLOG.md` con el resumen que el propio agente elabore al terminar.
 
+## 🚀 Guía de Instalación y Ejecución del Proyecto
+
+Sigue estos pasos detallados para instalar, configurar y ejecutar el sistema **SAII** de manera local en tu máquina usando **XAMPP** y **Node.js**:
+
+### Paso 1: Instalar dependencias del Frontend (Node.js)
+1. Descarga e instala **Node.js** (versión 18 o superior recomendada) desde su web oficial.
+2. Abre una consola de comandos (como VS Code Terminal, CMD o PowerShell) en el directorio raíz del proyecto y ejecuta:
+   ```bash
+   npm install
+   ```
+3. Ejecuta el servidor del frontend con:
+   ```bash
+   npm run dev
+   ```
+   *(El frontend estará disponible en la dirección **http://127.0.0.1:3000/index.html**).*
+
+---
+
+### Paso 2: Configurar la Base de Datos (MySQL)
+1. Abre el panel de control de **XAMPP** e inicia los servicios de **Apache** y **MySQL**.
+2. Ingresa a **phpMyAdmin** en tu navegador: [http://localhost/phpmyadmin](http://localhost/phpmyadmin).
+3. Crea una base de datos nueva llamada:
+   `proy_nima` (usa la colación `utf8mb4_unicode_ci`).
+4. Haz clic sobre la base de datos `proy_nima`, ve a la pestaña **Importar** en la barra superior, selecciona el archivo **`database/schema.sql`** en la carpeta del proyecto y haz clic en **Importar**.
+5. Repite el mismo procedimiento de importación seleccionando ahora el archivo **`database/seeds.sql`** para poblar las tablas con los registros y usuarios de prueba.
+
+---
+
+### Paso 3: Configurar el Servidor del Backend (PHP)
+1. Abre otra consola en la raíz del proyecto.
+2. Corre el servidor de desarrollo CLI nativo de PHP apuntando al Front Controller `public/index.php`:
+   * **Si tienes XAMPP instalado en el Disco C (ruta por defecto):**
+     ```powershell
+     & C:\xampp\php\php.exe -S 127.0.0.1:8000 public/index.php
+     ```
+   * **Si tienes XAMPP en el Disco D (o configurado en tu variable de entorno PATH):**
+     ```powershell
+     php -S 127.0.0.1:8000 public/index.php
+     ```
+     *(El servidor backend estará corriendo y escuchando solicitudes en el puerto `8000`).*
+
+---
+
+### Paso 4: Ajustar Variables de Entorno (`.env`)
+1. En la raíz del proyecto, renombra el archivo **`.env.example`** a **`.env`**.
+2. Abre el archivo `.env` en tu editor y asegúrate de que las credenciales de tu base de datos de XAMPP coincidan (por defecto el usuario es `root` y la contraseña está vacía):
+   ```ini
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_NAME=proy_nima
+   DB_USER=root
+   DB_PASS=
+   SESSION_SECURE=false
+   ```
+
+---
+
+### Paso 5: Iniciar Sesión y Probar
+Abre tu navegador y entra en la ruta oficial del frontend:
+👉 **[http://127.0.0.1:3000/index.html](http://127.0.0.1:3000/index.html)**
+
+Inicia sesión con cualquiera de los siguientes usuarios cargados en los datos semilla:
+* **Administrador:** Usuario: `admin` | Contraseña: `admin123`
+* **Docente:** Usuario: `docente1` | Contraseña: `docente123`
+* **Secretaria:** Usuario: `secretaria1` | Contraseña: `secretaria123`
+
+---
+
 ## Descripción General
 
-SAII es un sistema web administrativo académico completo para el Instituto de Informática de la Universidad Nacional de Piura. Está diseñado inicialmente con HTML, CSS y JavaScript puro (Vanilla JS) para construir un frontend funcional con datos mock. El alcance final del proyecto contempla backend real en PHP con arquitectura MVC y base de datos MySQL.
+SAII es un sistema web administrativo académico completo para el Instituto de Informática de la Universidad Nacional de Piura. Está diseñado bajo una arquitectura limpia cliente-servidor, con un frontend interactivo responsivo en JavaScript puro (Vanilla JS) y un backend real en PHP con arquitectura MVC y base de datos relacional MySQL.
 
 El sistema proporciona una solución profesional para la gestión integral de estudiantes, cursos, docentes, grupos académicos, matrículas, asistencia de alumnos, calificaciones, certificados académicos, reportes, usuarios, roles y configuración institucional.
 
