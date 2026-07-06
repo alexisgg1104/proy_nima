@@ -666,6 +666,48 @@ El agente debe actualizar esta sección al terminar cada fase.
   - Clic en botón "Retirar" de alumno actualiza el estado a `withdrawn` en la base de datos MySQL de forma persistente.
 - Pendientes o riesgos: ninguno.
 
+#### Ajustes de Asistencia de Alumnos (Fase 5)
+
+- Fecha: 2026-07-06
+- Rama: main
+- Commit o mensaje sugerido: `fix: corregir flujo e integracion de asistencia de alumnos (Fase 5), bloqueo de edicion en boton ver, validacion de tardanza y exportacion Excel/CSV`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `public/index.php`
+  - `public/js/app.js`
+  - `docs/frontend/SAII_BACKLOG.md`
+- Funciones creadas o modificadas:
+  - En `public/index.php`:
+    - `/api/attendance/records` (modificada: remueve el filtro `status != 'borrador'` para que la caché del cliente cargue y persista los borradores de asistencia)
+  - En `public/js/app.js`:
+    - `setupAttendance()` (modificada: bifurca el flujo de carga mostrando la vista del docente o del administrador basado en el rol del usuario conectado)
+    - `setupTeacherAttendanceView()` (creada: inicializa el selector de grupos asignados al docente)
+    - `onTeacherGroupChange()` (creada: autopopula la fecha del día y carga la planilla)
+    - `loadAttendanceByDate()` (creada: descarga o instancia el borrador local/base de datos para la fecha elegida de alumnos matriculados)
+    - `renderStudentAttendancePlanilla()` (creada: renderiza cabecera, resumen de asistencia, filas editables de alumnos y botones de acción correspondientes)
+    - `onStudentStatusChange()`, `onStudentTimeChange()`, `onStudentObsChange()` (creadas: controlan los inputs de cada alumno actualizando el estado local en tiempo real)
+    - `updateStudentAttendanceSummaryBar()` (creada: actualiza dinámicamente los contadores de presentes, tardanzas, faltas, justificados y porcentaje de asistencia del día)
+    - `markAllPresent()` (creada: marca a todos los alumnos como Presente en un clic)
+    - `saveStudentAttendance()` (creada: persiste el borrador o registro oficial mediante POST/PUT al servidor de base de datos)
+    - `exportStudentAttendanceExcel()` (creada: exporta la sesión de asistencia del día actual en formato CSV/Excel con cabeceras e información del curso)
+    - `exportAttendanceToExcel()` (creada: compila y exporta la matriz completa de asistencia del grupo del administrador a un archivo CSV/Excel BOM)
+    - `viewAttendanceDetail()` (modificada: establece `canEdit = false` para forzar que el botón de inspección "Ver" (lupa) sea estrictamente de solo lectura)
+    - `closeAttendance()` (modificada: corrige el validador de cierre para admitir `'tarde'` como estado completo, y valida exclusivamente contra fechas realmente registradas en BD)
+    - `printAttendance()` (modificada: redirige la impresión de asistencia del administrador para descargar directamente la matriz de asistencia en Excel)
+- Cambios principales:
+  - **Flujo de Asistencia de Alumnos completo:** Integrada la vista del docente para la elección de grupo y fecha, posibilitando marcar estados, hora de entrada y observaciones individuales, con cálculo automático de estadísticas.
+  - **Borradores e integración con Base de Datos:** Los registros se guardan y editan en MySQL. El endpoint de records de PHP fue actualizado para retornar borradores, evitando que la cuadrícula se muestre vacía al recargar.
+  - **Inspección de Solo Lectura:** El botón de la lupa ("Ver") deshabilita los controles del modal para garantizar solo lectura.
+  - **Validaciones de Cierre:** Corregida la regla de negocio que impedía cerrar planillas si había alumnos en estado "Tarde". Ahora se valida sobre fechas registradas y se permite el cierre.
+  - **Exportación real a Excel:** Creadores de CSV de datos estructurados con BOM UTF-8 que permiten abrir plantillas con acentos directamente en Excel, tanto en la vista docente como en el listado del administrador.
+- Pruebas realizadas:
+  - Login como docente, selección de grupo, carga automática de alumnos matriculados.
+  - Guardado de borrador y persistencia en base de datos.
+  - Clic en "Ver" en la vista del administrador abre el modal con selectores deshabilitados.
+  - Clic en "Cerrar" en grupo con tardanzas y asistencias completas procesa la petición exitosamente.
+  - Clic en "Imprimir" del administrador y "Exportar" del docente descarga el reporte CSV/Excel correctamente.
+- Pendientes o riesgos: ninguno.
+
 ---
 
 ## Regla final del backlog
