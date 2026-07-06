@@ -1,10 +1,28 @@
 <?php
 
-// 1. Desviar archivos estáticos si se ejecuta en el servidor de desarrollo CLI de PHP
+// 1. Desviar y servir archivos estáticos si se ejecuta en el servidor de desarrollo CLI de PHP
 if (php_sapi_name() === 'cli-server') {
     $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-    if (file_exists(__DIR__ . $path) && is_file(__DIR__ . $path)) {
-        return false;
+    $filePath = __DIR__ . $path;
+    if (file_exists($filePath) && is_file($filePath)) {
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $mimes = [
+            'html' => 'text/html; charset=UTF-8',
+            'css'  => 'text/css',
+            'js'   => 'application/javascript',
+            'png'  => 'image/png',
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'gif'  => 'image/gif',
+            'svg'  => 'image/svg+xml',
+            'ico'  => 'image/x-icon',
+            'json' => 'application/json'
+        ];
+        if (isset($mimes[$ext])) {
+            header("Content-Type: " . $mimes[$ext]);
+        }
+        readfile($filePath);
+        exit;
     }
 }
 
