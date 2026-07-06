@@ -2262,10 +2262,13 @@ class SAIIApp {
             const groups = await DataManager.getGroups();
             groupSelect.innerHTML = '<option value="">-- Seleccione un grupo --</option>';
             groups.forEach(group => {
-                const option = document.createElement('option');
-                option.value = group.id;
-                option.textContent = `${group.code} - ${group.courseName}`;
-                groupSelect.appendChild(option);
+                // Solo mostrar grupos con estado abierto o en curso
+                if (group.status === 'open' || group.status === 'inprogress') {
+                    const option = document.createElement('option');
+                    option.value = group.id;
+                    option.textContent = `${group.code} - ${group.courseName}`;
+                    groupSelect.appendChild(option);
+                }
             });
             groupSelect.addEventListener('change', () => this.loadEnrollmentGroup(groupSelect.value));
         } catch (e) {
@@ -2438,7 +2441,7 @@ class SAIIApp {
                     <div class="action-icons">
                         <button class="icon-btn icon-view" onclick="app.viewEnrollmentDetail('${enrollment.id}', '${groupId}')" title="Ver matrícula">&#128269;</button>
                         ${enrollment.status === 'active' ? 
-                            `<button class="icon-btn icon-delete" onclick="app.toggleEnrollmentStatus('${enrollment.id}', '${groupId}', 'inactive')" title="Retirar alumno">&#128683;</button>` :
+                            `<button class="icon-btn icon-delete" onclick="app.toggleEnrollmentStatus('${enrollment.id}', '${groupId}', 'withdrawn')" title="Retirar alumno">&#128683;</button>` :
                             `<button class="icon-btn" style="background-color: var(--color-success-light); color: var(--color-success); padding: 2px 6px; border-radius: 4px; font-weight: bold;" onclick="app.toggleEnrollmentStatus('${enrollment.id}', '${groupId}', 'active')" title="Reactivar alumno">&#10003;</button>`
                         }
                     </div>
@@ -2483,7 +2486,7 @@ class SAIIApp {
         const enrollment = DataManager.getEnrollments(groupId).find(e => e.id == enrollmentId);
         if (!enrollment) return;
         const student = DataManager.getStudentById(enrollment.studentId);
-        const isRetire = newStatus === 'inactive';
+        const isRetire = newStatus === 'withdrawn';
         const label = isRetire ? 'retirar al alumno de este grupo' : 'reactivar la matrícula del alumno en este grupo';
         if (confirm(`¿Desea ${label} a ${student ? student.firstName + ' ' + student.lastName : 'este alumno'}?`)) {
             try {
@@ -2499,6 +2502,22 @@ class SAIIApp {
 
     async addEnrollment(groupId, studentId) {
         try {
+            const group = DataManager.getGroupById(groupId);
+            const student = DataManager.getStudentById(studentId);
+            const studentName = student ? `${student.firstName} ${student.lastName}` : 'este alumno';
+
+            if (group && group.status === 'inprogress') {
+                const userRole = DataManager.currentUser ? DataManager.currentUser.role : 'secretary';
+                if (userRole !== 'admin') {
+                    this.showToast('Solo el Administrador puede matricular alumnos en un grupo en curso', 'error');
+                    return;
+                }
+                const confirmMsg = `¿Está seguro que desea añadir al alumno ${studentName} a este grupo que ya está en curso?`;
+                if (!confirm(confirmMsg)) {
+                    return;
+                }
+            }
+
             const result = await DataManager.addEnrollment(groupId, studentId);
             if (result) {
                 this.showToast('Alumno matriculado correctamente', 'success');
