@@ -86,20 +86,29 @@ Inicia sesión utilizando cualquiera de los usuarios preconfigurados en la base 
 El sistema SAII está construido con una separación limpia de responsabilidades (Arquitectura de Capas) y patrón MVC (Modelo-Vista-Controlador):
 
 ```text
-docs/                       # Documentación de desarrollo del proyecto
-├── frontend/               # Planificación y bitácoras de la etapa de interfaz (Fases 1-7)
-├── backend/                # Planificación de API, esquema de base de datos MySQL y logs
-├── rules/                  # Reglas y restricciones de desarrollo (AGENTS.md)
-├── misc/                   # Auditorías y correcciones generales de soporte
-└── DESPLIEGUE.md           # Manual de instalación y puesta en producción
-public/                     # Raíz pública (Servida en el servidor)
-├── css/styles.css          # Vista (Diseño responsivo institucional, variables HSL)
-├── images/                 # Recursos gráficos y logotipos institucionales
-├── js/api.js               # Cliente HTTP (APIClient para llamadas fetch asíncronas)
-├── js/data.js              # Modelo local (DataManager, mapeadores e inicializador de caché síncrona)
-├── js/app.js               # Controlador del Frontend (Manejadores de eventos y pintado dinámico del DOM)
-├── index.html              # Vista principal (Estructura SPA de una sola página)
-└── index.php               # Front Controller / Enrutador del Servidor PHP
+saii-frontend-development/
+├── .agents/                # Configuración y reglas locales para agentes de IA
+├── app/                    # Backend: Capa lógica de Controladores y Modelos (MVC)
+├── config/                 # Backend: Configuración de conexión de base de datos
+├── database/               # Base de Datos: Scripts SQL de Tablas (schema) y Semillas (seeds)
+├── docs/                   # Documentación organizada de desarrollo
+│   ├── frontend/           # Bitácoras y especificaciones de la etapa de interfaz (Fases 1-7)
+│   ├── backend/            # Contratos de API, seguridad de base de datos y backlog de PHP
+│   ├── rules/              # Reglas y restricciones de desarrollo (AGENTS.md)
+│   ├── misc/               # Auditorías y correcciones de soporte general
+│   └── DESPLIEGUE.md       # Guía detallada de instalación y producción (XAMPP / VPS)
+├── logs/                   # Backend: Registro seguro de errores técnicos PHP en producción
+├── public/                 # Frontend y Servidor Web (Servido públicamente)
+│   ├── css/styles.css      # Vista: Diseño responsivo institucional y estilos CSS
+│   ├── images/             # Activos: Logotipos oficiales y recursos gráficos del sistema
+│   ├── js/api.js           # Cliente HTTP: Cliente REST asíncrono (APIClient)
+│   ├── js/data.js          # Modelo local: Manejo de datos y sincronización de caché en memoria
+│   ├── js/app.js           # Controlador local: Interacción del DOM y pintado de vistas
+│   ├── index.html          # Vista principal: Estructura HTML de una sola página (SPA)
+│   └── index.php           # Front Controller: Enrutador del servidor de backend PHP
+├── .env                    # Configuración de variables de entorno locales
+├── .htaccess               # Configuración de redirecciones URL en servidores Apache
+└── README.md               # Portada explicativa del proyecto en el repositorio
 ```
 
 ### Tecnologías Utilizadas
