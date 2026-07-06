@@ -206,7 +206,7 @@
                             <div class="kpi-icon">📚</div>
                             <div class="kpi-content">
                                 <p class="kpi-label">Cursos Activos</p>
-                                <p class="kpi-value">12</p>
+                                <p class="kpi-value" id="kpiCourses">12</p>
                             </div>
                         </div>
                         
@@ -214,7 +214,7 @@
                             <div class="kpi-icon">🏫</div>
                             <div class="kpi-content">
                                 <p class="kpi-label">Grupos Abiertos</p>
-                                <p class="kpi-value">18</p>
+                                <p class="kpi-value" id="kpiGroups">18</p>
                             </div>
                         </div>
                         
@@ -222,7 +222,7 @@
                             <div class="kpi-icon">🎓</div>
                             <div class="kpi-content">
                                 <p class="kpi-label">Docentes Asignados</p>
-                                <p class="kpi-value">24</p>
+                                <p class="kpi-value" id="kpiTeachers">24</p>
                             </div>
                         </div>
                         
@@ -230,7 +230,7 @@
                             <div class="kpi-icon">✍️</div>
                             <div class="kpi-content">
                                 <p class="kpi-label">Matrículas Período</p>
-                                <p class="kpi-value">342</p>
+                                <p class="kpi-value" id="kpiEnrollments">342</p>
                             </div>
                         </div>
                         
@@ -238,7 +238,7 @@
                             <div class="kpi-icon">⏳</div>
                             <div class="kpi-content">
                                 <p class="kpi-label">Notas Pendientes</p>
-                                <p class="kpi-value" style="color: #d32f2f;">45</p>
+                                <p class="kpi-value" id="kpiPendingGrades" style="color: #d32f2f;">45</p>
                             </div>
                         </div>
                         
@@ -246,7 +246,7 @@
                             <div class="kpi-icon">📜</div>
                             <div class="kpi-content">
                                 <p class="kpi-label">Certificados Generados</p>
-                                <p class="kpi-value">156</p>
+                                <p class="kpi-value" id="kpiCertificates">156</p>
                             </div>
                         </div>
                         
@@ -254,7 +254,7 @@
                             <div class="kpi-icon">✓</div>
                             <div class="kpi-content">
                                 <p class="kpi-label">Asistencias por Revisar</p>
-                                <p class="kpi-value">12</p>
+                                <p class="kpi-value" id="kpiPendingAttendance">12</p>
                             </div>
                         </div>
                     </div>
@@ -269,15 +269,15 @@
                                     <div class="chart-simple">
                                         <div class="chart-bar">
                                             <div class="bar-item">
-                                                <div class="bar-fill" style="width: 75%; background-color: #4caf50;"></div>
+                                                <div class="bar-fill" id="barApproved" style="width: 75%; background-color: #4caf50;"></div>
                                             </div>
-                                            <span class="bar-label">Aprobados: 75%</span>
+                                            <span class="bar-label" id="labelApproved">Aprobados: 75%</span>
                                         </div>
                                         <div class="chart-bar">
                                             <div class="bar-item">
-                                                <div class="bar-fill" style="width: 25%; background-color: #f44336;"></div>
+                                                <div class="bar-fill" id="barDisapproved" style="width: 25%; background-color: #f44336;"></div>
                                             </div>
-                                            <span class="bar-label">Desaprobados: 25%</span>
+                                            <span class="bar-label" id="labelDisapproved">Desaprobados: 25%</span>
                                         </div>
                                     </div>
                                 </div>

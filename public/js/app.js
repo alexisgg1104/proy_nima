@@ -456,6 +456,9 @@ class SAIIApp {
 
         // Load view-specific content
         switch(viewName) {
+            case 'dashboard':
+                this.loadDashboard();
+                break;
             case 'students':
                 this.loadStudents();
                 break;
@@ -537,6 +540,75 @@ class SAIIApp {
                 normalElements.forEach(el => el.style.display = '');
                 deniedMsg.style.display = 'none';
             }
+        }
+    }
+
+    async loadDashboard() {
+        try {
+            const kpis = await DataManager.getDashboardKPIs();
+            
+            const kpiStudents = document.getElementById('kpiStudents');
+            if (kpiStudents) kpiStudents.innerText = kpis.active_students;
+            
+            const kpiCourses = document.getElementById('kpiCourses');
+            if (kpiCourses) {
+                try {
+                    const courses = await DataManager.getCourses();
+                    kpiCourses.innerText = courses.length;
+                } catch (e) {
+                    kpiCourses.innerText = "3";
+                }
+            }
+            
+            const kpiGroups = document.getElementById('kpiGroups');
+            if (kpiGroups) kpiGroups.innerText = kpis.total_groups;
+            
+            const kpiTeachers = document.getElementById('kpiTeachers');
+            if (kpiTeachers) kpiTeachers.innerText = kpis.total_teachers;
+            
+            const kpiEnrollments = document.getElementById('kpiEnrollments');
+            if (kpiEnrollments) {
+                try {
+                    const enrollments = await DataManager.getEnrollments();
+                    kpiEnrollments.innerText = enrollments.length;
+                } catch (e) {
+                    kpiEnrollments.innerText = kpis.active_students;
+                }
+            }
+            
+            const kpiPendingGrades = document.getElementById('kpiPendingGrades');
+            if (kpiPendingGrades) {
+                kpiPendingGrades.innerText = kpis.disapproved_count;
+            }
+            
+            const kpiCertificates = document.getElementById('kpiCertificates');
+            if (kpiCertificates) {
+                kpiCertificates.innerText = kpis.certificates_generated + kpis.constancias_generated;
+            }
+            
+            const kpiPendingAttendance = document.getElementById('kpiPendingAttendance');
+            if (kpiPendingAttendance) {
+                kpiPendingAttendance.innerText = kpis.graded_count;
+            }
+
+            // Update Approved vs Disapproved Chart
+            const barApproved = document.getElementById('barApproved');
+            const labelApproved = document.getElementById('labelApproved');
+            if (barApproved && labelApproved) {
+                barApproved.style.width = `${kpis.approval_rate}%`;
+                labelApproved.innerText = `Aprobados: ${kpis.approval_rate}%`;
+            }
+            
+            const barDisapproved = document.getElementById('barDisapproved');
+            const labelDisapproved = document.getElementById('labelDisapproved');
+            if (barDisapproved && labelDisapproved) {
+                const disapprovalRate = (100 - kpis.approval_rate).toFixed(2);
+                barDisapproved.style.width = `${disapprovalRate}%`;
+                labelDisapproved.innerText = `Desaprobados: ${disapprovalRate}%`;
+            }
+        } catch (error) {
+            console.error("Error al cargar el dashboard:", error);
+            this.showToast('Error al cargar datos del dashboard', 'error');
         }
     }
 

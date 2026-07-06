@@ -1879,6 +1879,27 @@ const DataManager = {
         return true;
     },
 
+    getDashboardKPIs: async function() {
+        if (USE_MOCK) {
+            const activeStudents = mockData.students ? mockData.students.filter(s => s.status === 'active').length : 487;
+            const totalTeachers = mockData.teachers ? mockData.teachers.length : 24;
+            const totalGroups = mockData.groups ? mockData.groups.length : 18;
+            return {
+                active_students: activeStudents,
+                total_teachers: totalTeachers,
+                total_groups: totalGroups,
+                certificates_generated: 156,
+                constancias_generated: 12,
+                average_grade: 14.5,
+                approval_rate: 75.0,
+                graded_count: 120,
+                approved_count: 90,
+                disapproved_count: 30
+            };
+        }
+        return await APIClient.request('/reports/dashboard');
+    },
+
     getTeacherIdForUser: function(user) {
         if (!user) return null;
         return user.teacherId;
