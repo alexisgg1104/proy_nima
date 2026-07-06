@@ -4104,13 +4104,13 @@ class SAIIApp {
                     
                     <!-- Logos Header -->
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #003d82; padding-bottom: 10px; margin-bottom: 25px;">
-                        <img src="logo-unp-transparent.png" style="width: 110px; height: 110px; object-fit: contain; flex-shrink: 0; mix-blend-mode: multiply;" alt="Escudo UNP">
+                        <img src="images/logo-unp-transparent.png" style="width: 110px; height: 110px; object-fit: contain; flex-shrink: 0; mix-blend-mode: multiply;" alt="Escudo UNP">
                         <div style="flex: 1; text-align: center; font-family: 'Arial', sans-serif; padding: 0 10px;">
                             <div style="font-size: 1.25rem; font-weight: bold; color: #003d82; letter-spacing: 0.5px;">UNIVERSIDAD NACIONAL DE PIURA</div>
                             <div style="font-size: 0.95rem; font-weight: bold; color: #444; margin-top: 2px;">FACULTAD DE INGENIERÍA INDUSTRIAL</div>
                             <div style="font-size: 0.85rem; font-weight: 600; color: #666; margin-top: 1px;">INSTITUTO DE INFORMÁTICA</div>
                         </div>
-                        <img src="logo-fii.png" style="width: 110px; height: 110px; object-fit: contain; mix-blend-mode: multiply; flex-shrink: 0;" alt="Escudo FII">
+                        <img src="images/logo-fii.png" style="width: 110px; height: 110px; object-fit: contain; mix-blend-mode: multiply; flex-shrink: 0;" alt="Escudo FII">
                     </div>
 
                     <!-- Título -->
@@ -4230,13 +4230,13 @@ class SAIIApp {
                     
                     <!-- Logos Header -->
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #003d82; padding-bottom: 10px; margin-bottom: 25px;">
-                        <img src="logo-unp-transparent.png" style="width: 110px; height: 110px; object-fit: contain; flex-shrink: 0; mix-blend-mode: multiply;" alt="Escudo UNP">
+                        <img src="images/logo-unp-transparent.png" style="width: 110px; height: 110px; object-fit: contain; flex-shrink: 0; mix-blend-mode: multiply;" alt="Escudo UNP">
                         <div style="flex: 1; text-align: center; font-family: 'Arial', sans-serif; padding: 0 10px;">
                             <div style="font-size: 1.25rem; font-weight: bold; color: #003d82; letter-spacing: 0.5px;">UNIVERSIDAD NACIONAL DE PIURA</div>
                             <div style="font-size: 0.95rem; font-weight: bold; color: #444; margin-top: 2px;">FACULTAD DE INGENIERÍA INDUSTRIAL</div>
                             <div style="font-size: 0.85rem; font-weight: 600; color: #666; margin-top: 1px;">INSTITUTO DE INFORMÁTICA</div>
                         </div>
-                        <img src="logo-fii.png" style="width: 110px; height: 110px; object-fit: contain; mix-blend-mode: multiply; flex-shrink: 0;" alt="Escudo FII">
+                        <img src="images/logo-fii.png" style="width: 110px; height: 110px; object-fit: contain; mix-blend-mode: multiply; flex-shrink: 0;" alt="Escudo FII">
                     </div>
 
                     <!-- Título -->

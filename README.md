@@ -92,6 +92,7 @@ docs/                       # Documentación de desarrollo del proyecto
 └── misc/                   # Auditorías y correcciones generales de soporte
 public/                     # Raíz pública (Servida en el servidor)
 ├── css/styles.css          # Vista (Diseño responsivo institucional, variables HSL)
+├── images/                 # Recursos gráficos y logotipos institucionales
 ├── js/api.js               # Cliente HTTP (APIClient para llamadas fetch asíncronas)
 ├── js/data.js              # Modelo local (DataManager, mapeadores e inicializador de caché síncrona)
 ├── js/app.js               # Controlador del Frontend (Manejadores de eventos y pintado dinámico del DOM)
