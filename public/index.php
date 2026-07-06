@@ -65,6 +65,32 @@ spl_autoload_register(function ($class) {
     }
 });
 
+// 4.1. Configuración de Errores y Logs para Producción
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../logs/php_errors.log');
+
+set_exception_handler(function ($exception) {
+    error_log("Uncaught Exception: " . $exception->getMessage() . " in " . $exception->getFile() . " on line " . $exception->getLine());
+    \App\Core\BaseController::sendError("Ha ocurrido un error interno en el servidor.", 500);
+});
+
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+    if (!(error_reporting() & $errno)) {
+        return false;
+    }
+    error_log("PHP Error ($errno): $errstr in $errfile on line $errline");
+    if (in_array($errno, [E_USER_ERROR, E_RECOVERABLE_ERROR])) {
+        \App\Core\BaseController::sendError("Ha ocurrido un error interno en el servidor.", 500);
+    }
+    return true;
+});
+
+// 4.2. Inicialización de Protección CSRF
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // 5. Configurar Cabeceras CORS
 if (isset($_SERVER['HTTP_ORIGIN'])) {
     $origin = $_SERVER['HTTP_ORIGIN'];
@@ -87,13 +113,9 @@ $router = new Router();
 
 // Endpoint de Prueba (Fase B2)
 $router->addRoute('GET', '/api/test', function() {
-    http_response_code(200);
-    header('Content-Type: application/json');
-    echo json_encode([
-        'status' => 'success',
+    \App\Core\BaseController::sendJson([
         'message' => 'Backend SAII de Informática operando con éxito'
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
+    ]);
 });
 
 use App\Controllers\AuthController;
@@ -103,6 +125,11 @@ use App\Controllers\UserController;
 $router->addRoute('POST', '/api/auth/login', [AuthController::class, 'login']);
 $router->addRoute('POST', '/api/auth/logout', [AuthController::class, 'logout']);
 $router->addRoute('GET', '/api/auth/me', [AuthController::class, 'me']);
+$router->addRoute('GET', '/api/auth/csrf', function() {
+    \App\Core\BaseController::sendJson([
+        'csrfToken' => $_SESSION['csrf_token']
+    ]);
+});
 
 // Rutas de Gestión de Usuarios - CRUD (Fase B3)
 $router->addRoute('GET', '/api/users', [UserController::class, 'index']);
@@ -212,26 +239,17 @@ $router->addRoute('GET', '/api/reports/pdf/certificate/{id}', [ReportController:
 // Rutas de Gestión de Usuarios y Roles (Fase B9)
 $router->addRoute('GET', '/api/users', function() {
     if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-        http_response_code(403);
-        header('Content-Type: application/json');
-        echo json_encode(['status' => 'error', 'message' => 'Acceso denegado.']);
-        exit;
+        \App\Core\BaseController::sendError('Acceso denegado.', 403);
     }
     $db = \Config\Database::getInstance()->getConnection();
     $stmt = $db->query("SELECT id, username, full_name as fullName, email, role, status, last_login as lastLogin FROM users ORDER BY id ASC");
     $users = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    http_response_code(200);
-    header('Content-Type: application/json');
-    echo json_encode(['status' => 'success', 'data' => $users]);
-    exit;
+    \App\Core\BaseController::sendJson($users);
 });
 
 $router->addRoute('POST', '/api/users', function() {
     if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-        http_response_code(403);
-        header('Content-Type: application/json');
-        echo json_encode(['status' => 'error', 'message' => 'Acceso denegado.']);
-        exit;
+        \App\Core\BaseController::sendError('Acceso denegado.', 403);
     }
     $input = json_decode(file_get_contents('php://input'), true);
     $db = \Config\Database::getInstance()->getConnection();
@@ -245,18 +263,12 @@ $router->addRoute('POST', '/api/users', function() {
         'status' => $input['status'] ?? 'active'
     ]);
     $userId = $db->lastInsertId();
-    http_response_code(201);
-    header('Content-Type: application/json');
-    echo json_encode(['status' => 'success', 'data' => ['id' => (int)$userId]]);
-    exit;
+    \App\Core\BaseController::sendJson(['id' => (int)$userId], 201);
 });
 
 $router->addRoute('PUT', '/api/users/{id}', function($id) {
     if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-        http_response_code(403);
-        header('Content-Type: application/json');
-        echo json_encode(['status' => 'error', 'message' => 'Acceso denegado.']);
-        exit;
+        \App\Core\BaseController::sendError('Acceso denegado.', 403);
     }
     $input = json_decode(file_get_contents('php://input'), true);
     $db = \Config\Database::getInstance()->getConnection();
@@ -278,18 +290,12 @@ $router->addRoute('PUT', '/api/users/{id}', function($id) {
     
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
-    http_response_code(200);
-    header('Content-Type: application/json');
-    echo json_encode(['status' => 'success', 'message' => 'Usuario actualizado exitosamente.']);
-    exit;
+    \App\Core\BaseController::sendJson(['message' => 'Usuario actualizado exitosamente.']);
 });
 
 $router->addRoute('DELETE', '/api/certificates/{id}', function($id) {
     if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-        http_response_code(403);
-        header('Content-Type: application/json');
-        echo json_encode(['status' => 'error', 'message' => 'Acceso denegado.']);
-        exit;
+        \App\Core\BaseController::sendError('Acceso denegado.', 403);
     }
     
     $db = \Config\Database::getInstance()->getConnection();
@@ -299,22 +305,13 @@ $router->addRoute('DELETE', '/api/certificates/{id}', function($id) {
     $stmtC = $db->prepare("DELETE FROM certificates WHERE id = :id");
     $stmtC->execute(['id' => $id]);
 
-    http_response_code(200);
-    header('Content-Type: application/json');
-    echo json_encode([
-        'status' => 'success',
-        'message' => 'Certificado eliminado exitosamente.'
-    ]);
-    exit;
+    \App\Core\BaseController::sendJson(['message' => 'Certificado eliminado exitosamente.']);
 });
 
 // Rutas de Consulta Global de Notas y Asistencia (Fase B9 Helper)
 $router->addRoute('GET', '/api/grades', function() {
     if (!isset($_SESSION['user'])) {
-        http_response_code(401);
-        header('Content-Type: application/json');
-        echo json_encode(['status' => 'error', 'message' => 'No autenticado.']);
-        exit;
+        \App\Core\BaseController::sendError('No autenticado.', 401);
     }
     $db = \Config\Database::getInstance()->getConnection();
     $stmt = $db->query("
@@ -323,42 +320,25 @@ $router->addRoute('GET', '/api/grades', function() {
         JOIN grade_sheets gs ON gr.grade_sheet_id = gs.id
     ");
     $records = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    http_response_code(200);
-    header('Content-Type: application/json');
-    echo json_encode(['status' => 'success', 'data' => $records]);
-    exit;
+    \App\Core\BaseController::sendJson($records);
 });
-
-
 
 // Rutas de Configuración del Sistema (Fase B9)
 $router->addRoute('GET', '/api/settings', function() {
     if (!isset($_SESSION['user'])) {
-        http_response_code(401);
-        header('Content-Type: application/json');
-        echo json_encode(['status' => 'error', 'message' => 'No autenticado. Por favor inicie sesión.']);
-        exit;
+        \App\Core\BaseController::sendError('No autenticado. Por favor inicie sesión.', 401);
     }
     
     $db = \Config\Database::getInstance()->getConnection();
     $stmt = $db->query("SELECT * FROM settings LIMIT 1");
     $settings = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-    http_response_code(200);
-    header('Content-Type: application/json');
-    echo json_encode([
-        'status' => 'success',
-        'data' => $settings
-    ]);
-    exit;
+    \App\Core\BaseController::sendJson($settings);
 });
 
 $router->addRoute('PUT', '/api/settings', function() {
     if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-        http_response_code(403);
-        header('Content-Type: application/json');
-        echo json_encode(['status' => 'error', 'message' => 'Acceso denegado. Permisos insuficientes.']);
-        exit;
+        \App\Core\BaseController::sendError('Acceso denegado. Permisos insuficientes.', 403);
     }
 
     $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
@@ -398,14 +378,18 @@ $router->addRoute('PUT', '/api/settings', function() {
         'responsible_academic' => trim($input['responsible_academic'] ?? '')
     ]);
 
-    http_response_code(200);
-    header('Content-Type: application/json');
-    echo json_encode([
-        'status' => 'success',
-        'message' => 'Configuración actualizada exitosamente.'
-    ]);
-    exit;
+    \App\Core\BaseController::sendJson(['message' => 'Configuración actualizada exitosamente.']);
 });
+
+// Validar tokens CSRF para peticiones POST/PUT/DELETE que modifican datos
+if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'])) {
+    $headers = getallheaders();
+    $clientToken = $headers['X-CSRF-TOKEN'] ?? $headers['x-csrf-token'] ?? '';
+    
+    if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $clientToken)) {
+        \App\Core\BaseController::sendError("Token CSRF inválido o ausente.", 403);
+    }
+}
 
 // Despachar la petición
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

@@ -18,7 +18,7 @@ Este archivo define el mapa general de fases de desarrollo para la etapa del bac
 | **Fase B7** | Notas, actas y certificados | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B8** | Reportes, gráficos y exportaciones | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 | **Fase B9** | Integración frontend-backend | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
-| **Fase B10**| Seguridad, pruebas y despliegue | Pendiente | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
+| **Fase B10**| Seguridad, pruebas y despliegue | **Completada** | `SAII_BACKEND_ESTADO_Y_PROMPTS.md` |
 
 ---
 
@@ -448,4 +448,25 @@ Estado: **Pendiente**.
   * Implementación de endpoints de soporte rápido `/api/users`, `/api/certificates/{id}` y `/api/settings` en la base de datos relacional.
   * Creación de endpoints de consulta global `/api/grades` y `/api/attendance/records` para optimizar el cálculo de promedios e inasistencias en la sábana de notas y la emisión de constancias en un solo HTTP request.
 - **Siguiente fase sugerida:** Fase B10 — Seguridad, pruebas y despliegue.
+
+### Fase B10 — Seguridad, Pruebas y Despliegue
+- **Fecha:** 2026-07-05
+- **Rama:** `alexis/backend-b10-security`
+- **Commit o mensaje sugerido:** `security: fase B10 aseguramiento de la api php y preparacion de despliegue`
+- **Estado final:** Completado
+- **Archivos creados:**
+  * `DESPLIEGUE.md`
+  * `logs/.gitkeep`
+- **Archivos modificados:**
+  * `public/index.php`
+  * `public/js/api.js`
+  * `app/Core/BaseController.php`
+  * `SAII_BACKEND_BACKLOG.md`
+- **Cambios principales:**
+  * Centralización y sanitización recursiva automática contra XSS (`htmlspecialchars` y `strip_tags`) para todas las salidas JSON y de error a nivel de `BaseController`.
+  * Middleware de protección global contra ataques CSRF (`X-CSRF-TOKEN`) para todas las solicitudes modificadoras (`POST`, `PUT`, `DELETE`).
+  * Integración transparente del token CSRF en `APIClient` mediante consultas dinámicas al endpoint `/api/auth/csrf`.
+  * Redirección segura de excepciones y errores técnicos PHP a archivo seguro `/logs/php_errors.log` y ocultación de errores detallados (`display_errors = 0`) para producción.
+  * Elaboración de guía detallada de despliegue local y VPS `DESPLIEGUE.md`.
+- **Siguiente fase sugerida:** Ninguna (Etapa de Backend de SAII completada exitosamente).
 

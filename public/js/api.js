@@ -28,8 +28,37 @@ const APIClient = {
         return origin + path + '/api';
     },
 
+    csrfToken: null,
+
+    // Obtener el token CSRF desde el servidor de forma asíncrona
+    fetchCSRFToken: async function() {
+        if (this.csrfToken) return this.csrfToken;
+        try {
+            // Hacemos una petición directa usando fetch tradicional para evitar recursión infinita
+            const url = this.getBaseURL() + '/auth/csrf';
+            const response = await fetch(url, { credentials: 'include' });
+            const data = await response.json().catch(() => null);
+            if (data && data.status === 'success' && data.data && data.data.csrfToken) {
+                this.csrfToken = data.data.csrfToken;
+            }
+            return this.csrfToken;
+        } catch (e) {
+            console.error("Error al obtener token CSRF del backend", e);
+            return null;
+        }
+    },
+
     // Realizar peticiones asíncronas con credenciales (para cookies de sesión)
     request: async function(endpoint, options = {}) {
+        const method = (options.method || 'GET').toUpperCase();
+
+        // Si se realiza una acción que modifica estado, asegurar que tenemos el token CSRF
+        if (['POST', 'PUT', 'DELETE'].includes(method) && endpoint !== '/auth/csrf') {
+            if (!this.csrfToken) {
+                await this.fetchCSRFToken();
+            }
+        }
+
         const url = this.getBaseURL() + endpoint;
         
         // Incluir credenciales de cookies para mantener sesiones nativas de PHP
@@ -41,6 +70,12 @@ const APIClient = {
             options.body = JSON.stringify(options.body);
         }
 
+        // Si tenemos token CSRF y es una acción modificadora de estado, enviarla en cabeceras
+        if (this.csrfToken && ['POST', 'PUT', 'DELETE'].includes(method)) {
+            options.headers = options.headers || {};
+            options.headers['X-CSRF-TOKEN'] = this.csrfToken;
+        }
+
         try {
             const response = await fetch(url, options);
             const data = await response.json().catch(() => null);
@@ -49,6 +84,7 @@ const APIClient = {
                 // Manejar error de sesión expirada o no autenticada globalmente
                 if (response.status === 401) {
                     localStorage.removeItem('saii_currentUser');
+                    this.csrfToken = null; // Limpiar token al expirar sesión
                     // Redirigir a login
                     const loginScreen = document.getElementById('loginScreen');
                     const appContainer = document.getElementById('appContainer');

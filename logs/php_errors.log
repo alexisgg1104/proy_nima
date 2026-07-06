@@ -1,0 +1,2 @@
+[06-Jul-2026 02:25:28 Europe/Berlin] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'root'@'localhost' (using password: YES)
+[06-Jul-2026 02:25:28 Europe/Berlin] Uncaught Exception: Error de conexión a la base de datos. in C:\Users\manue\Downloads\saii-frontend-development (2)\config\Database.php on line 34
