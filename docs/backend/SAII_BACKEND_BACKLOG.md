@@ -491,3 +491,28 @@ Estado: **Pendiente**.
   * Campo de contraseña opcional y placeholder dinámico al editar datos de usuario.
   * Control de autorización en `loadView()` para bloquear y redireccionar o alertar en accesos a vistas restringidas como el Dashboard.
 
+### Ajustes de Autorización, Roles y Depuración
+- **Fecha:** 2026-07-06
+- **Rama:** `main`
+- **Commit o mensaje sugerido:** `fix: ajustar politicas de autorizacion, bypass de password para admins y permisos de precarga del cache`
+- **Estado final:** Completado
+- **Archivos modificados:**
+  * `public/js/data.js`
+  * `public/index.html`
+  * `public/js/app.js`
+  * `app/Controllers/UserController.php`
+  * `app/Controllers/AuthController.php`
+  * `app/Controllers/StudentController.php`
+  * `app/Controllers/TeacherController.php`
+  * `app/Controllers/CourseController.php`
+  * `app/Controllers/GroupController.php`
+  * `app/Controllers/EnrollmentController.php`
+  * `app/Controllers/CertificateController.php`
+  * `app/Controllers/ReportController.php`
+  * `docs/backend/SAII_BACKEND_BACKLOG.md`
+- **Cambios principales:**
+  * **Emisión de Certificados (Fase B7/B8):** Se ajustó la lógica de generación masiva; ahora emite certificado y constancia para cursos regulares, y únicamente constancia para grupos de examen (los certificados de exámenes deben emitirse manualmente).
+  * **Bypass de Contraseña Actual para Admins (Fase B9):** Se ocultó el campo de "Contraseña Actual" y se removió su atributo `required` en el modal de cambio de contraseña cuando un administrador la edita. En el servidor, se configuró un bypass de `password_verify` para que el admin pueda reestablecer contraseñas de otros usuarios directamente.
+  * **Depuración de Autenticación y Carga de Roles (Fase B9):** Se habilitaron permisos de consulta en `/api/roles` para todos los roles autenticados. Esto permite que docentes y decanos puedan leer sus respectivos permisos al iniciar sesión, desbloqueando la carga del menú lateral.
+  * **Permisos en Controladores Académicos (Fase B9):** Se extendieron los alcances de lectura (`GET /index`) de estudiantes, docentes, cursos, grupos, matrículas, certificados e informes de dashboard para incluir los roles `teacher` y `dean`. Esto solucionó los errores HTTP 403 (Acceso Denegado) que bloqueaban la secuencia de precarga de caché del frontend al iniciar sesión.
+
