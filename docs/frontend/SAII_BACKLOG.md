@@ -686,6 +686,7 @@ El agente debe actualizar esta sección al terminar cada fase.
     - `/api/attendance/records` (modificada: remueve el filtro `status != 'borrador'` para que la caché del cliente cargue y persista los borradores de asistencia)
   - En `public/js/data.js`:
     - `getAllStudentAttendance()` (modificada: evalúa dinámicamente si hay listas cerradas en la base de datos para mostrar el estado 'cerrado' en la tabla general)
+    - `getStudentAttendanceById()` (modificada: remueve el bucle que generaba dinámicamente 4 fechas ficticias de relleno, cargando única y estrictamente las fechas reales registradas en la base de datos MySQL)
   - En `public/js/app.js`:
     - `simulateRoleChange()` (modificada: corrige la asignación del ID del docente simulado consultando el caché real en vez del mock)
     - `setupAttendance()` (modificada: bifurca el flujo de carga mostrando la vista del docente o del administrador basado en el rol del usuario conectado y oculta el botón "Volver al listado" si el rol es docente)
@@ -699,11 +700,12 @@ El agente debe actualizar esta sección al terminar cada fase.
     - `closeAttendance()` (modificada: corrige el validador de cierre para admitir `'tarde'` como estado completo, valida exclusivamente contra fechas realmente registradas en BD, y utiliza await para evitar la condición de carrera al recargar)
     - `printAttendance()` (modificada: redirige la impresión de asistencia del administrador para descargar directamente la matriz de asistencia en Excel)
 - Cambios principales:
+  - **Eliminación definitiva de Fechas Mock:** Se removió el código que generaba automáticamente 4 fechas mock al cargar la matriz de un grupo. Ahora el sistema solo lee y despliega las columnas de fechas reales que existan registradas en la base de datos.
   - **Cierre de Asistencia por el Docente:** Se habilitó el botón de "Cerrar Asistencia" en la planilla del docente. Se actualizó el middleware de seguridad en `AttendanceController::updateStatus` para autorizar peticiones del rol `'teacher'`, permitiendo que el docente guarde con éxito el estado de cierre en la base de datos.
   - **Bloqueo estricto de edición:** Una vez que la lista está en estado `'cerrado'` o `'cerrada'`, el sistema bloquea inmediatamente todos los selectores de la cuadrícula de asistencia del docente e impide la adición de nuevas fechas de clase.
   - **Quitar botón de navegación para Docentes:** Se ocultó el botón "Volver al listado" en la vista del docente, puesto que no tiene un listado global al cual retornar.
   - **Rediseño a Vista Matriz de Asistencia:** Se eliminó el selector de fecha individual de la planilla docente. Ahora, al seleccionar el grupo y presionar "Cargar", se pinta la matriz completa de asistencia (idéntica a la vista de detalle del administrador), donde cada fecha registrada es una columna y cada fila un estudiante.
-  - **Autoguardado en vivo:** Los cambios en las celdas se guardan en la base de datos real automáticamente al cambiar el selector en la tabla, proporcionando una experiencia rápida sin parpadeo de pantalla.
+  - **Autoguardado en vivo:** Los cambios en las celdas se guardan en la base de datos real automáticamente al cambiar el selector en la tabla, porporcionando una experiencia rápida sin parpadeo de pantalla.
   - **Adición Dinámica de Sesiones:** Se añadió el botón "➕ Agregar Fecha" en la cuadrícula del docente, permitiendo ingresar una fecha válida del curso para crear de forma automática y asíncrona una nueva columna en la matriz.
   - **Mapeo de Docente Simulado corregido:** Se solucionó el problema por el cual el selector de "Grupo asignado" se mostraba vacío al simular el rol de Docente (como Roberto Silva). Ahora, el simulador busca el ID correspondiente del docente en el listado real de la base de datos (por ejemplo, `1` en vez del ID mockeado `'TCH001'`).
   - **Estado dinámico Cerrado:** El estado de las filas del listado de asistencias de alumnos del administrador se evalúa dinámicamente consultando si hay listas cerradas en la base de datos, en lugar de amarrarse únicamente al estado del grupo académico en sí.
@@ -713,7 +715,7 @@ El agente debe actualizar esta sección al terminar cada fase.
   - **Exportación real a Excel:** Creadores de CSV de datos estructurados con BOM UTF-8 que permiten abrir plantillas con acentos directamente en Excel, tanto en la vista docente como en el listado del administrador.
 - Pruebas realizadas:
   - Simular rol de docente e ingresar al módulo de asistencia para validar la carga de grupos asignados correspondientes al docente activo.
-  - Seleccionar grupo, hacer clic en "Cargar" y constatar la visualización de la matriz de alumnos y fechas registradas en MySQL, verificando que el botón "Volver al listado" se encuentre oculto.
+  - Seleccionar grupo, hacer clic en "Cargar" y constatar la visualización de la matriz de alumnos y fechas registradas en MySQL (sin presencia de fechas mock), verificando que el botón "Volver al listado" se encuentre oculto.
   - Cambiar el selector de estado en una celda de la matriz y corroborar que el toast informe el guardado automático persistente en base de datos.
   - Hacer clic en "➕ Agregar Fecha", introducir una fecha dentro del período del grupo y validar que aparezca como nueva columna interactiva en la matriz.
   - Presionar el botón "Cerrar Asistencia" como docente, verificar que se actualice a `'cerrada'` en MySQL, y constatar que los selectores y el botón de adición queden inmediatamente deshabilitados/ocultos.
