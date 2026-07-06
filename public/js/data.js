@@ -1741,6 +1741,25 @@ const DataManager = {
         return true;
     },
 
+    changeUserPassword: async function(id, currentPassword, newPassword) {
+        if (USE_MOCK) {
+            const user = mockData.users.find(u => u.id === id);
+            if (user) {
+                user.password = newPassword;
+                return true;
+            }
+            return false;
+        }
+        await APIClient.request(`/users/${id}/password`, {
+            method: 'PUT',
+            body: {
+                current_password: currentPassword,
+                new_password: newPassword
+            }
+        });
+        return true;
+    },
+
     getRoles: function() {
         if (USE_MOCK) {
             return Object.keys(mockData.rolePermissions).map(roleKey => {

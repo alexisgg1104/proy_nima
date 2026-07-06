@@ -355,6 +355,22 @@ class SAIIApp {
 
     // ========== VIEW MANAGEMENT ==========
     loadView(viewName) {
+        // Enforce view authorization permissions
+        const role = DataManager.currentUser ? DataManager.currentUser.role : null;
+        if (role) {
+            let permissions = [];
+            if (USE_MOCK) {
+                permissions = mockData.rolePermissions[role] || [];
+            } else {
+                const roleObj = DataManager.getRoles().find(r => r.id === role);
+                permissions = roleObj ? roleObj.permissions : [];
+            }
+            if (permissions.length > 0 && !permissions.includes(viewName)) {
+                this.loadView(permissions[0]);
+                return;
+            }
+        }
+
         // Hide all views
         document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
         
@@ -449,8 +465,14 @@ class SAIIApp {
         this.updateBreadcrumb(viewName);
 
         // Dashboard specific permission check: if view is dashboard but role lacks dashboard permission, hide normal dashboard elements and show restricted message
-        const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
-        const permissions = mockData.rolePermissions[role] || [];
+        const activeRoleForDashboard = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
+        let activePermissionsForDashboard = [];
+        if (USE_MOCK) {
+            activePermissionsForDashboard = mockData.rolePermissions[activeRoleForDashboard] || [];
+        } else {
+            const roleObj = DataManager.getRoles().find(r => r.id === activeRoleForDashboard);
+            activePermissionsForDashboard = roleObj ? roleObj.permissions : [];
+        }
         
         const dashboard = document.getElementById('dashboard');
         if (dashboard) {
@@ -478,7 +500,7 @@ class SAIIApp {
 
             const normalElements = dashboard.querySelectorAll('.dashboard-grid, .dashboard-content');
 
-            if (viewName === 'dashboard' && !permissions.includes('dashboard')) {
+            if (viewName === 'dashboard' && !activePermissionsForDashboard.includes('dashboard')) {
                 normalElements.forEach(el => el.style.display = 'none');
                 deniedMsg.style.display = 'flex';
             } else {
@@ -5932,6 +5954,7 @@ class SAIIApp {
                 <td>
                     <div class="action-icons">
                         <button class="icon-btn icon-edit" onclick="app.editUser('${user.id}')" title="Editar">&#9998;</button>
+                        <button class="icon-btn icon-key" onclick="app.openChangePasswordModal('${user.id}')" title="Cambiar Contraseña">&#128273;</button>
                         <button class="icon-btn icon-delete" onclick="app.deleteUser('${user.id}')" title="Desactivar">&#128683;</button>
                     </div>
                 </td>
@@ -5945,6 +5968,11 @@ class SAIIApp {
         form.reset();
         document.getElementById('userModalTitle').textContent = 'Nuevo Usuario';
         document.getElementById('userUsername').readOnly = false;
+        
+        const pwdInput = document.getElementById('userPassword');
+        pwdInput.required = true;
+        pwdInput.placeholder = 'Contraseña de acceso';
+        
         this._editingUserId = null;
 
         document.getElementById('modalOverlay').style.display = 'block';
@@ -5961,7 +5989,12 @@ class SAIIApp {
         document.getElementById('userUsername').value = user.username;
         document.getElementById('userUsername').readOnly = true;
         document.getElementById('userFullName').value = user.fullName;
-        document.getElementById('userPassword').value = user.password || '';
+        
+        const pwdInput = document.getElementById('userPassword');
+        pwdInput.value = '';
+        pwdInput.required = false;
+        pwdInput.placeholder = '(Dejar en blanco para mantener actual)';
+        
         document.getElementById('userEmail').value = user.email;
         document.getElementById('userRole').value = user.role;
         document.getElementById('userStatus').value = user.status;
@@ -6020,6 +6053,36 @@ class SAIIApp {
                 console.error("Error al desactivar usuario:", error);
                 this.showToast('Error al desactivar usuario: ' + error.message, 'error');
             }
+        }
+    }
+
+    openChangePasswordModal(userId) {
+        this._editingUserIdForPassword = userId;
+        const form = document.getElementById('changePasswordForm');
+        if (form) form.reset();
+        
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('changePasswordModal').style.display = 'block';
+    }
+
+    async handleChangePasswordSubmit(e) {
+        if (e) e.preventDefault();
+        
+        const currentPassword = document.getElementById('userCurrentPassword').value;
+        const newPassword = document.getElementById('userNewPassword').value;
+        
+        if (!currentPassword || !newPassword) {
+            this.showToast('Por favor complete todos los campos', 'error');
+            return;
+        }
+        
+        try {
+            await DataManager.changeUserPassword(this._editingUserIdForPassword, currentPassword, newPassword);
+            this.showToast('Contraseña cambiada correctamente', 'success');
+            this.closeModal();
+        } catch (error) {
+            console.error("Error al cambiar contraseña:", error);
+            this.showToast('Error al cambiar contraseña: ' + error.message, 'error');
         }
     }
 

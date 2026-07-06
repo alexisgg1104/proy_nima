@@ -154,6 +154,7 @@ $router->addRoute('GET', '/api/users', [UserController::class, 'index']);
 $router->addRoute('GET', '/api/users/{id}', [UserController::class, 'show']);
 $router->addRoute('POST', '/api/users', [UserController::class, 'create']);
 $router->addRoute('PUT', '/api/users/{id}', [UserController::class, 'update']);
+$router->addRoute('PUT', '/api/users/{id}/password', [UserController::class, 'changePassword']);
 $router->addRoute('DELETE', '/api/users/{id}', [UserController::class, 'delete']);
 
 use App\Controllers\StudentController;

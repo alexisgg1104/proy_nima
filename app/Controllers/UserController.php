@@ -176,4 +176,38 @@ class UserController extends BaseController {
             $this->error('Error al actualizar permisos en el servidor.', 500);
         }
     }
+
+    // Cambiar contraseña de un usuario (PUT /api/users/{id}/password)
+    public function changePassword($id) {
+        $this->requireAuth(['admin']);
+        $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+        
+        $currentPassword = $input['current_password'] ?? '';
+        $newPassword = $input['new_password'] ?? '';
+        
+        if (empty($currentPassword) || empty($newPassword)) {
+            $this->error('La contraseña actual y la nueva son obligatorias.', 400);
+        }
+        
+        $db = \Config\Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT password FROM users WHERE id = :id");
+        $stmt->execute(['id' => (int)$id]);
+        $user = $stmt->fetch();
+        
+        if (!$user) {
+            $this->error('Usuario no encontrado.', 404);
+        }
+        
+        // Verificar contraseña actual
+        if (!password_verify($currentPassword, $user['password'])) {
+            $this->error('La contraseña actual es incorrecta.', 400);
+        }
+        
+        // Actualizar contraseña
+        $hashed = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmtUpdate = $db->prepare("UPDATE users SET password = :password WHERE id = :id");
+        $stmtUpdate->execute(['password' => $hashed, 'id' => (int)$id]);
+        
+        $this->json(['message' => 'Contraseña actualizada correctamente.']);
+    }
 }
