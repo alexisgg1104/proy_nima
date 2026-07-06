@@ -86,6 +86,10 @@ Inicia sesión utilizando cualquiera de los usuarios preconfigurados en la base 
 El sistema SAII está construido con una separación limpia de responsabilidades (Arquitectura de Capas) y patrón MVC (Modelo-Vista-Controlador):
 
 ```text
+docs/                       # Documentación de desarrollo del proyecto
+├── frontend/               # Planificación y bitácoras de la etapa de interfaz (Fases 1-7)
+├── backend/                # Planificación de API, esquema de base de datos MySQL y logs
+└── misc/                   # Auditorías y correcciones generales de soporte
 public/                     # Raíz pública (Servida en el servidor)
 ├── css/styles.css          # Vista (Diseño responsivo institucional, variables HSL)
 ├── js/api.js               # Cliente HTTP (APIClient para llamadas fetch asíncronas)
