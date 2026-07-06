@@ -133,7 +133,7 @@ class UserController extends BaseController {
 
     // Listar todos los roles con sus permisos (GET /api/roles)
     public function getRoles() {
-        $this->requireAuth(['admin']);
+        $this->requireAuth(['admin', 'secretary', 'teacher', 'dean', 'coordinator']);
         $roleModel = new \App\Models\Role();
         $roles = $roleModel->getAll();
         
