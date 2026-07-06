@@ -5961,7 +5961,7 @@ class SAIIApp {
         document.getElementById('userFormModal').style.display = 'block';
     }
 
-    handleUserSubmit(e) {
+    async handleUserSubmit(e) {
         e.preventDefault();
         const username = document.getElementById('userUsername').value.trim();
         const fullName = document.getElementById('userFullName').value.trim();
