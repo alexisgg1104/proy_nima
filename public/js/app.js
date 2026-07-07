@@ -116,6 +116,9 @@ class SAIIApp {
         // Set role-based access
         this.setRolePermissions(role);
         
+        // Initialize notifications badge and list
+        this.loadNotificationsList();
+        
         // Load dashboard
         this.loadView('dashboard');
     }
@@ -145,6 +148,9 @@ class SAIIApp {
             
             document.getElementById('currentUser').textContent = DataManager.currentUser.fullName;
             this.setRolePermissions(role);
+            
+            // Reload notifications list for the new role
+            this.loadNotificationsList();
             
             // Reload current view or go to dashboard
             this.loadView('dashboard');
@@ -312,11 +318,23 @@ class SAIIApp {
 
         // Sidebar toggle
         const sidebarToggle = document.getElementById('sidebarToggle');
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', () => {
+        const menuToggleBtn = document.getElementById('menuToggleBtn');
+        
+        const toggleSidebar = () => {
+            if (window.innerWidth <= 1024) {
                 const sidebar = document.getElementById('sidebar');
                 sidebar.classList.toggle('active');
-            });
+            } else {
+                const appContainer = document.getElementById('appContainer');
+                appContainer.classList.toggle('sidebar-collapsed');
+            }
+        };
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', toggleSidebar);
+        }
+        if (menuToggleBtn) {
+            menuToggleBtn.addEventListener('click', toggleSidebar);
         }
 
         // Module buttons
@@ -5365,45 +5383,155 @@ class SAIIApp {
         if (!list) return;
 
         const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
+        const teacherId = DataManager.currentUser ? DataManager.currentUser.teacherId : null;
+
+        const groups = DataManager.getGroups() || [];
+        const teachers = DataManager.getTeachers() || [];
+        const students = DataManager.getStudents() || [];
+        const courses = DataManager.getCourses() || [];
+        const certificates = DataManager.getCertificates() || [];
+        const attendanceLists = DataManager.cache.attendanceLists || [];
+
+        let realEvents = [];
+
+        // 1. Certificados generados o aptos
+        certificates.forEach(c => {
+            const student = students.find(s => s.id == c.studentId);
+            const group = groups.find(g => g.id == c.groupId);
+            const course = group ? courses.find(co => co.id == group.courseId) : null;
+            if (student && course) {
+                const name = `${student.firstName} ${student.lastName}`;
+                const courseName = course.name;
+                
+                if (c.status === 'apto' || c.status === 'apt') {
+                    realEvents.push({
+                        id: `cert-apto-${c.id}`,
+                        text: `${name} está apto para emitir certificado en ${courseName}.`,
+                        time: 'Estado: Apto',
+                        groupId: c.groupId
+                    });
+                } else if (c.status === 'por_firmar' || c.status === 'pending_signature') {
+                    realEvents.push({
+                        id: `cert-sign-${c.id}`,
+                        text: `El certificado de ${name} en ${courseName} está pendiente de firma.`,
+                        time: 'Por firmar',
+                        groupId: c.groupId
+                    });
+                } else if (c.status === 'generado' || c.status === 'generated') {
+                    realEvents.push({
+                        id: `cert-gen-${c.id}`,
+                        text: `Certificado generado y firmado para ${name} en ${courseName}.`,
+                        time: 'Emitido',
+                        groupId: c.groupId
+                    });
+                }
+            }
+        });
+
+        // 2. Listas de asistencia guardadas
+        attendanceLists.forEach(l => {
+            const group = groups.find(g => g.id == l.groupId);
+            const teacher = group ? teachers.find(t => t.id == group.teacherId) : null;
+            const course = group ? courses.find(co => co.id == group.courseId) : null;
+            
+            if (group && course) {
+                const teacherLabel = teacher ? `${teacher.firstName} ${teacher.lastName}` : 'El docente';
+                realEvents.push({
+                    id: `att-${l.id}-${l.date}`,
+                    text: `${teacherLabel} registró asistencia en ${course.name} (${group.code}) para la fecha ${l.date}.`,
+                    time: `Fecha: ${l.date}`,
+                    groupId: l.groupId
+                });
+            }
+        });
+
+        // 3. Nuevos Grupos
+        groups.slice(-3).forEach(g => {
+            const course = courses.find(co => co.id == g.courseId);
+            if (course) {
+                realEvents.push({
+                    id: `group-${g.id}`,
+                    text: `Nuevo grupo ${g.code} aperturado para el curso ${course.name}.`,
+                    time: 'Nuevo Grupo',
+                    groupId: g.id
+                });
+            }
+        });
+
+        // 4. Filtrar eventos basados en el ROL y del docente asignado
+        let filteredEvents = [];
+        realEvents.forEach(ev => {
+            if (role === 'admin') {
+                // Admin ve todo el flujo del sistema
+                filteredEvents.push(ev);
+            } else if (role === 'dean') {
+                // Decano solo firma o ve certificados por firmar y aptos
+                if (ev.id.startsWith('cert-sign-') || ev.id.startsWith('cert-apto-')) {
+                    filteredEvents.push(ev);
+                }
+            } else if (role === 'teacher') {
+                // Docente solo ve lo relativo a sus propios grupos
+                if (teacherId && ev.groupId) {
+                    const group = groups.find(g => g.id == ev.groupId);
+                    if (group && group.teacherId == teacherId) {
+                        filteredEvents.push(ev);
+                    }
+                }
+            } else if (role === 'secretary') {
+                // Secretaria ve certificados emitidos, listos para entregar o nuevos grupos
+                if (ev.id.startsWith('cert-gen-') || ev.id.startsWith('cert-apto-') || ev.id.startsWith('group-')) {
+                    filteredEvents.push(ev);
+                }
+            } else if (role === 'coordinator') {
+                // Coordinador ve apertura de grupos y listas de asistencia
+                if (ev.id.startsWith('group-') || ev.id.startsWith('att-')) {
+                    filteredEvents.push(ev);
+                }
+            } else {
+                filteredEvents.push(ev);
+            }
+        });
+
+        // Cargar leídos desde localStorage por rol
+        const readKey = `saii_read_notifications_${role}`;
+        const readNotificationIds = JSON.parse(localStorage.getItem(readKey) || '[]');
         
-        let notificationData = [];
-        if (role === 'admin') {
-            notificationData = [
-                { id: 1, text: 'El docente Roberto Silva ha registrado asistencia para el grupo GRP001.', time: 'Hace 5 minutos' },
-                { id: 2, text: 'Manuel Alexis Sandoval está apto para emitir certificado en BASE DE DATOS.', time: 'Hace 20 minutos' },
-                { id: 3, text: 'Configuración del sistema actualizada por el administrador.', time: 'Hace 1 hora' }
-            ];
-        } else if (role === 'teacher') {
-            notificationData = [
-                { id: 1, text: 'El acta de calificaciones del grupo GRP001 ha sido habilitada.', time: 'Hace 15 minutos' },
-                { id: 2, text: 'La asistencia del grupo GRP003 tiene observaciones del administrador.', time: 'Hace 2 horas' },
-                { id: 3, text: 'Inicio de periodo académico 2026-I.', time: 'Hace 1 día' }
-            ];
-        } else {
-            notificationData = [
-                { id: 1, text: 'El Decano firmó el Certificado del alumno Manuel Alexis Sandoval.', time: 'Hace 10 minutos' },
-                { id: 2, text: 'Nuevo grupo de Base de Datos programado en el sistema.', time: 'Hace 30 minutos' },
-                { id: 3, text: 'Certificado de suficiencia generado correctamente.', time: 'Hace 2 horas' }
-            ];
+        filteredEvents = filteredEvents.map(ev => ({
+            ...ev,
+            read: readNotificationIds.includes(ev.id)
+        }));
+
+        // Limitar a las 5 más recientes
+        const displayEvents = filteredEvents.slice(0, 5);
+
+        // Actualizar el contador del badge
+        const unreadCount = filteredEvents.filter(ev => !ev.read).length;
+        const badge = document.getElementById('notificationsBadge');
+        if (badge) {
+            if (unreadCount > 0) {
+                badge.style.display = 'flex';
+                badge.innerText = unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
         }
 
-        // Check if cleared
-        if (this._notificationsCleared) {
-            list.innerHTML = '<div style="padding: 10px; text-align: center; color: var(--color-text-secondary); font-size: 0.85rem;">No hay nuevas notificaciones</div>';
+        if (displayEvents.length === 0) {
+            list.innerHTML = '<div style="padding: 15px; text-align: center; color: var(--color-text-secondary); font-size: 0.85rem;">No hay notificaciones académicas</div>';
             return;
         }
 
         list.innerHTML = '';
-        notificationData.forEach(n => {
+        displayEvents.forEach(n => {
             let icon = '🔔';
             const lowerText = n.text.toLowerCase();
             if (lowerText.includes('asistencia')) icon = '📅';
             else if (lowerText.includes('certificado') || lowerText.includes('constancia')) icon = '🎓';
-            else if (lowerText.includes('calificaciones') || lowerText.includes('notas') || lowerText.includes('aprobado') || lowerText.includes('apto')) icon = '📝';
-            else if (lowerText.includes('configuración') || lowerText.includes('periodo')) icon = '⚙️';
+            else if (lowerText.includes('calificaciones') || lowerText.includes('notas') || lowerText.includes('aprobado') || lowerText.includes('apto') || lowerText.includes('firma')) icon = '📝';
+            else if (lowerText.includes('aperturado') || lowerText.includes('grupo') || lowerText.includes('curso')) icon = '🏫';
 
             const item = document.createElement('div');
-            item.className = 'notification-item';
+            item.className = `notification-item ${n.read ? 'read' : ''}`;
             item.innerHTML = `
                 <div class="notification-icon-wrapper">${icon}</div>
                 <div class="notification-body">
@@ -5411,14 +5539,77 @@ class SAIIApp {
                     <div class="notification-time">🕒 ${n.time}</div>
                 </div>
             `;
+            
+            // Marcar individualmente como leída al hacer clic
+            item.addEventListener('click', () => {
+                if (!n.read) {
+                    readNotificationIds.push(n.id);
+                    localStorage.setItem(readKey, JSON.stringify(readNotificationIds));
+                    this.loadNotificationsList();
+                }
+            });
+
             list.appendChild(item);
         });
     }
 
     clearNotifications() {
-        this._notificationsCleared = true;
+        const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
+        const teacherId = DataManager.currentUser ? DataManager.currentUser.teacherId : null;
+
+        const groups = DataManager.getGroups() || [];
+        const certificates = DataManager.getCertificates() || [];
+        const attendanceLists = DataManager.cache.attendanceLists || [];
+        
+        const readKey = `saii_read_notifications_${role}`;
+        const readNotificationIds = JSON.parse(localStorage.getItem(readKey) || '[]');
+        
+        const addId = id => {
+            if (!readNotificationIds.includes(id)) readNotificationIds.push(id);
+        };
+
+        // Identificar qué notificaciones corresponden a este rol para agregarlas al listado de leídas
+        certificates.forEach(c => {
+            if (role === 'admin' || role === 'dean' || role === 'secretary' || (role === 'teacher' && teacherId)) {
+                if (role === 'teacher') {
+                    const group = groups.find(g => g.id == c.groupId);
+                    if (group && group.teacherId == teacherId) {
+                        addId(`cert-apto-${c.id}`);
+                        addId(`cert-sign-${c.id}`);
+                        addId(`cert-gen-${c.id}`);
+                    }
+                } else {
+                    addId(`cert-apto-${c.id}`);
+                    addId(`cert-sign-${c.id}`);
+                    addId(`cert-gen-${c.id}`);
+                }
+            }
+        });
+        
+        attendanceLists.forEach(l => {
+            if (role === 'admin' || role === 'coordinator' || (role === 'teacher' && teacherId)) {
+                if (role === 'teacher') {
+                    const group = groups.find(g => g.id == l.groupId);
+                    if (group && group.teacherId == teacherId) {
+                        addId(`att-${l.id}-${l.date}`);
+                    }
+                } else {
+                    addId(`att-${l.id}-${l.date}`);
+                }
+            }
+        });
+        
+        groups.forEach(g => {
+            if (role === 'admin' || role === 'secretary' || role === 'coordinator' || (role === 'teacher' && teacherId && g.teacherId == teacherId)) {
+                addId(`group-${g.id}`);
+            }
+        });
+        
+        localStorage.setItem(readKey, JSON.stringify(readNotificationIds));
+        
         const badge = document.getElementById('notificationsBadge');
         if (badge) badge.style.display = 'none';
+        
         this.loadNotificationsList();
         this.showToast('Notificaciones marcadas como leídas', 'success');
     }
