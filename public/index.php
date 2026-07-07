@@ -44,7 +44,7 @@ loadEnv(__DIR__ . '/../.env');
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
 
-$secureCookie = isset($_ENV['SESSION_SECURE']) && $_ENV['SESSION_SECURE'] === 'true';
+$secureCookie = (getenv('SESSION_SECURE') === 'true') || (isset($_ENV['SESSION_SECURE']) && $_ENV['SESSION_SECURE'] === 'true');
 if ($secureCookie) {
     ini_set('session.cookie_secure', 1);
 }
@@ -52,7 +52,6 @@ if ($secureCookie) {
 session_set_cookie_params([
     'lifetime' => 0,
     'path' => '/',
-    'domain' => '',
     'secure' => $secureCookie,
     'httponly' => true,
     'samesite' => 'Lax'
