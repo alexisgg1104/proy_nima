@@ -27,7 +27,12 @@ class Database {
 
         // Habilitar SSL para bases de datos en la nube (como Aiven) si DB_SSL es true
         if (isset($_ENV['DB_SSL']) && $_ENV['DB_SSL'] === 'true') {
-            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+            // PHP 8.5+ usa Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT
+            // PHP 8.4 y menor usa PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT
+            $sslAttr = defined('Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT')
+                ? \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT
+                : PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT;
+            $options[$sslAttr] = false;
         }
 
         try {
