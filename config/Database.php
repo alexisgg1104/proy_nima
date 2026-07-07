@@ -25,6 +25,11 @@ class Database {
             PDO::ATTR_EMULATE_PREPARES   => false,
         ];
 
+        // Habilitar SSL para bases de datos en la nube (como Aiven) si DB_SSL es true
+        if (isset($_ENV['DB_SSL']) && $_ENV['DB_SSL'] === 'true') {
+            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+        }
+
         try {
             $this->conn = new PDO($dsn, $user, $pass, $options);
         } catch (PDOException $e) {
