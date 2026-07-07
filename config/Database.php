@@ -11,11 +11,11 @@ class Database {
     private $conn;
 
     private function __construct() {
-        $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
-        $port = $_ENV['DB_PORT'] ?? '3306';
-        $db   = $_ENV['DB_NAME'] ?? 'saii_db';
-        $user = $_ENV['DB_USER'] ?? 'root';
-        $pass = $_ENV['DB_PASS'] ?? '';
+        $host = getenv('DB_HOST') ?: '127.0.0.1';
+        $port = getenv('DB_PORT') ?: '3306';
+        $db   = getenv('DB_NAME') ?: 'saii_db';
+        $user = getenv('DB_USER') ?: 'root';
+        $pass = getenv('DB_PASS') ?: '';
         $charset = 'utf8mb4';
 
         $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
@@ -26,7 +26,7 @@ class Database {
         ];
 
         // Habilitar SSL para bases de datos en la nube (como Aiven) si DB_SSL es true
-        if (isset($_ENV['DB_SSL']) && $_ENV['DB_SSL'] === 'true') {
+        if (getenv('DB_SSL') === 'true') {
             // PHP 8.5+ usa Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT
             // PHP 8.4 y menor usa PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT
             $sslAttr = defined('Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT')
