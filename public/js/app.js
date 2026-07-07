@@ -5395,16 +5395,21 @@ class SAIIApp {
 
         list.innerHTML = '';
         notificationData.forEach(n => {
+            let icon = '🔔';
+            const lowerText = n.text.toLowerCase();
+            if (lowerText.includes('asistencia')) icon = '📅';
+            else if (lowerText.includes('certificado') || lowerText.includes('constancia')) icon = '🎓';
+            else if (lowerText.includes('calificaciones') || lowerText.includes('notas') || lowerText.includes('aprobado') || lowerText.includes('apto')) icon = '📝';
+            else if (lowerText.includes('configuración') || lowerText.includes('periodo')) icon = '⚙️';
+
             const item = document.createElement('div');
-            item.style.padding = '8px';
-            item.style.borderRadius = '4px';
-            item.style.background = 'var(--color-bg-tertiary)';
-            item.style.border = '1px solid var(--color-border)';
-            item.style.fontSize = '0.8rem';
-            item.style.color = 'var(--color-text-primary)';
+            item.className = 'notification-item';
             item.innerHTML = `
-                <div style="line-height: 1.3; margin-bottom: 4px;">${n.text}</div>
-                <div style="font-size: 0.7rem; color: var(--color-text-secondary);">${n.time}</div>
+                <div class="notification-icon-wrapper">${icon}</div>
+                <div class="notification-body">
+                    <div class="notification-text">${n.text}</div>
+                    <div class="notification-time">🕒 ${n.time}</div>
+                </div>
             `;
             list.appendChild(item);
         });
