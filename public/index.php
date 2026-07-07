@@ -57,6 +57,11 @@ session_set_cookie_params([
     'samesite' => 'Lax'
 ]);
 
+// En entornos en la nube como Railway, asegurar que las sesiones se guarden en un directorio escribible (/tmp)
+if (getenv('PORT') || getenv('RAILWAY_STATIC_URL')) {
+    session_save_path('/tmp');
+}
+
 session_start();
 
 // 4. Registro del cargador de clases (PSR-4 Autoloader Autogestionado)
