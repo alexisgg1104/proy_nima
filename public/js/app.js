@@ -4596,7 +4596,8 @@ class SAIIApp {
                     });
                 } else {
                     // If apt, add rows for eligible types if they don't already exist
-                    if (isApt && !hasCert) {
+                    // Omit certificate for exam groups (must be emitted manually via modal)
+                    if (isApt && !hasCert && group.modality !== 'examen') {
                         certificateRows.push({
                             student,
                             group,

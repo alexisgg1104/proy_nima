@@ -163,10 +163,15 @@ class Certificate extends BaseModel {
 
     // Verificar si un estudiante es elegible para recibir un certificado
     public function checkEligibility($studentId, $groupId) {
-        // 1. Obtener los parámetros de aprobación configurados en la tabla settings
+        // 1. Obtener los parámetros de aprobación configurados en la tabla settings y el grupo
         $stmtSettings = $this->db->prepare("SELECT min_passing_grade, min_attendance_required FROM settings LIMIT 1");
         $stmtSettings->execute();
         $settings = $stmtSettings->fetch();
+
+        $stmtGroup = $this->db->prepare("SELECT modality FROM academic_groups WHERE id = :id");
+        $stmtGroup->execute(['id' => $groupId]);
+        $group = $stmtGroup->fetch();
+        $modality = $group ? $group['modality'] : 'regular';
 
         // Parámetros por defecto si no existen configuraciones en BD
         $minPassingGrade = $settings ? (float)$settings['min_passing_grade'] : 11.00;
@@ -234,7 +239,7 @@ class Certificate extends BaseModel {
             $reasons[] = "Nota promedio ponderada desaprobatoria ($averageGrade < $minPassingGrade).";
         }
 
-        if ($attendancePercentage < $minAttendanceRequired) {
+        if ($modality === 'regular' && $attendancePercentage < $minAttendanceRequired) {
             $isEligible = false;
             $reasons[] = "Porcentaje de asistencia insuficiente ($attendancePercentage% < $minAttendanceRequired%).";
         }
