@@ -242,10 +242,32 @@ class SAIIApp {
         if (userMenuBtn && userDropdown) {
             userMenuBtn.addEventListener('click', () => {
                 userDropdown.style.display = userDropdown.style.display === 'none' ? 'block' : 'none';
+                // Close notifications dropdown if open
+                const notifDropdown = document.getElementById('notificationsDropdown');
+                if (notifDropdown) notifDropdown.style.display = 'none';
             });
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.user-menu')) {
                     userDropdown.style.display = 'none';
+                }
+            });
+        }
+
+        // Notifications menu
+        const notificationsBtn = document.getElementById('notificationsBtn');
+        const notificationsDropdown = document.getElementById('notificationsDropdown');
+        if (notificationsBtn && notificationsDropdown) {
+            notificationsBtn.addEventListener('click', () => {
+                notificationsDropdown.style.display = notificationsDropdown.style.display === 'none' ? 'block' : 'none';
+                if (notificationsDropdown.style.display === 'block') {
+                    // Close user dropdown if open
+                    if (userDropdown) userDropdown.style.display = 'none';
+                    this.loadNotificationsList();
+                }
+            });
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#notificationsBtn') && !e.target.closest('#notificationsDropdown')) {
+                    if (notificationsDropdown) notificationsDropdown.style.display = 'none';
                 }
             });
         }
@@ -5336,6 +5358,64 @@ class SAIIApp {
             console.error("Error al crear certificado:", error);
             this.showToast('Error al crear el documento: ' + error.message, 'error');
         }
+    }
+
+    loadNotificationsList() {
+        const list = document.getElementById('notificationsList');
+        if (!list) return;
+
+        const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
+        
+        let notificationData = [];
+        if (role === 'admin') {
+            notificationData = [
+                { id: 1, text: 'El docente Roberto Silva ha registrado asistencia para el grupo GRP001.', time: 'Hace 5 minutos' },
+                { id: 2, text: 'Manuel Alexis Sandoval está apto para emitir certificado en BASE DE DATOS.', time: 'Hace 20 minutos' },
+                { id: 3, text: 'Configuración del sistema actualizada por el administrador.', time: 'Hace 1 hora' }
+            ];
+        } else if (role === 'teacher') {
+            notificationData = [
+                { id: 1, text: 'El acta de calificaciones del grupo GRP001 ha sido habilitada.', time: 'Hace 15 minutos' },
+                { id: 2, text: 'La asistencia del grupo GRP003 tiene observaciones del administrador.', time: 'Hace 2 horas' },
+                { id: 3, text: 'Inicio de periodo académico 2026-I.', time: 'Hace 1 día' }
+            ];
+        } else {
+            notificationData = [
+                { id: 1, text: 'El Decano firmó el Certificado del alumno Manuel Alexis Sandoval.', time: 'Hace 10 minutos' },
+                { id: 2, text: 'Nuevo grupo de Base de Datos programado en el sistema.', time: 'Hace 30 minutos' },
+                { id: 3, text: 'Certificado de suficiencia generado correctamente.', time: 'Hace 2 horas' }
+            ];
+        }
+
+        // Check if cleared
+        if (this._notificationsCleared) {
+            list.innerHTML = '<div style="padding: 10px; text-align: center; color: var(--color-text-secondary); font-size: 0.85rem;">No hay nuevas notificaciones</div>';
+            return;
+        }
+
+        list.innerHTML = '';
+        notificationData.forEach(n => {
+            const item = document.createElement('div');
+            item.style.padding = '8px';
+            item.style.borderRadius = '4px';
+            item.style.background = 'var(--color-bg-tertiary)';
+            item.style.border = '1px solid var(--color-border)';
+            item.style.fontSize = '0.8rem';
+            item.style.color = 'var(--color-text-primary)';
+            item.innerHTML = `
+                <div style="line-height: 1.3; margin-bottom: 4px;">${n.text}</div>
+                <div style="font-size: 0.7rem; color: var(--color-text-secondary);">${n.time}</div>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    clearNotifications() {
+        this._notificationsCleared = true;
+        const badge = document.getElementById('notificationsBadge');
+        if (badge) badge.style.display = 'none';
+        this.loadNotificationsList();
+        this.showToast('Notificaciones marcadas como leídas', 'success');
     }
 
     async signDocument(certId, role) {

@@ -154,10 +154,21 @@
                             <option value="dean">Decano</option>
                         </select>
                     </div>
-                    <button class="header-btn notifications-btn" id="notificationsBtn" title="Notificaciones">
-                        🔔
-                        <span class="badge">3</span>
-                    </button>
+                    <div class="user-menu" style="position: relative;">
+                        <button class="header-btn notifications-btn" id="notificationsBtn" title="Notificaciones">
+                            🔔
+                            <span class="badge" id="notificationsBadge">3</span>
+                        </button>
+                        <div class="dropdown-menu" id="notificationsDropdown" style="display: none; right: 0; width: 300px; padding: 12px; max-height: 400px; overflow-y: auto;">
+                            <div style="font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid var(--color-border); padding-bottom: 5px; color: var(--color-text-primary); display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;">
+                                <span>Notificaciones</span>
+                                <span style="font-size: 0.75rem; font-weight: normal; color: var(--color-primary); cursor: pointer;" onclick="app.clearNotifications()">Marcar como leídas</span>
+                            </div>
+                            <div id="notificationsList" style="display: flex; flex-direction: column; gap: 8px;">
+                                <!-- Notificaciones dinámicas -->
+                            </div>
+                        </div>
+                    </div>
                     
                     <button class="header-btn theme-btn" id="themeToggle" title="Cambiar tema">
                         🌙
