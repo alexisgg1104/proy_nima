@@ -315,7 +315,8 @@ class SAIIApp {
                 if (e.target.closest('.action-icons') || e.target.closest('button')) return;
 
                 const status = row.getAttribute('data-status');
-                if (status === 'Apto') {
+                const allowedStatuses = ['Apto', 'Por firmar', 'Pendiente', 'Generado'];
+                if (allowedStatuses.includes(status)) {
                     const isSelected = row.classList.contains('selected-row');
                     
                     // Remove selection from all other rows
@@ -5235,7 +5236,7 @@ class SAIIApp {
         document.getElementById('certificateModal').style.display = 'block';
     }
 
-    openCertificateModal() {
+    async openCertificateModal() {
         const selectedRow = document.querySelector('#certificatesTableBody tr.selected-row');
         if (!selectedRow) {
             this.showToast('Seleccione un alumno aprobado en la tabla', 'error');
@@ -5244,17 +5245,46 @@ class SAIIApp {
 
         const studentId = selectedRow.getAttribute('data-student-id');
         const groupId = selectedRow.getAttribute('data-group-id');
-        const type = selectedRow.getAttribute('data-type');
 
         const student = DataManager.getStudentById(studentId);
         const group = DataManager.getGroupById(groupId);
 
         if (student && group) {
+            // Check existing certificates
+            const certificates = await DataManager.getCertificates();
+            const studentCerts = (certificates || []).filter(c => 
+                c.studentId == studentId && c.groupId == groupId && c.status !== 'annulled'
+            );
+
+            const hasCert = studentCerts.some(c => c.type === 'certificado');
+            const hasConst = studentCerts.some(c => c.type === 'constancia');
+
+            if (hasCert && hasConst) {
+                this.showToast('Ya se han emitido todos los documentos posibles para este alumno en este grupo.', 'info');
+                return;
+            }
+
             document.getElementById('emitStudentId').value = studentId;
             document.getElementById('emitGroupId').value = groupId;
             document.getElementById('emitStudentName').value = `${student.firstName} ${student.lastName}`;
             document.getElementById('emitGroupName').value = `${group.courseName} (${group.code})`;
-            document.getElementById('emitDocType').value = type || 'certificado';
+
+            // Populate options in dropdown based on what is missing
+            const docTypeSelect = document.getElementById('emitDocType');
+            docTypeSelect.innerHTML = '';
+
+            if (!hasCert) {
+                const optCert = document.createElement('option');
+                optCert.value = 'certificado';
+                optCert.textContent = 'Certificado de Aprobación';
+                docTypeSelect.appendChild(optCert);
+            }
+            if (!hasConst) {
+                const optConst = document.createElement('option');
+                optConst.value = 'constancia';
+                optConst.textContent = 'Constancia de Participación';
+                docTypeSelect.appendChild(optConst);
+            }
 
             document.getElementById('modalOverlay').style.display = 'block';
             document.getElementById('emitCertModal').style.display = 'block';
