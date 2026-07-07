@@ -63,6 +63,7 @@ if (getenv('PORT') || getenv('RAILWAY_STATIC_URL')) {
 }
 
 session_start();
+header('X-Debug-Session: ' . session_id());
 
 // 4. Registro del cargador de clases (PSR-4 Autoloader Autogestionado)
 spl_autoload_register(function ($class) {
