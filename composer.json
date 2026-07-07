@@ -3,6 +3,8 @@
     "description": "Sistema Administrativo del Instituto de Informática",
     "type": "project",
     "require": {
-        "php": ">=8.0"
+        "php": ">=8.0",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*"
     }
 }
