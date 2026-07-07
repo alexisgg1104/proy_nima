@@ -813,6 +813,33 @@ El agente debe actualizar esta sección al terminar cada fase.
   - Registrar observación en el botón de chat como Decano y verificar persistencia en base de datos al recargar la página.
 - Pendientes o riesgos: ninguno.
 
+#### Ajustes de Cabecera, Ocultamiento de Sidebar y Notificaciones Dinámicas por Rol (Fase 7 Ajustes)
+
+- Fecha: 2026-07-06
+- Rama: main
+- Commit o mensaje sugerido: `feat: enrutar ocultamiento de sidebar, segmentar notificaciones reales por rol e incorporar toggle en cabecera`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `public/css/styles.css`
+  - `public/index.html`
+  - `public/js/app.js`
+  - `docs/frontend/SAII_BACKLOG.md`
+- Funciones creadas o modificadas:
+  - En `public/js/app.js`:
+    - `loadNotificationsList()` (modificada: genera notificaciones a partir de los datos reales del caché, las segmenta según el rol del usuario conectado y las persiste como leídas en `localStorage` individualmente)
+    - `clearNotifications()` (modificada: marca como leídas todas las notificaciones del rol en el `localStorage`)
+    - `loginUser()` y `simulateRoleChange()` (modificadas: gatillan la recarga de notificaciones del rol en el inicio de sesión y la simulación de roles)
+- Cambios principales:
+  - **Contraer/Ocultar Menú Lateral**: Agregado el botón de menú hamburguesa (☰) en el encabezado izquierdo reemplazando el texto descriptivo del sistema. En desktop, la barra lateral se contrae/expande desplazándose `-280px` hacia la izquierda con transición fluida. En móviles, opera el menú lateral responsivo.
+  - **Notificaciones Reales por Rol**: Reemplazadas las notificaciones estáticas por alertas en tiempo real generadas dinámicamente sobre la base de datos MySQL (certificados por firmar, constancias listas para entregar, asistencias y nuevos grupos). Las alertas se filtran en tiempo real para que al Decano solo le aparezcan documentos pendientes de firma, al Docente los de sus grupos y a la Secretaria/Admin los del sistema general.
+  - **Persistencia Individual por Rol**: La lectura de notificaciones se guarda por rol en el `localStorage`, logrando que la simulación refleje estados de lectura independientes por cada usuario.
+  - **Corrección de undefined en nombres**: Solucionado el error que mostraba nombres `undefined` de alumnos y docentes en la alerta combinando los atributos `firstName` y `lastName`.
+- Pruebas realizadas:
+  - Clic en el botón ☰ contrae el menú lateral en pantallas mayores a 1024px de manera fluida.
+  - Simular rol Decano muestra el badge de firmas y un listado de documentos pendientes sin nombres `undefined`.
+  - Marcar notificaciones como leídas en Decano no altera el estado inicial del Docente o la Secretaria al cambiar el rol simulado.
+- Pendientes o riesgos: ninguno.
+
 ---
 
 ## Regla final del backlog
