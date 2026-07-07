@@ -40,8 +40,8 @@ class Database {
         } catch (PDOException $e) {
             // Registrar error de manera segura en log interno
             error_log("Connection failed: " . $e->getMessage());
-            // Lanzar excepción genérica para el usuario
-            throw new Exception("Error de conexión a la base de datos.");
+            // Lanzar excepción incluyendo el mensaje real temporalmente para depuración
+            throw new Exception("Error de conexión a la base de datos: " . $e->getMessage());
         }
     }
 
