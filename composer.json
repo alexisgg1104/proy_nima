@@ -1,0 +1,8 @@
+{
+    "name": "alexisgg1104/saii",
+    "description": "Sistema Administrativo del Instituto de Informática",
+    "type": "project",
+    "require": {
+        "php": ">=8.0"
+    }
+}
