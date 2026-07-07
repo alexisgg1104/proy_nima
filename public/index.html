@@ -144,9 +144,9 @@
                 </div>
                 
                 <div class="header-right">
-                    <div class="role-simulator-wrapper" style="margin-right: 15px; display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-secondary);">Simular Rol:</span>
-                        <select id="simulatedRoleSelect" class="role-selector-header filter-select" style="padding: 4px 10px; font-size: 0.85rem; border-radius: 4px; border: 1px solid var(--color-border); background: var(--color-bg-secondary); color: var(--color-text-primary); cursor: pointer; outline: none;" onchange="app.simulateRoleChange(this.value)">
+                    <div class="role-simulator-wrapper">
+                        <span class="role-simulator-label">Simular Rol:</span>
+                        <select id="simulatedRoleSelect" class="role-selector-header" onchange="app.simulateRoleChange(this.value)">
                             <option value="admin">Administrador / Director</option>
                             <option value="secretary">Secretaria</option>
                             <option value="teacher">Docente</option>
@@ -175,9 +175,10 @@
                     </button>
                     
                     <div class="user-menu">
-                        <button class="header-btn user-btn" id="userMenuBtn">
-                            👤
-                            <span id="currentUser">Admin</span>
+                        <button class="user-btn" id="userMenuBtn">
+                            <div class="user-avatar">👤</div>
+                            <span id="currentUser" class="user-name">Admin</span>
+                            <span class="user-arrow">▼</span>
                         </button>
                         <div class="dropdown-menu" id="userDropdown" style="display: none;">
                             <a href="#" class="dropdown-item" id="myProfileBtn">Mi Perfil</a>
