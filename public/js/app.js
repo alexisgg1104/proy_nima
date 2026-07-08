@@ -57,10 +57,18 @@ class SAIIApp {
             try {
                 // Preload cache from server before showing dashboard
                 await DataManager.preload();
+                this.loginUser(DataManager.currentUser.role);
             } catch (e) {
                 console.error("Failed to preload cache on startup", e);
+                // Limpiar la sesión corrupta o expirada
+                localStorage.removeItem('saii_currentUser');
+                DataManager.currentUser = null;
+                if (window.mockData) {
+                    window.mockData.currentUser = null;
+                }
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('appContainer').style.display = 'none';
             }
-            this.loginUser(DataManager.currentUser.role);
         } else {
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('appContainer').style.display = 'none';

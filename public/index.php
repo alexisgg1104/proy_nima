@@ -237,6 +237,151 @@ $router->addRoute('GET', '/api/classrooms', function() {
     \App\Core\BaseController::sendJson($data);
 });
 
+$router->addRoute('GET', '/api/preload', function() {
+    if (!isset($_SESSION['user'])) {
+        \App\Core\BaseController::sendError('No autenticado.', 401);
+    }
+    
+    try {
+        $db = \Config\Database::getInstance()->getConnection();
+        
+        // 1. Students
+        $students = $db->query("SELECT * FROM students ORDER BY last_name ASC, first_name ASC")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // 2. Teachers
+        $teachers = $db->query("SELECT * FROM teachers ORDER BY last_name ASC, first_name ASC")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // 3. Courses & Modules
+        $courses = $db->query("SELECT * FROM courses ORDER BY code ASC")->fetchAll(\PDO::FETCH_ASSOC);
+        $modules = $db->query("SELECT * FROM course_modules ORDER BY course_id ASC, id ASC")->fetchAll(\PDO::FETCH_ASSOC);
+        // Group modules by course
+        $modulesByCourse = [];
+        foreach ($modules as $m) {
+            $modulesByCourse[$m['course_id']][] = [
+                'id' => (int)$m['id'],
+                'course_module_id' => (int)$m['id'],
+                'name' => $m['name'],
+                'module_name' => $m['name'],
+                'percentage' => (float)$m['percentage'],
+                'module_percentage' => (float)$m['percentage']
+            ];
+        }
+        foreach ($courses as &$c) {
+            $c['modules'] = $modulesByCourse[$c['id']] ?? [];
+        }
+        unset($c);
+        
+        // 4. Academic Groups
+        $groups = $db->query("
+            SELECT g.*, c.name AS course_name, CONCAT(t.first_name, ' ', t.last_name) AS teacher_name
+            FROM academic_groups g
+            LEFT JOIN courses c ON g.course_id = c.id
+            LEFT JOIN teachers t ON g.teacher_id = t.id
+            ORDER BY g.code ASC
+        ")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // 5. Enrollments
+        $enrollments = $db->query("
+            SELECT e.*, 
+                   CONCAT(s.first_name, ' ', s.last_name) AS student_name,
+                   s.code AS student_code,
+                   g.code AS group_code,
+                   c.name AS course_name
+            FROM enrollments e
+            LEFT JOIN students s ON e.student_id = s.id
+            LEFT JOIN academic_groups g ON e.group_id = g.id
+            LEFT JOIN courses c ON g.course_id = c.id
+            ORDER BY e.id DESC
+        ")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // 6. Settings
+        $settings = $db->query("SELECT * FROM settings LIMIT 1")->fetch(\PDO::FETCH_ASSOC);
+        
+        // 7. Saved Reports
+        $reports = $db->query("SELECT * FROM saved_reports ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // 8. Certificates
+        $certificates = $db->query("
+            SELECT cert.*,
+                   CONCAT(s.first_name, ' ', s.last_name) AS student_name,
+                   s.code AS student_code,
+                   g.code AS group_code,
+                   c.name AS course_name
+            FROM certificates cert
+            LEFT JOIN students s ON cert.student_id = s.id
+            LEFT JOIN academic_groups g ON cert.group_id = g.id
+            LEFT JOIN courses c ON cert.course_id = c.id
+            ORDER BY cert.id DESC
+        ")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        $certSignatures = $db->query("SELECT * FROM certificate_signatures")->fetchAll(\PDO::FETCH_ASSOC);
+        $signaturesByCert = [];
+        foreach ($certSignatures as $sig) {
+            $signaturesByCert[$sig['certificate_id']][] = [
+                'signer_name' => $sig['signer_name'],
+                'signer_role' => $sig['signer_role'],
+                'signed_at' => $sig['signed_at'],
+                'is_signed' => (bool)$sig['is_signed']
+            ];
+        }
+        foreach ($certificates as &$cert) {
+            $cert['signatures'] = $signaturesByCert[$cert['id']] ?? [];
+        }
+        unset($cert);
+        
+        // 9. Grades
+        $grades = $db->query("
+            SELECT gs.group_id, gr.student_id, gr.course_module_id, gr.grade
+            FROM grade_records gr
+            JOIN grade_sheets gs ON gr.grade_sheet_id = gs.id
+        ")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // 10. Grade Sheets
+        $gradeSheets = $db->query("SELECT id, group_id, status, updated_at FROM grade_sheets")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // 11. Attendance Lists
+        $attendanceLists = $db->query("SELECT * FROM student_attendance_lists ORDER BY date DESC")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // 12. Attendance Records
+        $attendanceRecords = $db->query("
+            SELECT ar.student_id, ar.status, al.group_id, al.date, ar.attendance_list_id AS list_id
+            FROM student_attendance_records ar
+            JOIN student_attendance_lists al ON ar.attendance_list_id = al.id
+        ")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // 13. Users
+        $users = $db->query("
+            SELECT u.id, u.username, u.full_name, u.email, u.status, r.key_name AS role_key
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            ORDER BY u.username ASC
+        ")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // 14. Roles
+        $roles = $db->query("SELECT * FROM roles ORDER BY id ASC")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        \App\Core\BaseController::sendJson([
+            'students' => $students,
+            'teachers' => $teachers,
+            'courses' => $courses,
+            'groups' => $groups,
+            'enrollments' => $enrollments,
+            'settings' => $settings,
+            'reports' => $reports,
+            'certificates' => $certificates,
+            'grades' => $grades,
+            'gradeSheets' => $gradeSheets,
+            'attendanceLists' => $attendanceLists,
+            'attendanceRecords' => $attendanceRecords,
+            'users' => $users,
+            'roles' => $roles
+        ]);
+        
+    } catch (\Exception $e) {
+        \App\Core\BaseController::sendError($e->getMessage(), 500);
+    }
+});
+
 use App\Controllers\AuthController;
 use App\Controllers\UserController;
 

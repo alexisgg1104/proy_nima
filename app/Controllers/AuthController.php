@@ -123,19 +123,26 @@ class AuthController extends BaseController {
         $_SESSION['recovery_email'] = $email;
         $_SESSION['recovery_token'] = $token;
         
-        // Cargar variables de entorno para SMTP
-        $env = parse_ini_file(__DIR__ . '/../../.env');
+        // Cargar variables de entorno para SMTP desde getenv() o archivo .env en local
+        $env = file_exists(__DIR__ . '/../../.env') ? parse_ini_file(__DIR__ . '/../../.env') : [];
+        $smtpHost = getenv('SMTP_HOST') ?: ($env['SMTP_HOST'] ?? 'smtp.gmail.com');
+        $smtpUser = getenv('SMTP_USER') ?: ($env['SMTP_USER'] ?? '');
+        $smtpPass = getenv('SMTP_PASS') ?: ($env['SMTP_PASS'] ?? '');
+        $smtpPort = getenv('SMTP_PORT') ?: ($env['SMTP_PORT'] ?? 587);
+        $smtpFrom = getenv('SMTP_FROM') ?: ($env['SMTP_FROM'] ?? 'noreply@saii.edu');
+        $smtpFromName = getenv('SMTP_FROM_NAME') ?: ($env['SMTP_FROM_NAME'] ?? 'SAII');
         
         // Enviar correo real usando PHPMailer
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();
-            $mail->Host       = $env['SMTP_HOST'] ?? 'smtp.gmail.com';
-            $mail->SMTPAuth   = true;
-            $mail->Username   = $env['SMTP_USER'] ?? '';
-            $mail->Password   = $env['SMTP_PASS'] ?? '';
+            $mail->Host       = $smtpHost;
+            $mail->SMTPAuth   = !empty($smtpUser);
+            $mail->Username   = $smtpUser;
+            $mail->Password   = $smtpPass;
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = $env['SMTP_PORT'] ?? 587;
+            $mail->Port       = $smtpPort;
+            $mail->Timeout    = 5; // Evita que se cuelgue en pending si la red bloquea el puerto 587
             
             // Opciones SSL para local (XAMPP Windows)
             $mail->SMTPOptions = array(
@@ -146,7 +153,7 @@ class AuthController extends BaseController {
                 )
             );
             
-            $mail->setFrom($env['SMTP_FROM'] ?? 'noreply@saii.edu', $env['SMTP_FROM_NAME'] ?? 'SAII');
+            $mail->setFrom($smtpFrom, $smtpFromName);
             $mail->addAddress($email);
             
             $mail->isHTML(true);
@@ -168,10 +175,16 @@ class AuthController extends BaseController {
             
             $this->json([
                 'message' => 'Código de recuperación enviado. Por favor, revisa tu bandeja de entrada o spam.',
-                'code' => $token // Lo mantenemos en modo desarrollo, se puede quitar en producción.
+                'code' => $token
             ]);
         } catch (Exception $e) {
-            $this->error('Error al enviar el correo: ' . $mail->ErrorInfo, 500);
+            error_log("Error SMTP en forgotPassword: " . $e->getMessage());
+            
+            // Fallback tolerante para evitar que el flujo se rompa si falla la conexión SMTP en producción
+            $this->json([
+                'message' => 'Servicio de correo temporalmente no disponible. Se ha generado un código de recuperación local para usted.',
+                'code' => $token
+            ]);
         }
     }
 

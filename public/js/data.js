@@ -629,44 +629,26 @@ const DataManager = {
     preload: async function() {
         if (USE_MOCK) return;
         
-        // Asegurar la sesión y el token CSRF antes de disparar peticiones paralelas
+        // Asegurar la sesión y el token CSRF antes de disparar la precarga
         await APIClient.fetchCSRFToken();
         
         try {
-            const [
-                studentsRes, teachersRes, coursesRes, groupsRes, 
-                enrollmentsRes, settingsRes, reportsRes, certificatesRes,
-                gradesRes, gradesSheetsRes, attendanceListsRes, attendanceRecordsRes, usersRes, rolesRes
-            ] = await Promise.all([
-                APIClient.request('/students'),
-                APIClient.request('/teachers'),
-                APIClient.request('/courses'),
-                APIClient.request('/groups'),
-                APIClient.request('/enrollments'),
-                APIClient.request('/settings'),
-                APIClient.request('/reports/saved'),
-                APIClient.request('/certificates'),
-                APIClient.request('/grades'),
-                APIClient.request('/grades/sheets'),
-                APIClient.request('/attendance'),
-                APIClient.request('/attendance/records'),
-                APIClient.request('/users').catch(() => ({ data: [] })),
-                APIClient.request('/roles').catch(() => ({ data: [] }))
-            ]);
+            const res = await APIClient.request('/preload');
+            const data = res.data || {};
 
-            this.cache.students = (studentsRes.data || []).map(mappers.student);
-            this.cache.teachers = (teachersRes.data || []).map(mappers.teacher);
-            this.cache.courses = (coursesRes.data || []).map(mappers.course);
-            this.cache.groups = (groupsRes.data || []).map(mappers.group);
-            this.cache.enrollments = (enrollmentsRes.data || []).map(mappers.enrollment);
-            this.cache.settings = mappers.settings(settingsRes.data);
-            this.cache.reports = (reportsRes.data || []).map(mappers.savedReport);
-            this.cache.certificates = (certificatesRes.data || []).map(mappers.certificate);
-            this.cache.gradeSheets = gradesSheetsRes.data || [];
+            this.cache.students = (data.students || []).map(mappers.student);
+            this.cache.teachers = (data.teachers || []).map(mappers.teacher);
+            this.cache.courses = (data.courses || []).map(mappers.course);
+            this.cache.groups = (data.groups || []).map(mappers.group);
+            this.cache.enrollments = (data.enrollments || []).map(mappers.enrollment);
+            this.cache.settings = mappers.settings(data.settings);
+            this.cache.reports = (data.reports || []).map(mappers.savedReport);
+            this.cache.certificates = (data.certificates || []).map(mappers.certificate);
+            this.cache.gradeSheets = data.gradeSheets || [];
             
             // Map grades
             const groupedGrades = {};
-            (gradesRes.data || []).forEach(r => {
+            (data.grades || []).forEach(r => {
                 const key = `${r.group_id}-${r.student_id}`;
                 if (!groupedGrades[key]) {
                     groupedGrades[key] = {
@@ -680,16 +662,16 @@ const DataManager = {
             this.cache.grades = Object.values(groupedGrades);
 
             // Map attendance lists and records
-            this.cache.attendanceLists = (attendanceListsRes.data || []).map(mappers.attendanceList);
-            this.cache.attendanceRecords = (attendanceRecordsRes.data || []).map(r => ({
+            this.cache.attendanceLists = (data.attendanceLists || []).map(mappers.attendanceList);
+            this.cache.attendanceRecords = (data.attendanceRecords || []).map(r => ({
                 studentId: Number(r.student_id),
                 status: r.status,
                 groupId: Number(r.group_id),
                 date: r.date,
                 listId: Number(r.list_id)
             }));
-            this.cache.users = (usersRes.data || []).map(mappers.user);
-            this.cache.roles = rolesRes.data || [];
+            this.cache.users = (data.users || []).map(mappers.user);
+            this.cache.roles = data.roles || [];
         } catch (e) {
             console.error("Error preloading SAII REST API cache:", e);
             throw e;
