@@ -516,3 +516,22 @@ Estado: **Pendiente**.
   * **Depuración de Autenticación y Carga de Roles (Fase B9):** Se habilitaron permisos de consulta en `/api/roles` para todos los roles autenticados. Esto permite que docentes y decanos puedan leer sus respectivos permisos al iniciar sesión, desbloqueando la carga del menú lateral.
   * **Permisos en Controladores Académicos (Fase B9):** Se extendieron los alcances de lectura (`GET /index`) de estudiantes, docentes, cursos, grupos, matrículas, certificados e informes de dashboard para incluir los roles `teacher` y `dean`. Esto solucionó los errores HTTP 403 (Acceso Denegado) que bloqueaban la secuencia de precarga de caché del frontend al iniciar sesión.
 
+### Ajustes de Base de Datos y Comboboxes de Especialidades/Aulas
+- **Fecha:** 2026-07-08
+- **Rama:** `main`
+- **Commit o mensaje sugerido:** `fix: comboboxes para especialidad/aulas y correccion de error CSRF de sesion paralela`
+- **Estado final:** Completado
+- **Archivos modificados:**
+  * `public/index.php`
+  * `public/index.html`
+  * `public/js/data.js`
+  * `public/js/app.js`
+  * `database/schema.sql`
+  * `database/seeds.sql`
+  * `docs/backend/SAII_BACKEND_BACKLOG.md`
+- **Cambios principales:**
+  * **Creación de tablas `specialties` y `classrooms`**: Definidas en `schema.sql` y `seeds.sql` con valores iniciales por defecto.
+  * **Comboboxes dinámicos**: Se cambiaron los campos de texto libre para Especialidad del Docente y Aula/Laboratorio del Grupo Académico por elementos `<select>` en el HTML, cargando sus opciones de manera dinámica desde el backend mediante llamadas a los endpoints `/api/specialties` y `/api/classrooms`.
+  * **Resolución del error CSRF de sesiones paralelas**: Se añadió una llamada síncrona a `APIClient.fetchCSRFToken()` al inicio de `DataManager.preload()` para forzar el establecimiento de la cookie `PHPSESSID` en el navegador antes de disparar el lote de consultas GET paralelas, eliminando la duplicación/colisión de sesiones en el servidor y solucionando el error 403 de token inválido en solicitudes de guardado de permisos.
+
+
