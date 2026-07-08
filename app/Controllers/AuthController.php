@@ -123,72 +123,107 @@ class AuthController extends BaseController {
         $_SESSION['recovery_email'] = $email;
         $_SESSION['recovery_token'] = $token;
         
-        // Cargar variables de entorno para SMTP desde getenv() o archivo .env en local
+        // Leer variables de entorno (.env local o Railway variables)
         $env = file_exists(__DIR__ . '/../../.env') ? parse_ini_file(__DIR__ . '/../../.env') : [];
+        $resendApiKey = getenv('RESEND_API_KEY') ?: ($env['RESEND_API_KEY'] ?? '');
+        $smtpFrom     = getenv('SMTP_FROM')      ?: ($env['SMTP_FROM']      ?? 'onboarding@resend.dev');
+        $smtpFromName = getenv('SMTP_FROM_NAME') ?: ($env['SMTP_FROM_NAME'] ?? 'SAII');
+
+        $emailBody = "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;
+                        padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>
+                <h2 style='color: #0d3580;'>Recuperación de Contraseña — SAII</h2>
+                <p>Hola,</p>
+                <p>Has solicitado restablecer tu contraseña en el <strong>Sistema Administrativo del Instituto de Informática (SAII)</strong>.</p>
+                <p style='font-size: 1.1rem;'>Tu código de seguridad es:</p>
+                <p style='font-size: 2rem; font-weight: bold; letter-spacing: 8px;
+                           text-align: center; color: #0d3580; padding: 16px;
+                           background: #f0f4ff; border-radius: 6px;'>{$token}</p>
+                <p>Ingresa este código en la pantalla de recuperación para crear tu nueva contraseña.</p>
+                <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
+                <p style='font-size: 12px; color: #777;'>Si no solicitaste este cambio, ignora este correo de forma segura.</p>
+            </div>
+        ";
+
+        // ── Intento 1: API HTTP de Resend (funciona en Railway, no usa SMTP) ──────
+        if (!empty($resendApiKey)) {
+            $payload = json_encode([
+                'from'    => "{$smtpFromName} <{$smtpFrom}>",
+                'to'      => [$email],
+                'subject' => 'Código de recuperación de contraseña — SAII',
+                'html'    => $emailBody,
+            ]);
+
+            $ch = curl_init('https://api.resend.com/emails');
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => $payload,
+                CURLOPT_TIMEOUT        => 10,
+                CURLOPT_HTTPHEADER     => [
+                    'Content-Type: application/json',
+                    "Authorization: Bearer {$resendApiKey}",
+                ],
+            ]);
+            $response   = curl_exec($ch);
+            $httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError  = curl_error($ch);
+            curl_close($ch);
+
+            if ($httpStatus === 200 || $httpStatus === 201) {
+                $this->json([
+                    'message' => 'Código de recuperación enviado. Por favor, revisa tu bandeja de entrada o spam.',
+                    'code'    => $token,
+                ]);
+                return;
+            }
+
+            // Si Resend falló, loggear el error y continuar al fallback PHPMailer
+            error_log("Resend API error ({$httpStatus}): {$response} | cURL: {$curlError}");
+        }
+
+        // ── Intento 2: PHPMailer SMTP (para entorno local con XAMPP) ────────────
         $smtpHost = getenv('SMTP_HOST') ?: ($env['SMTP_HOST'] ?? 'smtp.gmail.com');
         $smtpUser = getenv('SMTP_USER') ?: ($env['SMTP_USER'] ?? '');
         $smtpPass = getenv('SMTP_PASS') ?: ($env['SMTP_PASS'] ?? '');
-        $smtpPort = getenv('SMTP_PORT') ?: ($env['SMTP_PORT'] ?? 587);
-        $smtpFrom = getenv('SMTP_FROM') ?: ($env['SMTP_FROM'] ?? 'noreply@saii.edu');
-        $smtpFromName = getenv('SMTP_FROM_NAME') ?: ($env['SMTP_FROM_NAME'] ?? 'SAII');
-        
-        // Enviar correo real usando PHPMailer
+        $smtpPort = intval(getenv('SMTP_PORT') ?: ($env['SMTP_PORT'] ?? 587));
+
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();
-            $mail->Host       = $smtpHost;
-            $mail->SMTPAuth   = !empty($smtpUser);
-            $mail->Username   = $smtpUser;
-            $mail->Password   = $smtpPass;
-            // Elegir encriptación de forma dinámica según el puerto
-            if (intval($smtpPort) === 465) {
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // SSL implícito
-            } else {
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // TLS / STARTTLS
-            }
-            $mail->Port       = $smtpPort;
-            $mail->Timeout    = 5;
-            
-            // Opciones SSL para local (XAMPP Windows)
-            $mail->SMTPOptions = array(
-                'ssl' => array(
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                    'allow_self_signed' => true
-                )
-            );
-            
+            $mail->Host      = $smtpHost;
+            $mail->SMTPAuth  = !empty($smtpUser);
+            $mail->Username  = $smtpUser;
+            $mail->Password  = $smtpPass;
+            $mail->SMTPSecure = ($smtpPort === 465)
+                ? PHPMailer::ENCRYPTION_SMTPS
+                : PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port    = $smtpPort;
+            $mail->Timeout = 5;
+            $mail->SMTPOptions = ['ssl' => [
+                'verify_peer'       => false,
+                'verify_peer_name'  => false,
+                'allow_self_signed' => true,
+            ]];
+
             $mail->setFrom($smtpFrom, $smtpFromName);
             $mail->addAddress($email);
-            
             $mail->isHTML(true);
             $mail->CharSet = 'UTF-8';
-            $mail->Subject = 'Código de recuperación de contraseña - SAII';
-            $mail->Body    = "
-                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>
-                    <h2 style='color: #0d6efd;'>Recuperación de Contraseña</h2>
-                    <p>Hola,</p>
-                    <p>Has solicitado restablecer tu contraseña en el Sistema SAII.</p>
-                    <p>Tu código de seguridad es: <strong>{$token}</strong></p>
-                    <p>Ingresa este código en la pantalla de recuperación para crear tu nueva contraseña.</p>
-                    <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
-                    <p style='font-size: 12px; color: #777;'>Si no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>
-                </div>
-            ";
-            
+            $mail->Subject = 'Código de recuperación de contraseña — SAII';
+            $mail->Body    = $emailBody;
             $mail->send();
-            
+
             $this->json([
                 'message' => 'Código de recuperación enviado. Por favor, revisa tu bandeja de entrada o spam.',
-                'code' => $token
+                'code'    => $token,
             ]);
         } catch (Exception $e) {
-            error_log("Error SMTP en forgotPassword: " . $e->getMessage());
-            
-            // Fallback con detalles del error SMTP para diagnostico
+            error_log("Error SMTP PHPMailer: " . $e->getMessage());
+            // Fallback final: mostrar el código en pantalla
             $this->json([
-                'message' => 'Servicio de correo temporalmente no disponible. Detalles: ' . $e->getMessage(),
-                'code' => $token
+                'message' => 'No se pudo enviar el correo (SMTP bloqueado en el servidor). Usa el código de recuperación que aparece a continuación.',
+                'code'    => $token,
             ]);
         }
     }
