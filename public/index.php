@@ -369,8 +369,17 @@ $router->addRoute('GET', '/api/preload', function() {
             ORDER BY u.username ASC
         ")->fetchAll(\PDO::FETCH_ASSOC);
         
-        // 14. Roles
-        $roles = $db->query("SELECT * FROM roles ORDER BY id ASC")->fetchAll(\PDO::FETCH_ASSOC);
+        // 14. Roles (Decodificar permisos en el servidor para evitar escape HTML de comillas)
+        $rolesData = $db->query("SELECT * FROM roles ORDER BY id ASC")->fetchAll(\PDO::FETCH_ASSOC);
+        $roles = [];
+        foreach ($rolesData as $r) {
+            $roles[] = [
+                'id' => $r['id'],
+                'name' => $r['name'],
+                'key_name' => $r['key_name'],
+                'permissions' => json_decode($r['permissions'] ?? '[]', true)
+            ];
+        }
         
         \App\Core\BaseController::sendJson([
             'students' => $students,

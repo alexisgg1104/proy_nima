@@ -681,7 +681,14 @@ const DataManager = {
             this.cache.roles = (data.roles || []).map(r => {
                 let perms = [];
                 try {
-                    perms = typeof r.permissions === 'string' ? JSON.parse(r.permissions) : (r.permissions || []);
+                    let rawPerms = r.permissions;
+                    if (typeof rawPerms === 'string') {
+                        // Reemplazar entidades HTML &quot; por comillas reales por si acaso
+                        rawPerms = rawPerms.replace(/&quot;/g, '"');
+                        perms = JSON.parse(rawPerms);
+                    } else {
+                        perms = rawPerms || [];
+                    }
                 } catch (e) {
                     console.error("Error parsing permissions for role", r.key_name, e);
                 }
