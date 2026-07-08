@@ -31,10 +31,20 @@ function loadEnv($path) {
     if (!file_exists($path)) return;
     $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0) continue;
+        $trimmed = trim($line);
+        // Ignorar comentarios estilo # y ; (formato INI usado en este proyecto)
+        if ($trimmed === '' || $trimmed[0] === '#' || $trimmed[0] === ';') continue;
         if (strpos($line, '=') === false) continue;
         list($name, $value) = explode('=', $line, 2);
-        $_ENV[trim($name)] = trim($value);
+        $name  = trim($name);
+        $value = trim($value);
+        // Quitar comillas envolventes del valor si las tiene
+        if (strlen($value) >= 2 && $value[0] === '"' && $value[strlen($value)-1] === '"') {
+            $value = substr($value, 1, -1);
+        }
+        // Registrar en $_ENV Y en putenv() para que getenv() también funcione
+        $_ENV[$name] = $value;
+        putenv("$name=$value");
     }
 }
 
