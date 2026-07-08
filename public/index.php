@@ -239,6 +239,33 @@ $router->addRoute('GET', '/api/classrooms', function() {
     \App\Core\BaseController::sendJson($data);
 });
 
+$router->addRoute('GET', '/api/import-db', function() {
+    try {
+        $db = \Config\Database::getInstance()->getConnection();
+        
+        $schemaFile = __DIR__ . '/../database/schema.sql';
+        $seedsFile = __DIR__ . '/../database/seeds.sql';
+        
+        if (!file_exists($schemaFile) || !file_exists($seedsFile)) {
+            \App\Core\BaseController::sendError("No se encontraron los archivos SQL de la base de datos.", 404);
+        }
+        
+        $schemaSql = file_get_contents($schemaFile);
+        $db->exec($schemaSql);
+        
+        $seedsSql = file_get_contents($seedsFile);
+        $db->exec($seedsSql);
+        
+        \App\Core\BaseController::sendJson([
+            'status' => 'success',
+            'message' => '¡Estructura de tablas y datos iniciales importados con éxito en la nueva base de datos!'
+        ]);
+        
+    } catch (\Exception $e) {
+        \App\Core\BaseController::sendError("Error de migración: " . $e->getMessage(), 500);
+    }
+});
+
 $router->addRoute('GET', '/api/preload', function() {
     if (!isset($_SESSION['user'])) {
         \App\Core\BaseController::sendError('No autenticado.', 401);
