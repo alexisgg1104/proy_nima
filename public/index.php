@@ -172,12 +172,59 @@ $router->addRoute('GET', '/api/migrate-permissions', function() {
             ]);
         }
         
+        // 3. Crear tabla specialties
+        $db->exec("CREATE TABLE IF NOT EXISTS specialties (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL UNIQUE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        
+        // Poblar specialties si está vacía
+        $countSpec = $db->query("SELECT COUNT(*) FROM specialties")->fetchColumn();
+        if ($countSpec == 0) {
+            $specs = ['Ofimática', 'Programación', 'Diseño', 'Computación básica', 'Matemática aplicada / Matlab'];
+            $stmtSpec = $db->prepare("INSERT INTO specialties (name) VALUES (:name)");
+            foreach ($specs as $s) {
+                $stmtSpec->execute(['name' => $s]);
+            }
+        }
+        
+        // 4. Crear tabla classrooms
+        $db->exec("CREATE TABLE IF NOT EXISTS classrooms (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL UNIQUE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        
+        // Poblar classrooms si está vacía
+        $countClass = $db->query("SELECT COUNT(*) FROM classrooms")->fetchColumn();
+        if ($countClass == 0) {
+            $classes = ['Lab. Informática 1', 'Lab. Informática 2', 'Lab. Informática 3', 'Aula 101', 'Aula 102'];
+            $stmtClass = $db->prepare("INSERT INTO classrooms (name) VALUES (:name)");
+            foreach ($classes as $c) {
+                $stmtClass->execute(['name' => $c]);
+            }
+        }
+        
         \App\Core\BaseController::sendJson([
-            'message' => "Migración completada con éxito. $msg1"
+            'message' => "Migración completada con éxito. $msg1 y tablas de Especialidades/Aulas inicializadas."
         ]);
     } catch (\Exception $e) {
         \App\Core\BaseController::sendError($e->getMessage(), 500);
     }
+});
+
+// Rutas de Especialidades y Aulas (Para poblar comboboxes)
+$router->addRoute('GET', '/api/specialties', function() {
+    $db = \Config\Database::getInstance()->getConnection();
+    $stmt = $db->query("SELECT id, name FROM specialties ORDER BY name ASC");
+    $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    \App\Core\BaseController::sendJson($data);
+});
+
+$router->addRoute('GET', '/api/classrooms', function() {
+    $db = \Config\Database::getInstance()->getConnection();
+    $stmt = $db->query("SELECT id, name FROM classrooms ORDER BY name ASC");
+    $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    \App\Core\BaseController::sendJson($data);
 });
 
 use App\Controllers\AuthController;

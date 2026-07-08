@@ -171,3 +171,19 @@ INSERT INTO saved_reports (id, name, type, created_by, created_at, query_config)
 (1, 'Alumnos en Riesgo Académico (Asistencia < 70%)', 'attendance', 'Admin', '2024-03-01', '{"minAtt":70}'),
 (2, 'Resumen de Calificaciones por Curso', 'grades', 'Admin', '2024-03-05', '{}'),
 (3, 'Historial de Certificados Emitidos 2024-I', 'certificates', 'Secretaria', '2024-03-10', '{}');
+
+-- 17. Specialties
+INSERT INTO specialties (id, name) VALUES
+(1, 'Ofimática'),
+(2, 'Programación'),
+(3, 'Diseño'),
+(4, 'Computación básica'),
+(5, 'Matemática aplicada / Matlab');
+
+-- 18. Classrooms
+INSERT INTO classrooms (id, name) VALUES
+(1, 'Lab. Informática 1'),
+(2, 'Lab. Informática 2'),
+(3, 'Lab. Informática 3'),
+(4, 'Aula 101'),
+(5, 'Aula 102');

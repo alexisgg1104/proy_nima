@@ -2133,12 +2133,27 @@ class SAIIApp {
         document.getElementById('teacherDetailModal').style.display = 'block';
     }
 
-    openTeacherModal(teacherId = null) {
+    async openTeacherModal(teacherId = null) {
         const modal = document.getElementById('teacherModal');
         const form = document.getElementById('teacherForm');
         const title = document.getElementById('teacherModalTitle');
 
         form.reset();
+
+        // Cargar especialidades dinámicamente desde la base de datos
+        const specSelect = document.getElementById('teacherSpecialty');
+        specSelect.innerHTML = '<option value="">-- Seleccione una especialidad --</option>';
+        try {
+            const specialties = await DataManager.getSpecialties();
+            specialties.forEach(spec => {
+                const opt = document.createElement('option');
+                opt.value = spec;
+                opt.textContent = spec;
+                specSelect.appendChild(opt);
+            });
+        } catch (err) {
+            console.error("Error al cargar especialidades", err);
+        }
 
         if (teacherId) {
             title.textContent = 'Editar Docente';
@@ -2371,7 +2386,7 @@ class SAIIApp {
         this.openGroupModal(groupId);
     }
 
-    openGroupModal(groupId = null) {
+    async openGroupModal(groupId = null) {
         const modal = document.getElementById('groupModal');
         const form = document.getElementById('groupForm');
         const title = document.getElementById('groupModalTitle');
@@ -2381,6 +2396,21 @@ class SAIIApp {
         // Reset conditional sections
         document.getElementById('groupFieldsRegular').style.display = 'block';
         document.getElementById('groupFieldsExam').style.display = 'none';
+
+        // Cargar aulas dinámicamente desde la base de datos
+        const roomSelect = document.getElementById('groupClassroom');
+        roomSelect.innerHTML = '<option value="">-- Seleccione aula/lab --</option>';
+        try {
+            const classrooms = await DataManager.getClassrooms();
+            classrooms.forEach(room => {
+                const opt = document.createElement('option');
+                opt.value = room;
+                opt.textContent = room;
+                roomSelect.appendChild(opt);
+            });
+        } catch (err) {
+            console.error("Error al cargar aulas/laboratorios", err);
+        }
 
         const courseSelect = document.getElementById('groupCourse');
         courseSelect.innerHTML = '<option value="">-- Seleccione un curso --</option>';

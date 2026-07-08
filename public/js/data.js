@@ -628,6 +628,10 @@ const DataManager = {
     // Preload all backend API data into local memory cache
     preload: async function() {
         if (USE_MOCK) return;
+        
+        // Asegurar la sesión y el token CSRF antes de disparar peticiones paralelas
+        await APIClient.fetchCSRFToken();
+        
         try {
             const [
                 studentsRes, teachersRes, coursesRes, groupsRes, 
@@ -1826,6 +1830,22 @@ const DataManager = {
             });
         }
         return this.cache.roles;
+    },
+
+    getSpecialties: async function() {
+        if (USE_MOCK) {
+            return ['Ofimática', 'Programación', 'Diseño', 'Computación básica', 'Matemática aplicada / Matlab'];
+        }
+        const res = await APIClient.request('/specialties');
+        return (res.data || []).map(item => item.name);
+    },
+
+    getClassrooms: async function() {
+        if (USE_MOCK) {
+            return ['Lab. Informática 1', 'Lab. Informática 2', 'Lab. Informática 3', 'Aula 101', 'Aula 102'];
+        }
+        const res = await APIClient.request('/classrooms');
+        return (res.data || []).map(item => item.name);
     },
 
     updateRolePermissions: async function(roleKey, permissions) {
