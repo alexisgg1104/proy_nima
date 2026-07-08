@@ -8,12 +8,12 @@ INSERT INTO settings (id, system_name, institute_name, university_name, institut
 (1, 'SAII', 'Instituto de Informática', 'Universidad Nacional de Piura', 'info@institutoinformatica.edu.pe', '+51 (73) 123-4567', '2024-I', 11, 70, 'light', 1, 1, 'es', 'DR. JONATHAN DAVID NIMA RAMOS - Director');
 
 -- 2. Roles
-INSERT INTO roles (id, name, key_name) VALUES 
-(1, 'Administrador', 'admin'),
-(2, 'Secretaria Académica', 'secretary'),
-(3, 'Docente', 'teacher'),
-(4, 'Coordinador Académico', 'coordinator'),
-(5, 'Decano', 'dean');
+INSERT INTO roles (id, name, key_name, permissions) VALUES 
+(1, 'Administrador', 'admin', '["dashboard","students","courses","teachers","groups","enrollments","attendance","grades","certificates","reports","users","settings"]'),
+(2, 'Secretaria Académica', 'secretary', '["dashboard","students","enrollments","certificates","reports"]'),
+(3, 'Docente', 'teacher', '["dashboard","grades","attendance","reports"]'),
+(4, 'Coordinador Académico', 'coordinator', '["dashboard","courses","groups","reports","students"]'),
+(5, 'Decano', 'dean', '["dashboard","certificates"]');
 
 -- 3. Users
 -- Contraseña encriptada por defecto: admin123 / secretaria123 / docente123 / coordinador123 / decano123

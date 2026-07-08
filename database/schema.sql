@@ -8,7 +8,8 @@ USE saii_db;
 CREATE TABLE roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
-    key_name VARCHAR(30) NOT NULL UNIQUE
+    key_name VARCHAR(30) NOT NULL UNIQUE,
+    permissions TEXT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 2. Users
