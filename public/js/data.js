@@ -1910,7 +1910,7 @@ const DataManager = {
             method: 'POST',
             body: { email }
         });
-        return res.code;
+        return res && res.data ? res.data.code : (res ? res.code : null);
     },
 
     resetUserPasswordWithCode: async function(code, newPassword) {

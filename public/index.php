@@ -310,7 +310,7 @@ $router->addRoute('GET', '/api/preload', function() {
             FROM certificates cert
             LEFT JOIN students s ON cert.student_id = s.id
             LEFT JOIN academic_groups g ON cert.group_id = g.id
-            LEFT JOIN courses c ON cert.course_id = c.id
+            LEFT JOIN courses c ON g.course_id = c.id
             ORDER BY cert.id DESC
         ")->fetchAll(\PDO::FETCH_ASSOC);
         
