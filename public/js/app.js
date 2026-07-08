@@ -6795,10 +6795,23 @@ class SAIIApp {
             
             const tokenHint = document.getElementById('recoveryTokenHint');
             if (tokenHint) {
-                tokenHint.innerText = `[Simulación] Código generado: ${token}`;
+                if (token) {
+                    // El correo falló en el servidor — se muestra el código de fallback
+                    tokenHint.style.display = 'block';
+                    tokenHint.innerText = `[Respaldo] El correo no pudo enviarse. Usa este código: ${token}`;
+                } else {
+                    // Correo enviado correctamente por Resend — ocultar hint
+                    tokenHint.style.display = 'none';
+                    tokenHint.innerText = '';
+                }
             }
             
-            this.showToast('Código de recuperación enviado. Revisa tu correo.', 'success');
+            this.showToast(
+                token
+                    ? 'No se pudo enviar el correo. Usa el código mostrado en pantalla.'
+                    : 'Código enviado a tu correo. Revisa tu bandeja de entrada o spam.',
+                token ? 'warning' : 'success'
+            );
         } catch (error) {
             console.error("Error al solicitar código:", error);
             this.showToast(error.message, 'error');

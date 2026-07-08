@@ -185,7 +185,7 @@ class AuthController extends BaseController {
             if ($httpStatus === 200 || $httpStatus === 201) {
                 $this->json([
                     'message' => 'Código de recuperación enviado. Por favor, revisa tu bandeja de entrada o spam.',
-                    'code'    => $token,
+                    // No se incluye 'code' cuando el correo se envió realmente
                 ]);
                 return;
             }
