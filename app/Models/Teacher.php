@@ -103,4 +103,18 @@ class Teacher extends BaseModel {
         $stmt->execute(['user_id' => $userId]);
         return $stmt->fetch();
     }
+
+    // Validar duplicados de una sola vez para mejorar rendimiento
+    public function checkDuplicates($code, $dni, $email) {
+        $stmt = $this->db->prepare("SELECT code, dni, email FROM teachers WHERE code = :code OR dni = :dni OR email = :email LIMIT 1");
+        $stmt->execute(['code' => $code, 'dni' => $dni, 'email' => $email]);
+        return $stmt->fetch();
+    }
+
+    // Validar duplicados excluyendo al actual para mejorar rendimiento en actualizaciones
+    public function checkDuplicatesExclude($code, $dni, $email, $excludeId) {
+        $stmt = $this->db->prepare("SELECT code, dni, email FROM teachers WHERE (code = :code OR dni = :dni OR email = :email) AND id != :exclude_id LIMIT 1");
+        $stmt->execute(['code' => $code, 'dni' => $dni, 'email' => $email, 'exclude_id' => $excludeId]);
+        return $stmt->fetch();
+    }
 }

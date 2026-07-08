@@ -67,15 +67,18 @@ class TeacherController extends BaseController {
 
         $teacherModel = new Teacher();
 
-        // 5. Validar duplicados en BD
-        if ($teacherModel->getByDni($dni)) {
-            $this->error('Ya existe un docente registrado con este mismo DNI.', 409);
-        }
-        if ($teacherModel->getByCode($code)) {
-            $this->error('Ya existe un docente registrado con este mismo código académico.', 409);
-        }
-        if ($teacherModel->getByEmail($email)) {
-            $this->error('Ya existe un docente registrado con este mismo correo electrónico.', 409);
+        // 5. Validar duplicados en BD usando una sola consulta para mejorar rendimiento
+        $duplicate = $teacherModel->checkDuplicates($code, $dni, $email);
+        if ($duplicate) {
+            if ($duplicate['dni'] === $dni) {
+                $this->error('Ya existe un docente registrado con este mismo DNI.', 409);
+            }
+            if ($duplicate['code'] === $code) {
+                $this->error('Ya existe un docente registrado con este mismo código académico.', 409);
+            }
+            if ($duplicate['email'] === $email) {
+                $this->error('Ya existe un docente registrado con este mismo correo electrónico.', 409);
+            }
         }
 
         try {
@@ -136,20 +139,18 @@ class TeacherController extends BaseController {
             $this->error('El correo electrónico no tiene un formato válido.', 400);
         }
 
-        // 3. Validar duplicados excluyendo al docente actual
-        $existingDni = $teacherModel->getByDni($dni);
-        if ($existingDni && (int)$existingDni['id'] !== (int)$id) {
-            $this->error('Ya existe otro docente registrado con el DNI proporcionado.', 409);
-        }
-
-        $existingCode = $teacherModel->getByCode($code);
-        if ($existingCode && (int)$existingCode['id'] !== (int)$id) {
-            $this->error('Ya existe otro docente registrado con el código académico proporcionado.', 409);
-        }
-
-        $existingEmail = $teacherModel->getByEmail($email);
-        if ($existingEmail && (int)$existingEmail['id'] !== (int)$id) {
-            $this->error('Ya existe otro docente registrado con el correo proporcionado.', 409);
+        // 3. Validar duplicados en BD usando una sola consulta excluyendo al actual para mejorar rendimiento
+        $duplicate = $teacherModel->checkDuplicatesExclude($code, $dni, $email, $id);
+        if ($duplicate) {
+            if ($duplicate['dni'] === $dni) {
+                $this->error('Ya existe otro docente registrado con el DNI proporcionado.', 409);
+            }
+            if ($duplicate['code'] === $code) {
+                $this->error('Ya existe otro docente registrado con el código académico proporcionado.', 409);
+            }
+            if ($duplicate['email'] === $email) {
+                $this->error('Ya existe otro docente registrado con el correo proporcionado.', 409);
+            }
         }
 
         try {

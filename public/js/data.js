@@ -685,7 +685,8 @@ const DataManager = {
                 studentId: Number(r.student_id),
                 status: r.status,
                 groupId: Number(r.group_id),
-                date: r.date
+                date: r.date,
+                listId: Number(r.list_id)
             }));
             this.cache.users = (usersRes.data || []).map(mappers.user);
             this.cache.roles = rolesRes.data || [];
@@ -1411,7 +1412,12 @@ const DataManager = {
         const totalClasses = dbLists.length;
         if (totalClasses === 0) return 100;
 
-        const studentRecords = this.cache.attendanceRecords.filter(r => r.studentId == studentId && r.groupId == groupId);
+        const validListIds = dbLists.map(l => l.id);
+        const studentRecords = this.cache.attendanceRecords.filter(r => 
+            r.studentId == studentId && 
+            r.groupId == groupId &&
+            validListIds.includes(r.listId)
+        );
         let activeDays = 0;
         studentRecords.forEach(r => {
             if (r.status === 'presente' || r.status === 'tarde' || r.status === 'justificado') {

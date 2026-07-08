@@ -63,6 +63,16 @@ if (getenv('PORT') || getenv('RAILWAY_STATIC_URL')) {
 }
 
 session_start();
+
+// Liberar el bloqueo de sesión inmediatamente para peticiones concurrentes si no modifican la sesión (Fase B9 Perf)
+$requestUri = $_SERVER['REQUEST_URI'] ?? '';
+$isSessionWriter = (strpos($requestUri, '/api/auth/login') !== false) || 
+                   (strpos($requestUri, '/api/auth/logout') !== false) || 
+                   (strpos($requestUri, '/api/auth/csrf') !== false);
+
+if (!$isSessionWriter) {
+    session_write_close();
+}
 header('X-Debug-Session: ' . session_id());
 
 // 4. Registro del cargador de clases (PSR-4 Autoloader Autogestionado)
@@ -305,7 +315,7 @@ $router->addRoute('GET', '/api/attendance/records', function() {
     }
     $db = \Config\Database::getInstance()->getConnection();
     $stmt = $db->query("
-        SELECT ar.student_id, ar.status, al.group_id, al.date
+        SELECT ar.student_id, ar.status, al.group_id, al.date, ar.attendance_list_id AS list_id
         FROM student_attendance_records ar
         JOIN student_attendance_lists al ON ar.attendance_list_id = al.id
     ");
