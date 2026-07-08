@@ -118,10 +118,22 @@ class AuthController extends BaseController {
         
         // Generar token de recuperación
         $token = strval(rand(100000, 999999));
-        
-        // Almacenar el token y el email en la sesión
-        $_SESSION['recovery_email'] = $email;
-        $_SESSION['recovery_token'] = $token;
+        $expires = date('Y-m-d H:i:s', strtotime('+30 minutes'));
+
+        // Guardar token en la BD (funciona en multi-instancia, a diferencia de $_SESSION)
+        $db = \Config\Database::getInstance()->getConnection();
+        // Crear columnas si no existen (auto-migración ligera)
+        try {
+            $db->exec("ALTER TABLE users ADD COLUMN reset_token VARCHAR(10) NULL DEFAULT NULL");
+        } catch (\Exception $e) { /* columna ya existe, ignorar */ }
+        try {
+            $db->exec("ALTER TABLE users ADD COLUMN reset_token_expires DATETIME NULL DEFAULT NULL");
+        } catch (\Exception $e) { /* columna ya existe, ignorar */ }
+
+        $stmtTok = $db->prepare(
+            "UPDATE users SET reset_token = :token, reset_token_expires = :expires WHERE email = :email"
+        );
+        $stmtTok->execute(['token' => $token, 'expires' => $expires, 'email' => $email]);
         
         // Leer variables de entorno (.env local o Railway variables)
         $env = file_exists(__DIR__ . '/../../.env') ? parse_ini_file(__DIR__ . '/../../.env') : [];
@@ -238,28 +250,31 @@ class AuthController extends BaseController {
             $this->error('El código y la nueva contraseña son obligatorios.', 400);
         }
         
-        if (!isset($_SESSION['recovery_token']) || !isset($_SESSION['recovery_email'])) {
-            $this->error('No hay una solicitud de recuperación de contraseña activa.', 400);
-        }
-        
-        if ($code !== $_SESSION['recovery_token']) {
-            $this->error('El código de recuperación es incorrecto.', 400);
-        }
-        
-        $email = $_SESSION['recovery_email'];
+        // Verificar token desde la base de datos (no desde sesión, para multi-instancia)
         $db = \Config\Database::getInstance()->getConnection();
-        
-        // Actualizar contraseña
+        $stmtFind = $db->prepare(
+            "SELECT id, email FROM users
+             WHERE reset_token = :code
+               AND reset_token_expires > NOW()"
+        );
+        $stmtFind->execute(['code' => $code]);
+        $user = $stmtFind->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            $this->error('El código de recuperación es incorrecto o ha expirado (válido 30 minutos).', 400);
+        }
+
+        // Actualizar contraseña y limpiar token
         $hashed = password_hash($newPassword, PASSWORD_DEFAULT);
-        $stmt = $db->prepare("UPDATE users SET password = :password WHERE email = :email");
-        $stmt->execute(['password' => $hashed, 'email' => $email]);
-        
-        // Limpiar variables de recuperación
-        unset($_SESSION['recovery_token']);
-        unset($_SESSION['recovery_email']);
-        
+        $stmtUp = $db->prepare(
+            "UPDATE users
+             SET password = :password, reset_token = NULL, reset_token_expires = NULL
+             WHERE id = :id"
+        );
+        $stmtUp->execute(['password' => $hashed, 'id' => $user['id']]);
+
         $this->json([
-            'message' => 'Contraseña restablecida correctamente.'
+            'message' => 'Contraseña restablecida correctamente.',
         ]);
     }
 }
