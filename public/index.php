@@ -141,6 +141,45 @@ $router->addRoute('GET', '/api/test', function() {
     ]);
 });
 
+// Endpoint temporal para migrar los permisos de roles en Aiven
+$router->addRoute('GET', '/api/migrate-permissions', function() {
+    try {
+        $db = \Config\Database::getInstance()->getConnection();
+        
+        // 1. Agregar columna
+        $columns = $db->query("SHOW COLUMNS FROM roles LIKE 'permissions'")->fetchAll();
+        if (empty($columns)) {
+            $db->exec("ALTER TABLE roles ADD COLUMN permissions TEXT NULL");
+            $msg1 = "Columna 'permissions' creada con éxito.";
+        } else {
+            $msg1 = "La columna 'permissions' ya existe.";
+        }
+        
+        // 2. Poblar permisos por defecto
+        $rolePermissions = [
+            'admin' => ["dashboard", "students", "courses", "teachers", "groups", "enrollments", "attendance", "grades", "certificates", "reports", "users", "settings"],
+            'secretary' => ["dashboard", "students", "enrollments", "certificates", "reports"],
+            'teacher' => ["dashboard", "grades", "attendance", "reports"],
+            'coordinator' => ["dashboard", "courses", "groups", "reports", "students"],
+            'dean' => ["dashboard", "certificates"]
+        ];
+        
+        $stmt = $db->prepare("UPDATE roles SET permissions = :permissions WHERE key_name = :key_name");
+        foreach ($rolePermissions as $key => $perms) {
+            $stmt->execute([
+                'permissions' => json_encode($perms),
+                'key_name' => $key
+            ]);
+        }
+        
+        \App\Core\BaseController::sendJson([
+            'message' => "Migración completada con éxito. $msg1"
+        ]);
+    } catch (\Exception $e) {
+        \App\Core\BaseController::sendError($e->getMessage(), 500);
+    }
+});
+
 use App\Controllers\AuthController;
 use App\Controllers\UserController;
 
