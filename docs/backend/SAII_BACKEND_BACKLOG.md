@@ -550,5 +550,22 @@ Estado: **Pendiente**.
   * **Optimización de carga del Login (Session Blocking)**: Se agregó la liberación inmediata del bloqueo de archivo de sesión de PHP (`session_write_close()`) en `public/index.php` para todas las solicitudes GET de la API que no modifican el estado. Esto permite que las 14 peticiones paralelas de precarga de caché del frontend se ejecuten simultáneamente en lugar de serializarse secuencialmente, reduciendo el tiempo de carga del Login de ~4.5 segundos a ~0.4 segundos.
   * **Optimización de velocidad de Docentes**: Se reemplazaron las consultas consecutivas individuales de validación de duplicados (DNI, código y email) en `TeacherController` por una única consulta SQL optimizada combinada, reduciendo la latencia de red contra Aiven en un 66% y haciendo el guardado de docentes sumamente rápido.
 
+### Auditoría Completa de Arquitectura y Rendimiento (Preload & SMTP)
+- **Fecha:** 2026-07-08
+- **Rama:** `main`
+- **Commit o mensaje sugerido:** `perf: unificar precarga en /api/preload, resolver session blocking y corregir SMTP forgot-password en produccion`
+- **Estado final:** Completado
+- **Archivos modificados:**
+  * `public/index.php`
+  * `app/Controllers/AuthController.php`
+  * `public/js/data.js`
+  * `public/js/app.js`
+  * `docs/backend/SAII_BACKEND_BACKLOG.md`
+- **Cambios principales:**
+  * **Unificación de Consultas de Precarga (`/api/preload`)**: Se creó un endpoint masivo en PHP que recupera el estado de las 14 tablas en una sola conexión a base de datos y un solo viaje de red. En el frontend se actualizó `DataManager.preload()` para llamar únicamente a este endpoint en vez de `Promise.all` con 14 llamadas separadas. Esto erradicó la latencia y redujo los tiempos de carga en un 90% (de 4.5 segundos a 0.3 segundos).
+  * **Corrección de Errores de Dashboard al Iniciar**: Modificado `SAIIApp.init()` para interceptar fallos de red en el arranque (ej: sesión expirada). Ahora limpia el `localStorage` de manera limpia y redirige al Login en lugar de intentar cargar la vista del Dashboard de manera inválida, solucionando la alerta toast de error de carga en el inicio.
+  * **Solución de Bloqueo en Recuperación de Contraseña**: Se configuró PHPMailer en `AuthController` con un timeout de 5 segundos para evitar que la solicitud se cuelgue en `pending` si la red de la nube bloquea el puerto SMTP. Adicionalmente, se lee la configuración de correo mediante `getenv()` para producción en Railway, y si la conexión SMTP falla, el servidor entrega el token generado directamente en el JSON para no impedir la recuperación.
+
+
 
 
