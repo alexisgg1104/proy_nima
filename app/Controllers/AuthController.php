@@ -140,9 +140,14 @@ class AuthController extends BaseController {
             $mail->SMTPAuth   = !empty($smtpUser);
             $mail->Username   = $smtpUser;
             $mail->Password   = $smtpPass;
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            // Elegir encriptación de forma dinámica según el puerto
+            if (intval($smtpPort) === 465) {
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // SSL implícito
+            } else {
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // TLS / STARTTLS
+            }
             $mail->Port       = $smtpPort;
-            $mail->Timeout    = 5; // Evita que se cuelgue en pending si la red bloquea el puerto 587
+            $mail->Timeout    = 5;
             
             // Opciones SSL para local (XAMPP Windows)
             $mail->SMTPOptions = array(
