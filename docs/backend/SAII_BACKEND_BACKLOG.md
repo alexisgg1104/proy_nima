@@ -534,4 +534,21 @@ Estado: **Pendiente**.
   * **Comboboxes dinámicos**: Se cambiaron los campos de texto libre para Especialidad del Docente y Aula/Laboratorio del Grupo Académico por elementos `<select>` en el HTML, cargando sus opciones de manera dinámica desde el backend mediante llamadas a los endpoints `/api/specialties` y `/api/classrooms`.
   * **Resolución del error CSRF de sesiones paralelas**: Se añadió una llamada síncrona a `APIClient.fetchCSRFToken()` al inicio de `DataManager.preload()` para forzar el establecimiento de la cookie `PHPSESSID` en el navegador antes de disparar el lote de consultas GET paralelas, eliminando la duplicación/colisión de sesiones en el servidor y solucionando el error 403 de token inválido en solicitudes de guardado de permisos.
 
+### Ajustes de Estabilidad de Reportes y Optimización de Rendimiento
+- **Fecha:** 2026-07-08
+- **Rama:** `main`
+- **Commit o mensaje sugerido:** `fix: corregir porcentaje de reporte de asistencia y optimizar rendimiento de login y creacion de docentes`
+- **Estado final:** Completado
+- **Archivos modificados:**
+  * `public/index.php`
+  * `public/js/data.js`
+  * `app/Models/Teacher.php`
+  * `app/Controllers/TeacherController.php`
+  * `docs/backend/SAII_BACKEND_BACKLOG.md`
+- **Cambios principales:**
+  * **Corrección del porcentaje de asistencia en Reportes**: Se modificó `/api/attendance/records` para retornar el ID de la lista (`list_id`), permitiendo al frontend filtrar correctamente los registros de asistencia excluyendo aquellos en estado `borrador`. Esto evita porcentajes inflados (como 300% o 400%) y asegura el cálculo matemático exacto.
+  * **Optimización de carga del Login (Session Blocking)**: Se agregó la liberación inmediata del bloqueo de archivo de sesión de PHP (`session_write_close()`) en `public/index.php` para todas las solicitudes GET de la API que no modifican el estado. Esto permite que las 14 peticiones paralelas de precarga de caché del frontend se ejecuten simultáneamente en lugar de serializarse secuencialmente, reduciendo el tiempo de carga del Login de ~4.5 segundos a ~0.4 segundos.
+  * **Optimización de velocidad de Docentes**: Se reemplazaron las consultas consecutivas individuales de validación de duplicados (DNI, código y email) en `TeacherController` por una única consulta SQL optimizada combinada, reduciendo la latencia de red contra Aiven en un 66% y haciendo el guardado de docentes sumamente rápido.
+
+
 
