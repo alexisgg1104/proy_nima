@@ -678,7 +678,19 @@ const DataManager = {
                 listId: Number(r.list_id)
             }));
             this.cache.users = (data.users || []).map(mappers.user);
-            this.cache.roles = data.roles || [];
+            this.cache.roles = (data.roles || []).map(r => {
+                let perms = [];
+                try {
+                    perms = typeof r.permissions === 'string' ? JSON.parse(r.permissions) : (r.permissions || []);
+                } catch (e) {
+                    console.error("Error parsing permissions for role", r.key_name, e);
+                }
+                return {
+                    id: r.key_name,
+                    name: r.name,
+                    permissions: perms
+                };
+            });
         } catch (e) {
             console.error("Error preloading SAII REST API cache:", e);
             throw e;
