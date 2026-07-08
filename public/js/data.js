@@ -479,12 +479,19 @@ const mappers = {
     },
     savedReport: function(r) {
         if (!r) return null;
+        let queryConfig = {};
+        try {
+            queryConfig = typeof r.query_config === 'string' ? JSON.parse(r.query_config) : (r.query_config || {});
+        } catch (e) {
+            console.error("Error parsing query_config for report", r.id, e);
+            queryConfig = {};
+        }
         return {
             id: r.id,
             name: r.name,
             type: r.type,
             createdBy: r.created_by,
-            queryConfig: typeof r.query_config === 'string' ? JSON.parse(r.query_config) : r.query_config,
+            queryConfig: queryConfig,
             createdAt: r.created_at
         };
     },

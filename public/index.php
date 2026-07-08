@@ -64,6 +64,11 @@ if (getenv('PORT') || getenv('RAILWAY_STATIC_URL')) {
 
 session_start();
 
+// 4.2. Inicialización de Protección CSRF (Debe hacerse antes de liberar el bloqueo para persistir en disco)
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // Liberar el bloqueo de sesión inmediatamente para peticiones concurrentes si no modifican la sesión (Fase B9 Perf)
 $requestUri = $_SERVER['REQUEST_URI'] ?? '';
 $isSessionWriter = (strpos($requestUri, '/api/auth/login') !== false) || 
@@ -119,10 +124,7 @@ set_error_handler(function ($errno, $errstr, $errfile, $errline) {
     return true;
 });
 
-// 4.2. Inicialización de Protección CSRF
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
+// 4.2. Protección CSRF inicializada arriba al arrancar la sesión
 
 // 5. Configurar Cabeceras CORS
 if (isset($_SERVER['HTTP_ORIGIN'])) {
