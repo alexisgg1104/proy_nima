@@ -239,6 +239,16 @@ $router->addRoute('GET', '/api/classrooms', function() {
     \App\Core\BaseController::sendJson($data);
 });
 
+$router->addRoute('GET', '/api/check-db', function() {
+    try {
+        $db = \Config\Database::getInstance()->getConnection();
+        $roles = $db->query("SELECT * FROM roles")->fetchAll(\PDO::FETCH_ASSOC);
+        \App\Core\BaseController::sendJson($roles);
+    } catch (\Exception $e) {
+        \App\Core\BaseController::sendError("Error: " . $e->getMessage(), 500);
+    }
+});
+
 $router->addRoute('GET', '/api/preload', function() {
     if (!isset($_SESSION['user'])) {
         \App\Core\BaseController::sendError('No autenticado.', 401);
