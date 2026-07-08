@@ -1,5 +1,19 @@
 <?php
 
+use App\Core\Router;
+use App\Core\BaseController;
+use App\Controllers\AuthController;
+use App\Controllers\UserController;
+use App\Controllers\StudentController;
+use App\Controllers\TeacherController;
+use App\Controllers\CourseController;
+use App\Controllers\GroupController;
+use App\Controllers\EnrollmentController;
+use App\Controllers\AttendanceController;
+use App\Controllers\GradeController;
+use App\Controllers\CertificateController;
+use App\Controllers\ReportController;
+
 // 1. Desviar y servir archivos estáticos si se ejecuta en el servidor de desarrollo CLI de PHP
 if (php_sapi_name() === 'cli-server') {
     $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -152,8 +166,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // 6. Instanciar enrutador y declarar endpoints base
-use App\Core\Router;
-
 $router = new Router();
 
 // Endpoint de Prueba (Fase B2)
@@ -413,9 +425,6 @@ $router->addRoute('GET', '/api/preload', function() {
     }
 });
 
-use App\Controllers\AuthController;
-use App\Controllers\UserController;
-
 // Rutas de Autenticación (Fase B3)
 $router->addRoute('POST', '/api/auth/login', [AuthController::class, 'login']);
 $router->addRoute('POST', '/api/auth/logout', [AuthController::class, 'logout']);
@@ -435,10 +444,6 @@ $router->addRoute('POST', '/api/users', [UserController::class, 'create']);
 $router->addRoute('PUT', '/api/users/{id}', [UserController::class, 'update']);
 $router->addRoute('PUT', '/api/users/{id}/password', [UserController::class, 'changePassword']);
 $router->addRoute('DELETE', '/api/users/{id}', [UserController::class, 'delete']);
-
-use App\Controllers\StudentController;
-use App\Controllers\TeacherController;
-use App\Controllers\CourseController;
 
 // Rutas de Alumnos - CRUD (Fase B4)
 $router->addRoute('GET', '/api/students', [StudentController::class, 'index']);
@@ -461,9 +466,6 @@ $router->addRoute('POST', '/api/courses', [CourseController::class, 'create']);
 $router->addRoute('PUT', '/api/courses/{id}', [CourseController::class, 'update']);
 $router->addRoute('DELETE', '/api/courses/{id}', [CourseController::class, 'delete']);
 
-use App\Controllers\GroupController;
-use App\Controllers\EnrollmentController;
-
 // Rutas de Grupos Académicos - CRUD (Fase B5)
 $router->addRoute('GET', '/api/groups', [GroupController::class, 'index']);
 $router->addRoute('GET', '/api/groups/{id}', [GroupController::class, 'show']);
@@ -477,8 +479,6 @@ $router->addRoute('GET', '/api/enrollments/{id}', [EnrollmentController::class, 
 $router->addRoute('POST', '/api/enrollments', [EnrollmentController::class, 'create']);
 $router->addRoute('PUT', '/api/enrollments/{id}', [EnrollmentController::class, 'update']);
 $router->addRoute('DELETE', '/api/enrollments/{id}', [EnrollmentController::class, 'delete']);
-
-use App\Controllers\AttendanceController;
 
 // Rutas de Control de Asistencia (Fase B6)
 $router->addRoute('GET', '/api/attendance', [AttendanceController::class, 'index']);
@@ -507,9 +507,6 @@ $router->addRoute('POST', '/api/attendance', [AttendanceController::class, 'crea
 $router->addRoute('PUT', '/api/attendance/{id}', [AttendanceController::class, 'update']);
 $router->addRoute('DELETE', '/api/attendance/{id}', [AttendanceController::class, 'delete']);
 $router->addRoute('POST', '/api/attendance/{id}/status', [AttendanceController::class, 'updateStatus']);
-
-use App\Controllers\GradeController;
-use App\Controllers\CertificateController;
 
 // Rutas de Calificaciones (Fase B7)
 $router->addRoute('GET', '/api/grades/group/{groupId}', [GradeController::class, 'showGroupGrades']);
@@ -556,8 +553,6 @@ $router->addRoute('GET', '/api/certificates/{id}', [CertificateController::class
 $router->addRoute('POST', '/api/certificates', [CertificateController::class, 'create']);
 $router->addRoute('POST', '/api/certificates/{id}/sign', [CertificateController::class, 'sign']);
 $router->addRoute('POST', '/api/certificates/{id}/observation', [CertificateController::class, 'saveObservation']);
-
-use App\Controllers\ReportController;
 
 // Rutas de Reportes, Gráficos y Exportaciones (Fase B8)
 $router->addRoute('GET', '/api/reports/dashboard', [ReportController::class, 'dashboard']);

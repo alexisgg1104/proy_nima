@@ -8,7 +8,7 @@ class Router {
     /**
      * Registrar una ruta con su método HTTP, path y handler.
      */
-    public function addRoute(string $method, string $path, callable $handler): void {
+    public function addRoute(string $method, string $path, $handler): void {
         $this->routes[] = [
             'method'  => strtoupper($method),
             'path'    => $path,
@@ -41,7 +41,17 @@ class Router {
             if (preg_match($pattern, $path, $matches)) {
                 // $matches[0] es la cadena completa; $matches[1..n] son los parámetros
                 array_shift($matches);
-                call_user_func_array($route['handler'], $matches);
+
+                $handler = $route['handler'];
+
+                // Soportar [ClassName::class, 'method'] además de closures
+                if (is_array($handler) && count($handler) === 2) {
+                    [$class, $methodName] = $handler;
+                    $instance = new $class();
+                    call_user_func_array([$instance, $methodName], $matches);
+                } else {
+                    call_user_func_array($handler, $matches);
+                }
                 return;
             }
         }
