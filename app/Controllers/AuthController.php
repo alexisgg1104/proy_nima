@@ -180,9 +180,9 @@ class AuthController extends BaseController {
         } catch (Exception $e) {
             error_log("Error SMTP en forgotPassword: " . $e->getMessage());
             
-            // Fallback tolerante para evitar que el flujo se rompa si falla la conexión SMTP en producción
+            // Fallback con detalles del error SMTP para diagnostico
             $this->json([
-                'message' => 'Servicio de correo temporalmente no disponible. Se ha generado un código de recuperación local para usted.',
+                'message' => 'Servicio de correo temporalmente no disponible. Detalles: ' . $e->getMessage(),
                 'code' => $token
             ]);
         }
