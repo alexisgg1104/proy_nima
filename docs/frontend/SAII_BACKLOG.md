@@ -857,12 +857,18 @@ El agente debe actualizar esta sección al terminar cada fase.
   - **Botones de Certificados**: Alineados a la derecha en pantallas de escritorio. En móviles, se simplificaron las etiquetas a "➕ Emitir" y "⚙️ Generar Pendientes" y se alinearon side-by-side (50% de ancho cada uno) con padding generoso y altura mínima de 44px.
   - **Filtros Alineados en la Misma Fila**: En los módulos Alumnos y Grupos Académicos, los dos selectores se redujeron a la mitad (50% de ancho) y se alinearon en la misma fila en dispositivos móviles.
   - **Rejilla de Filtros (2 Columnas)**: Los selectores de Asistencia de Alumnos y Reportes ahora forman una rejilla de 2 columnas de ancho igual (grid con 2 columnas) en móviles. En Reportes, se alineó a la derecha el botón "🔎 Filtrar" y las acciones se alinearon lado a lado.
+  - **Alineación de Botón de Nuevo Curso**: En Cursos y Módulos, el botón "➕ Nuevo Curso" se ajustó a 50% de ancho y se alineó a la derecha en dispositivos móviles.
+  - **Optimización de Header y Tap Targets**: Se incrementó el tamaño del botón de menú hamburguesa (☰) y todos los botones interactivos derechos de la cabecera (selector de rol, campana de notificaciones, luna de tema y avatar del perfil) a `44px x 44px` con alineación consolidada al extremo derecho en móviles.
+  - **Corrección de Desbordamiento de Certificados**: Corregido el desplazamiento y corte izquierdo al expandir el certificado en móviles, forzando la alineación izquierda (`margin: 0`) para permitir el desplazamiento por arrastre de forma segura en el contenedor scrollable `#certificatePreview`.
 - Pruebas realizadas:
   - Cambiar vista a modo responsive en el navegador (ancho inferior a 576px) y validar la simplificación de los textos de los botones a "➕ Nuevo".
   - Verificar que la barra de búsqueda y el botón "Nuevo" comparten la misma fila en Alumnos, Docentes y Grupos.
   - Verificar que en el módulo de Certificados, los botones ocupan la misma fila con padding adecuado y min-height de 44px.
   - Validar la alineación en la misma fila para los filtros de Alumnos y Grupos Académicos.
   - Validar la distribución en rejilla de 2 columnas de los filtros de Asistencias y Reportes.
+  - Comprobar que en el módulo Cursos, el botón "➕ Nuevo Curso" se reduce a 50% de ancho y se alinea a la derecha.
+  - Comprobar que la barra superior muestra los botones ☰, selector de rol, 🔔, 🌙, 👤 redimensionados a `44px` para fácil selección táctil y alineados a la derecha.
+  - Comprobar que al pulsar "Expandir" en el modal de certificados, el diploma se alinea a la izquierda de la ventana permitiendo deslizarse horizontalmente sin recortes de texto.
 - Pendientes o riesgos: ninguno.
 
 ---
