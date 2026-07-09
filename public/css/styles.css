@@ -3639,8 +3639,110 @@ select {
         flex: 1 !important;
         margin: 0 !important;
         justify-content: center !important;
-        padding: 12px 8px !important;
         min-height: 44px !important;
+    }
+
+    /* Fix expanded certificate modal cutoff: left-align wrapper so overflow goes right and is scrollable */
+    #certificateModal.modal-fullscreen .certificate-diploma-wrapper {
+        margin: 0 !important;
+        zoom: 0.9 !important;
+        -moz-transform: scale(0.9) !important;
+        -moz-transform-origin: top left !important;
+        transform-origin: top left !important;
+    }
+    #certificateModal.modal-fullscreen #certificatePreview {
+        overflow-x: auto !important;
+        overflow-y: auto !important;
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Format Courses "Nuevo Curso" button to 50% width aligned right on mobile */
+    #courses .module-controls {
+        display: flex !important;
+        justify-content: flex-end !important;
+        width: 100% !important;
+    }
+    #courses .module-controls button[data-action="new-course"] {
+        width: 50% !important;
+        margin-left: auto !important;
+        margin-right: 0 !important;
+        justify-content: center !important;
+    }
+
+    /* Header layout optimization */
+    .header {
+        height: 60px !important;
+        padding: 0 var(--spacing-sm) !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+    .header-left {
+        flex: 0 0 auto !important;
+    }
+    .header-right {
+        flex: 1 !important;
+        justify-content: flex-end !important;
+        gap: 8px !important;
+    }
+    
+    /* Menu Toggle button (Hamburger) */
+    #menuToggleBtn {
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 1.6rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* Role Selector Header */
+    .role-simulator-wrapper {
+        padding: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        margin: 0 !important;
+    }
+    .role-selector-header {
+        height: 40px !important;
+        max-width: 130px !important;
+        font-size: 0.8rem !important;
+        padding: 4px 8px !important;
+        border-radius: var(--radius-md) !important;
+        background: var(--color-bg-secondary) !important;
+        border: 1px solid var(--color-border) !important;
+        margin: 0 !important;
+    }
+
+    /* Header buttons: notification, theme, profile */
+    .header-btn.notifications-btn,
+    .header-btn.theme-btn,
+    .user-btn {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        font-size: 1.3rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 50% !important;
+    }
+    .user-avatar {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 1.1rem !important;
+        margin: 0 !important;
+    }
+    
+    /* Align notifications badge correctly */
+    .header-btn.notifications-btn .badge {
+        top: 2px !important;
+        right: 2px !important;
     }
 }
 
