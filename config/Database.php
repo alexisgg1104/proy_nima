@@ -37,11 +37,27 @@ class Database {
 
         try {
             $this->conn = new PDO($dsn, $user, $pass, $options);
+            $this->runMigrations();
         } catch (PDOException $e) {
             // Registrar error de manera segura en log interno
             error_log("Connection failed: " . $e->getMessage());
             // Lanzar excepción incluyendo el mensaje real temporalmente para depuración
             throw new Exception("Error de conexión a la base de datos: " . $e->getMessage());
+        }
+    }
+
+    private function runMigrations() {
+        try {
+            // Verificar si la columna session_id existe en la tabla users
+            $stmt = $this->conn->query("SHOW COLUMNS FROM users LIKE 'session_id'");
+            $column = $stmt->fetch();
+            if (!$column) {
+                // Agregar columnas session_id y last_activity a la tabla users
+                $this->conn->exec("ALTER TABLE users ADD COLUMN session_id VARCHAR(255) NULL");
+                $this->conn->exec("ALTER TABLE users ADD COLUMN last_activity DATETIME NULL");
+            }
+        } catch (PDOException $e) {
+            error_log("Error running auto-migrations: " . $e->getMessage());
         }
     }
 

@@ -57,6 +57,8 @@ saii-frontend-development/
 │   ├── DESPLIEGUE.md           # Guía de despliegue en Railway
 │   ├── backend/                # Backlog y estado del backend
 │   ├── frontend/               # Backlog y estado del frontend
+│   │   ├── SAII_CSS_GUIDE.md   # 🎨 Guía de CSS y diseño responsivo
+│   │   └── ...
 │   └── rules/                  # Reglas técnicas del proyecto
 │
 ├── legacy_nextjs/              # Archivos residuales de la etapa Next.js (no usar)

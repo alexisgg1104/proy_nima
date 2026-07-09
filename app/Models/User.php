@@ -95,4 +95,22 @@ class User extends BaseModel {
         $stmt = $this->db->prepare("UPDATE users SET last_login = NOW() WHERE id = :id");
         return $stmt->execute(['id' => $id]);
     }
+
+    // Registrar el ID de sesión y actualizar fecha/hora de actividad
+    public function updateSession($id, $sessionId) {
+        $stmt = $this->db->prepare("UPDATE users SET session_id = :session_id, last_activity = NOW() WHERE id = :id");
+        return $stmt->execute(['id' => $id, 'session_id' => $sessionId]);
+    }
+
+    // Actualizar fecha/hora de última actividad en la sesión activa
+    public function updateLastActivity($id) {
+        $stmt = $this->db->prepare("UPDATE users SET last_activity = NOW() WHERE id = :id");
+        return $stmt->execute(['id' => $id]);
+    }
+
+    // Limpiar el ID de sesión al cerrar sesión
+    public function clearSession($id) {
+        $stmt = $this->db->prepare("UPDATE users SET session_id = NULL, last_activity = NULL WHERE id = :id");
+        return $stmt->execute(['id' => $id]);
+    }
 }

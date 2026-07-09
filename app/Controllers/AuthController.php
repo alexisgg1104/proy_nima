@@ -49,6 +49,18 @@ class AuthController extends BaseController {
             $this->error('El rol solicitado no coincide con los privilegios del usuario.', 403);
         }
 
+        // --- PREVENCIÓN DE CONCURRENCIA DE SESIONES ---
+        if (!empty($user['session_id']) && !empty($user['last_activity'])) {
+            $lastActivity = strtotime($user['last_activity']);
+            $diff = time() - $lastActivity;
+            
+            // Si la última actividad fue hace menos de 300 segundos (5 minutos)
+            // y no es el mismo identificador de sesión actual.
+            if ($diff < 300 && $user['session_id'] !== session_id()) {
+                $this->error('Ya existe una sesión activa para este usuario en otro dispositivo. Cierre la sesión existente antes de ingresar.', 409);
+            }
+        }
+
         // Configurar los datos en la sesión nativa de PHP
         $_SESSION['user'] = [
             'id' => (int)$user['id'],
@@ -60,6 +72,9 @@ class AuthController extends BaseController {
 
         // Registrar la fecha del último inicio de sesión en BD
         $userModel->updateLastLogin($user['id']);
+
+        // Registrar el identificador de sesión activa en la base de datos
+        $userModel->updateSession($user['id'], session_id());
 
         // Retornar información del usuario (excluyendo el hash de la contraseña)
         $this->json([
@@ -82,6 +97,12 @@ class AuthController extends BaseController {
 
     // Cerrar Sesión (POST /api/auth/logout)
     public function logout() {
+        $sessionUser = $_SESSION['user'] ?? null;
+        if ($sessionUser) {
+            $userModel = new User();
+            $userModel->clearSession($sessionUser['id']);
+        }
+
         // Limpiar el arreglo de sesión y destruir la sesión del servidor
         $_SESSION = [];
 

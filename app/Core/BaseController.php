@@ -58,6 +58,28 @@ class BaseController {
             $this->error('No autenticado. Por favor inicie sesión.', 401);
         }
 
+        // --- VALIDAR CONCURRENCIA Y ACTUALIZAR ACTIVIDAD ---
+        $userId = $_SESSION['user']['id'];
+        $userModel = new \App\Models\User();
+        $dbUser = $userModel->getById($userId);
+
+        if (!$dbUser || empty($dbUser['session_id']) || $dbUser['session_id'] !== session_id()) {
+            // Limpiar la sesión nativa si es inválida o expiró por concurrencia
+            $_SESSION = [];
+            if (ini_get("session.use_cookies")) {
+                $params = session_get_cookie_params();
+                setcookie(session_name(), '', time() - 42000,
+                    $params["path"], $params["domain"],
+                    $params["secure"], $params["httponly"]
+                );
+            }
+            session_destroy();
+            $this->error('Sesión cerrada o iniciada en otro dispositivo.', 401);
+        }
+
+        // Actualizar la última fecha de actividad del usuario en la base de datos
+        $userModel->updateLastActivity($userId);
+
         if (!empty($allowedRoles)) {
             $userRole = $_SESSION['user']['role'] ?? '';
             if (!in_array($userRole, $allowedRoles)) {

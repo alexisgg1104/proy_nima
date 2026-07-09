@@ -22,6 +22,8 @@ CREATE TABLE users (
     role_id INT NOT NULL,
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
     last_login DATETIME NULL,
+    session_id VARCHAR(255) NULL,
+    last_activity DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE RESTRICT ON UPDATE CASCADE
