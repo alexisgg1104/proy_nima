@@ -45,8 +45,8 @@ class Student extends BaseModel {
     // Registrar un nuevo alumno
     public function create($data) {
         $stmt = $this->db->prepare("
-            INSERT INTO students (user_id, code, dni, first_name, last_name, email, phone, cycle, promotion, status, observations)
-            VALUES (:user_id, :code, :dni, :first_name, :last_name, :email, :phone, :cycle, :promotion, :status, :observations)
+            INSERT INTO students (user_id, code, dni, first_name, last_name, email, phone, student_type, promotion, status, observations)
+            VALUES (:user_id, :code, :dni, :first_name, :last_name, :email, :phone, :student_type, :promotion, :status, :observations)
         ");
         $stmt->execute([
             'user_id' => $data['user_id'] ?? null,
@@ -56,7 +56,7 @@ class Student extends BaseModel {
             'last_name' => $data['last_name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
-            'cycle' => $data['cycle'],
+            'student_type' => $data['student_type'] ?? 'pregrado',
             'promotion' => $data['promotion'],
             'status' => $data['status'] ?? 'active',
             'observations' => $data['observations'] ?? null
@@ -75,7 +75,7 @@ class Student extends BaseModel {
                 last_name = :last_name,
                 email = :email,
                 phone = :phone,
-                cycle = :cycle,
+                student_type = :student_type,
                 promotion = :promotion,
                 status = :status,
                 observations = :observations
@@ -90,7 +90,7 @@ class Student extends BaseModel {
             'last_name' => $data['last_name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
-            'cycle' => $data['cycle'],
+            'student_type' => $data['student_type'] ?? 'pregrado',
             'promotion' => $data['promotion'],
             'status' => $data['status'],
             'observations' => $data['observations'] ?? null

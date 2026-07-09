@@ -38,12 +38,12 @@ class StudentController extends BaseController {
 
         $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 
-        $code = trim($input['code'] ?? '');
+        $code = strtoupper(trim($input['code'] ?? ''));
         $dni = trim($input['dni'] ?? '');
         $firstName = trim($input['first_name'] ?? '');
         $lastName = trim($input['last_name'] ?? '');
         $email = trim($input['email'] ?? '');
-        $cycle = trim($input['cycle'] ?? 'I');
+        $studentType = trim($input['student_type'] ?? 'pregrado');
         $promotion = trim($input['promotion'] ?? '');
 
         // 1. Validar campos obligatorios
@@ -56,9 +56,15 @@ class StudentController extends BaseController {
             $this->error('El DNI debe tener exactamente 8 dígitos numéricos.', 400);
         }
 
-        // 3. Validar formato de Código (exactamente 10 dígitos)
-        if (!preg_match('/^\d{10}$/', $code)) {
-            $this->error('El código debe tener exactamente 10 dígitos numéricos.', 400);
+        // 3. Validar formato de Código (según tipo de estudiante)
+        if ($studentType === 'externo') {
+            if (!preg_match('/^E\d{9}$/', $code)) {
+                $this->error('El código para estudiantes externos debe empezar con "E" seguido de 9 dígitos.', 400);
+            }
+        } else {
+            if (!preg_match('/^\d{10}$/', $code)) {
+                $this->error('El código debe tener exactamente 10 dígitos numéricos.', 400);
+            }
         }
 
         // 4. Validar formato de correo electrónico
@@ -88,7 +94,7 @@ class StudentController extends BaseController {
                 'last_name' => $lastName,
                 'email' => $email,
                 'phone' => trim($input['phone'] ?? ''),
-                'cycle' => $cycle,
+                'student_type' => $studentType,
                 'promotion' => $promotion,
                 'status' => $input['status'] ?? 'active',
                 'observations' => trim($input['observations'] ?? '')
@@ -116,12 +122,12 @@ class StudentController extends BaseController {
 
         $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 
-        $code = trim($input['code'] ?? $student['code']);
+        $code = strtoupper(trim($input['code'] ?? $student['code']));
         $dni = trim($input['dni'] ?? $student['dni']);
         $firstName = trim($input['first_name'] ?? $student['first_name']);
         $lastName = trim($input['last_name'] ?? $student['last_name']);
         $email = trim($input['email'] ?? $student['email']);
-        $cycle = trim($input['cycle'] ?? $student['cycle'] ?? 'I');
+        $studentType = trim($input['student_type'] ?? $student['student_type'] ?? 'pregrado');
         $promotion = trim($input['promotion'] ?? $student['promotion']);
 
         // 1. Validar campos obligatorios
@@ -133,8 +139,14 @@ class StudentController extends BaseController {
         if (!preg_match('/^\d{8}$/', $dni)) {
             $this->error('El DNI debe tener exactamente 8 dígitos numéricos.', 400);
         }
-        if (!preg_match('/^\d{10}$/', $code)) {
-            $this->error('El código debe tener exactamente 10 dígitos numéricos.', 400);
+        if ($studentType === 'externo') {
+            if (!preg_match('/^E\d{9}$/', $code)) {
+                $this->error('El código para estudiantes externos debe empezar con "E" seguido de 9 dígitos.', 400);
+            }
+        } else {
+            if (!preg_match('/^\d{10}$/', $code)) {
+                $this->error('El código debe tener exactamente 10 dígitos numéricos.', 400);
+            }
         }
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->error('El correo electrónico no tiene un formato válido.', 400);
@@ -165,7 +177,7 @@ class StudentController extends BaseController {
                 'last_name' => $lastName,
                 'email' => $email,
                 'phone' => trim($input['phone'] ?? $student['phone']),
-                'cycle' => $cycle,
+                'student_type' => $studentType,
                 'promotion' => $promotion,
                 'status' => $input['status'] ?? $student['status'],
                 'observations' => trim($input['observations'] ?? $student['observations'])

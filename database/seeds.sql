@@ -27,17 +27,17 @@ INSERT INTO users (id, username, password, full_name, email, role_id, status) VA
 (6, 'decano', '$2y$10$w1I437LVXlKsf1mBppu4Zu0.zpRF7GEGdOxQTV9Z1Ve73BD6vbxNa', 'Dr. Francisco Javier Cruz Vilchez', 'decano@institutoinformatica.edu.pe', 5, 'active');
 
 -- 4. Students
-INSERT INTO students (id, user_id, code, dni, first_name, last_name, email, phone, cycle, promotion, status, observations) VALUES 
-(1, NULL, '2024001000', '12345678', 'Juan', 'Pérez García', 'juan.perez@student.edu.pe', '987654321', 'I', '2024', 'active', ''),
-(2, NULL, '2024002000', '23456789', 'María', 'López Rodríguez', 'maria.lopez@student.edu.pe', '987654322', 'II', '2024', 'active', ''),
-(3, NULL, '2024003000', '34567890', 'Carlos', 'Martínez Sánchez', 'carlos.martinez@student.edu.pe', '987654323', 'I', '2023', 'active', ''),
-(4, NULL, '2024004000', '45678901', 'Ana', 'García Flores', 'ana.garcia@student.edu.pe', '987654324', 'III', '2024', 'active', ''),
-(5, NULL, '2024005000', '56789012', 'Pedro', 'Gutiérrez López', 'pedro.gutierrez@student.edu.pe', '987654325', 'II', '2023', 'inactive', 'Solicitud de retiro'),
-(6, NULL, '2024006000', '67890123', 'Rosa', 'Hernández Torres', 'rosa.hernandez@student.edu.pe', '987654326', 'IV', '2022', 'active', ''),
-(7, NULL, '2024007000', '78901234', 'Diego', 'Ramírez Cruz', 'diego.ramirez@student.edu.pe', '987654327', 'I', '2024', 'active', ''),
-(8, NULL, '2024008000', '89012345', 'Sofia', 'Castillo Mendoza', 'sofia.castillo@student.edu.pe', '987654328', 'II', '2024', 'active', ''),
-(9, NULL, '2024009000', '90123456', 'Luis', 'Vargas Ruiz', 'luis.vargas@student.edu.pe', '987654329', 'III', '2023', 'active', ''),
-(10, NULL, '2024010000', '01234567', 'Carmen', 'Jiménez Morales', 'carmen.jimenez@student.edu.pe', '987654330', 'I', '2024', 'active', '');
+INSERT INTO students (id, user_id, code, dni, first_name, last_name, email, phone, student_type, promotion, status, observations) VALUES 
+(1, NULL, '2024001000', '12345678', 'Juan', 'Pérez García', 'juan.perez@student.edu.pe', '987654321', 'pregrado', '2024', 'active', ''),
+(2, NULL, '2024002000', '23456789', 'María', 'López Rodríguez', 'maria.lopez@student.edu.pe', '987654322', 'pregrado', '2024', 'active', ''),
+(3, NULL, '2024003000', '34567890', 'Carlos', 'Martínez Sánchez', 'carlos.martinez@student.edu.pe', '987654323', 'pregrado', '2023', 'active', ''),
+(4, NULL, '2024004000', '45678901', 'Ana', 'García Flores', 'ana.garcia@student.edu.pe', '987654324', 'pregrado', '2024', 'active', ''),
+(5, NULL, '2024005000', '56789012', 'Pedro', 'Gutiérrez López', 'pedro.gutierrez@student.edu.pe', '987654325', 'egresado', '2023', 'inactive', 'Solicitud de retiro'),
+(6, NULL, '2024006000', '67890123', 'Rosa', 'Hernández Torres', 'rosa.hernandez@student.edu.pe', '987654326', 'egresado', '2022', 'active', ''),
+(7, NULL, '2024007000', '78901234', 'Diego', 'Ramírez Cruz', 'diego.ramirez@student.edu.pe', '987654327', 'egresado', '2024', 'active', ''),
+(8, NULL, '2024008000', '89012345', 'Sofia', 'Castillo Mendoza', 'sofia.castillo@student.edu.pe', '987654328', 'posgrado', '2024', 'active', ''),
+(9, NULL, '2024009000', '90123456', 'Luis', 'Vargas Ruiz', 'luis.vargas@student.edu.pe', '987654329', 'posgrado', '2023', 'active', ''),
+(10, NULL, 'E000000010', '01234567', 'Carmen', 'Jiménez Morales', 'carmen.jimenez@student.edu.pe', '987654330', 'externo', '2024', 'active', '');
 
 -- 5. Teachers
 INSERT INTO teachers (id, user_id, code, dni, first_name, last_name, email, phone, specialty, status) VALUES 

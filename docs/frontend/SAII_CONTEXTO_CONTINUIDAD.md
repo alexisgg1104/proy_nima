@@ -93,6 +93,8 @@ Se han completado todas las fases de desarrollo del proyecto SAII:
 
 ### Etapa Frontend:
 * **Fases 1 a 7:** Construcción y optimización del diseño interactivo responsivo de todos los módulos del sistema académico con datos mock localizados en memoria.
+* **Integración del Tipo de Alumno (studentType) y Depreciación de Ciclo (cycle):** Reemplazo completo del ciclo de estudios por el tipo de alumno en los módulos de Alumnos, Matrículas, Calificaciones, Asistencias, Certificados y Reportes con badges color pastel.
+* **Solución de Desborde del Certificado Expandido (Fullscreen):** Implementación de la escala proporcional dinámica (`adjustCertificateScale()`) en JS y CSS, evitando cortes en la visualización en Desktop, Firefox y dispositivos móviles.
 
 ### Etapa Backend (Fases B0 a B10):
 * **Fases B1 a B8:** Diseño de la base de datos MySQL (17 tablas), migración de semillas y lógica de controladores y modelos en PHP con patrón MVC estricto y consultas PDO seguras para todos los módulos.

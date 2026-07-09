@@ -57,6 +57,18 @@ class Database {
                 $this->conn->exec("ALTER TABLE users ADD COLUMN last_activity DATETIME NULL");
             }
 
+            // 1.5. Verificar columna student_type y cycle en la tabla students
+            $stmt = $this->conn->query("SHOW COLUMNS FROM students LIKE 'student_type'");
+            $column = $stmt->fetch();
+            if (!$column) {
+                $this->conn->exec("ALTER TABLE students ADD COLUMN student_type ENUM('pregrado','egresado','posgrado','externo') NOT NULL DEFAULT 'pregrado'");
+            }
+            $stmt = $this->conn->query("SHOW COLUMNS FROM students LIKE 'cycle'");
+            $column = $stmt->fetch();
+            if ($column) {
+                $this->conn->exec("ALTER TABLE students DROP COLUMN cycle");
+            }
+
             // 2. Verificar columnas de backup en la tabla settings
             $stmt = $this->conn->query("SHOW COLUMNS FROM settings LIKE 'backup_frequency'");
             $column = $stmt->fetch();

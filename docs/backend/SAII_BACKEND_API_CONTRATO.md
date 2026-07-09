@@ -81,13 +81,13 @@ Para facilitar el control de errores en el frontend, todas las respuestas de la 
 * **Método:** `GET`
 * **Ruta:** `/api/students`
 * **Roles Permitidos:** `admin`, `secretary`, `coordinator`
-* **Parámetros Query (Opcionales):** `search` (búsqueda por código/DNI/nombre), `status` (`active`/`inactive`), `cycle`, `promotion`.
+* **Parámetros Query (Opcionales):** `search` (búsqueda por código/DNI/nombre), `status` (`active`/`inactive`), `studentType`, `promotion`.
 * **Respuesta Exitosa (200 OK):**
   ```json
   {
     "status": "success",
     "data": [
-      { "id": "ALU001", "code": "2024001000", "dni": "12345678", "firstName": "Juan", "lastName": "Pérez García", "email": "juan.perez@student.edu.pe", "phone": "987654321", "cycle": "I", "promotion": "2024", "status": "active", "observations": "" }
+      { "id": "ALU001", "code": "2024001000", "dni": "12345678", "firstName": "Juan", "lastName": "Pérez García", "email": "juan.perez@student.edu.pe", "phone": "987654321", "studentType": "pregrado", "promotion": "2024", "status": "active", "observations": "" }
     ]
   }
   ```

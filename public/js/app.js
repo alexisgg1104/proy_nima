@@ -461,6 +461,14 @@ class SAIIApp {
                 this.openCertificateModal();
             });
         }
+
+        // Window resize handler for scaling certificate
+        window.addEventListener('resize', () => {
+            const modal = document.getElementById('certificateModal');
+            if (modal && modal.style.display !== 'none') {
+                this.adjustCertificateScale();
+            }
+        });
     }
 
     setupModuleButtons() {
@@ -1594,7 +1602,7 @@ class SAIIApp {
             let t = node.textContent;
             if (isEn) {
                 t = t.replace(/\bPromoción\b/g, 'Promotion')
-                     .replace(/\bCiclo\b/g, 'Cycle')
+                     .replace(/\bTipo\b/g, 'Type')
                      .replace('No se encontraron alumnos', 'No students found')
                      .replace('No se encontraron cursos', 'No courses found')
                      .replace('No se encontraron docentes', 'No teachers found')
@@ -1605,7 +1613,7 @@ class SAIIApp {
                      .replace('cupos', 'seats');
             } else {
                 t = t.replace(/\bPromotion\b/g, 'Promoción')
-                     .replace(/\bCycle\b/g, 'Ciclo')
+                     .replace(/\bType\b/g, 'Tipo')
                      .replace('No students found', 'No se encontraron alumnos')
                      .replace('No courses found', 'No se encontraron cursos')
                      .replace('No teachers found', 'No se encontraron docentes')
@@ -1648,10 +1656,10 @@ class SAIIApp {
         allOptions.forEach(opt => {
             const txt = opt.textContent;
             if (isEn) {
-                opt.textContent = txt.replace('Ciclo', 'Cycle')
+                opt.textContent = txt.replace('Tipo', 'Type')
                                      .replace('Promoción', 'Promotion')
                                      .replace('Todos los estados', 'All statuses')
-                                     .replace('Todos los ciclos', 'All cycles')
+                                     .replace('Todos los tipos', 'All types')
                                      .replace('Todas las promociones', 'All promotions')
                                      .replace('Todos los meses', 'All months')
                                      .replace('Vista Detallada', 'Detailed View')
@@ -1663,15 +1671,19 @@ class SAIIApp {
                                      .replace('Curso regular', 'Regular course')
                                      .replace('Examen de suficiencia', 'Proficiency exam')
                                      .replace('Todas las calificaciones', 'All grades')
+                                     .replace('Pregrado', 'Undergraduate')
+                                     .replace('Egresado', 'Graduate')
+                                     .replace('Posgrado', 'Postgraduate')
+                                     .replace('Externo', 'External')
                                      .replace('-- Seleccione un grupo --', '-- Select a group --')
                                      .replace('Borrador', 'Draft')
                                      .replace('Cerrado', 'Closed')
                                      .replace('Cerrada', 'Closed');
             } else {
-                opt.textContent = txt.replace('Cycle', 'Ciclo')
+                opt.textContent = txt.replace('Type', 'Tipo')
                                      .replace('Promotion', 'Promoción')
                                      .replace('All statuses', 'Todos los estados')
-                                     .replace('All cycles', 'Todos los ciclos')
+                                     .replace('All types', 'Todos los tipos')
                                      .replace('All promotions', 'Todas las promociones')
                                      .replace('All months', 'Todos los meses')
                                      .replace('Detailed View', 'Vista Detallada')
@@ -1683,6 +1695,10 @@ class SAIIApp {
                                      .replace('Regular course', 'Curso regular')
                                      .replace('Proficiency exam', 'Examen de suficiencia')
                                      .replace('All grades', 'Todas las calificaciones')
+                                     .replace('Undergraduate', 'Pregrado')
+                                     .replace('Graduate', 'Egresado')
+                                     .replace('Postgraduate', 'Posgrado')
+                                     .replace('External', 'Externo')
                                      .replace('-- Select a group --', '-- Seleccione un grupo --')
                                      .replace('Draft', 'Borrador')
                                      .replace('Closed', 'Cerrado');
@@ -1745,19 +1761,30 @@ class SAIIApp {
         tbody.innerHTML = '';
 
         if (students.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem; color: var(--color-text-secondary);">No se encontraron alumnos</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2rem; color: var(--color-text-secondary);">No se encontraron alumnos</td></tr>';
             return;
         }
+
+        const typeLabels = {
+            'pregrado': 'Pregrado',
+            'egresado': 'Egresado',
+            'posgrado': 'Posgrado',
+            'externo': 'Externo'
+        };
 
         students.forEach(student => {
             const row = document.createElement('tr');
             const statusLabel = student.status === 'active' ? 'Activo' : 'Inactivo';
             const statusClass = student.status === 'active' ? 'badge-active' : 'badge-inactive';
             const fullName = `${student.firstName} ${student.lastName}`;
+            const typeLabel = typeLabels[student.studentType] || 'Pregrado';
+            const typeClass = `badge-${student.studentType || 'pregrado'}`;
+
             row.innerHTML = `
                 <td>${student.code}</td>
                 <td>${student.dni}</td>
                 <td><strong>${fullName}</strong></td>
+                <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
                 <td>${student.email}</td>
                 <td>Promoción ${student.promotion}</td>
                 <td><span class="badge-status ${statusClass}">${statusLabel}</span></td>
@@ -1778,6 +1805,16 @@ class SAIIApp {
         if (!student) return;
         const statusLabel = student.status === 'active' ? 'Activo' : 'Inactivo';
         const statusClass = student.status === 'active' ? 'badge-active' : 'badge-inactive';
+        
+        const typeLabels = {
+            'pregrado': 'Pregrado',
+            'egresado': 'Egresado',
+            'posgrado': 'Posgrado',
+            'externo': 'Externo'
+        };
+        const typeLabel = typeLabels[student.studentType] || 'Pregrado';
+        const typeClass = `badge-${student.studentType || 'pregrado'}`;
+
         const body = document.getElementById('studentDetailBody');
         body.innerHTML = `
             <div class="detail-grid">
@@ -1785,6 +1822,7 @@ class SAIIApp {
                 <div class="detail-item"><span class="detail-label">DNI</span><span class="detail-value">${student.dni}</span></div>
                 <div class="detail-item"><span class="detail-label">Nombres</span><span class="detail-value">${student.firstName}</span></div>
                 <div class="detail-item"><span class="detail-label">Apellidos</span><span class="detail-value">${student.lastName}</span></div>
+                <div class="detail-item"><span class="detail-label">Tipo</span><span class="detail-value"><span class="badge-status ${typeClass}">${typeLabel}</span></span></div>
                 <div class="detail-item"><span class="detail-label">Correo</span><span class="detail-value">${student.email || '-'}</span></div>
                 <div class="detail-item"><span class="detail-label">Teléfono</span><span class="detail-value">${student.phone || '-'}</span></div>
                 <div class="detail-item"><span class="detail-label">Promoción</span><span class="detail-value">Promoción ${student.promotion}</span></div>
@@ -1803,6 +1841,7 @@ class SAIIApp {
     setupStudentFilters() {
         const searchInput = document.getElementById('studentSearch');
         const statusFilter = document.getElementById('studentStatusFilter');
+        const typeFilter = document.getElementById('studentTypeFilter');
         const yearFilter = document.getElementById('studentYearFilter');
 
         const applyFilters = () => {
@@ -1811,7 +1850,7 @@ class SAIIApp {
             if (searchInput.value) {
                 const query = searchInput.value.toLowerCase();
                 students = students.filter(s => 
-                    s.code.includes(query) || 
+                    s.code.toLowerCase().includes(query) || 
                     s.dni.includes(query) || 
                     s.firstName.toLowerCase().includes(query) || 
                     s.lastName.toLowerCase().includes(query)
@@ -1820,6 +1859,10 @@ class SAIIApp {
 
             if (statusFilter.value) {
                 students = students.filter(s => s.status === statusFilter.value);
+            }
+
+            if (typeFilter.value) {
+                students = students.filter(s => s.studentType === typeFilter.value);
             }
 
             if (yearFilter.value) {
@@ -1831,6 +1874,7 @@ class SAIIApp {
 
         searchInput.addEventListener('input', applyFilters);
         statusFilter.addEventListener('change', applyFilters);
+        if (typeFilter) typeFilter.addEventListener('change', applyFilters);
         yearFilter.addEventListener('change', applyFilters);
     }
 
@@ -1838,12 +1882,15 @@ class SAIIApp {
         const modal = document.getElementById('studentModal');
         const form = document.getElementById('studentForm');
         const title = document.getElementById('studentModalTitle');
+        const codeInput = document.getElementById('studentCode');
+        const codeHelp = document.getElementById('studentCodeHelp');
 
         if (studentId) {
             title.textContent = 'Editar Alumno';
             const student = DataManager.getStudentById(studentId);
             if (student) {
-                document.getElementById('studentCode').value = student.code;
+                document.getElementById('studentType').value = student.studentType || 'pregrado';
+                codeInput.value = student.code;
                 document.getElementById('studentDNI').value = student.dni;
                 document.getElementById('studentFirstNames').value = student.firstName;
                 document.getElementById('studentLastNames').value = student.lastName;
@@ -1852,16 +1899,56 @@ class SAIIApp {
                 document.getElementById('studentPromotion').value = student.promotion;
                 document.getElementById('studentStatus').value = student.status;
                 document.getElementById('studentObservations').value = student.observations;
+
+                // Adjust readonly status for code
+                if (student.studentType === 'externo') {
+                    codeInput.readOnly = true;
+                    codeHelp.textContent = "Código asignado automáticamente (solo lectura)";
+                } else {
+                    codeInput.readOnly = false;
+                    codeHelp.textContent = "Formato: 10 dígitos";
+                }
             }
         } else {
             title.textContent = 'Nuevo Alumno';
             form.reset();
+            // Default to pregrado and editable
+            document.getElementById('studentType').value = 'pregrado';
+            codeInput.readOnly = false;
+            codeInput.placeholder = "10 dígitos";
+            codeHelp.textContent = "Formato: 10 dígitos";
         }
 
         document.getElementById('modalOverlay').style.display = 'block';
         modal.style.display = 'block';
 
         form.onsubmit = (e) => this.handleStudentSubmit(e, studentId);
+    }
+
+    async handleStudentTypeChange(type) {
+        const codeInput = document.getElementById('studentCode');
+        const codeHelp = document.getElementById('studentCodeHelp');
+        
+        if (type === 'externo') {
+            codeInput.readOnly = true;
+            codeInput.placeholder = "Generando código...";
+            codeHelp.textContent = "Código asignado automáticamente (solo lectura)";
+            try {
+                const nextCode = await DataManager.getNextExternalStudentCode();
+                codeInput.value = nextCode;
+            } catch (e) {
+                codeInput.value = "";
+                codeInput.placeholder = "Error al generar";
+                console.error("Error generating external student code:", e);
+            }
+        } else {
+            codeInput.readOnly = false;
+            if (codeInput.value.startsWith('E')) {
+                codeInput.value = "";
+            }
+            codeInput.placeholder = "10 dígitos";
+            codeHelp.textContent = "Formato: 10 dígitos";
+        }
     }
 
     async handleStudentSubmit(e, studentId) {
@@ -1874,6 +1961,7 @@ class SAIIApp {
             lastName: document.getElementById('studentLastNames').value,
             email: document.getElementById('studentEmail').value,
             phone: document.getElementById('studentPhone').value,
+            studentType: document.getElementById('studentType').value,
             promotion: document.getElementById('studentPromotion').value,
             status: document.getElementById('studentStatus').value,
             observations: document.getElementById('studentObservations').value
@@ -1901,9 +1989,16 @@ class SAIIApp {
     }
 
     validateStudentData(data) {
-        if (!data.code || data.code.length !== 10 || isNaN(data.code)) {
-            this.showToast('El código debe tener 10 dígitos', 'error');
-            return false;
+        if (data.studentType === 'externo') {
+            if (!data.code || !/^E\d{9}$/i.test(data.code)) {
+                this.showToast('El código para externos debe empezar con E y tener 10 caracteres', 'error');
+                return false;
+            }
+        } else {
+            if (!data.code || data.code.length !== 10 || isNaN(data.code)) {
+                this.showToast('El código debe tener exactamente 10 dígitos numéricos', 'error');
+                return false;
+            }
         }
         if (!data.dni || data.dni.length !== 8 || isNaN(data.dni)) {
             this.showToast('El DNI debe tener 8 dígitos', 'error');
@@ -2874,16 +2969,27 @@ class SAIIApp {
         tbody.innerHTML = '';
 
         if (students.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 1rem; color:var(--color-text-secondary);">No se encontraron alumnos disponibles</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 1rem; color:var(--color-text-secondary);">No se encontraron alumnos disponibles</td></tr>';
             return;
         }
 
+        const typeLabels = {
+            'pregrado': 'Pregrado',
+            'egresado': 'Egresado',
+            'posgrado': 'Posgrado',
+            'externo': 'Externo'
+        };
+
         students.forEach(student => {
             const row = document.createElement('tr');
+            const typeLabel = typeLabels[student.studentType] || 'Pregrado';
+            const typeClass = `badge-${student.studentType || 'pregrado'}`;
+
             row.innerHTML = `
                 <td>${student.code}</td>
                 <td><strong>${student.firstName} ${student.lastName}</strong></td>
                 <td>${student.dni}</td>
+                <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
                 <td>Prom. ${student.promotion}</td>
                 <td>
                     <button class="icon-btn icon-add" onclick="app.addEnrollment('${groupId}', '${student.id}')" title="Agregar al grupo">&#43;</button>
@@ -2912,20 +3018,31 @@ class SAIIApp {
         }
 
         if (enrollments.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem; color:var(--color-text-secondary);">No hay alumnos matriculados en este grupo</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2rem; color:var(--color-text-secondary);">No hay alumnos matriculados en este grupo</td></tr>';
             return;
         }
+
+        const typeLabels = {
+            'pregrado': 'Pregrado',
+            'egresado': 'Egresado',
+            'posgrado': 'Posgrado',
+            'externo': 'Externo'
+        };
 
         enrollments.forEach(enrollment => {
             const student = DataManager.getStudentById(enrollment.studentId);
             if (!student) return;
             const statusLabel = enrollment.status === 'active' ? 'Activo' : 'Retirado';
             const statusClass = enrollment.status === 'active' ? 'badge-active' : 'badge-inactive';
+            const typeLabel = typeLabels[student.studentType] || 'Pregrado';
+            const typeClass = `badge-${student.studentType || 'pregrado'}`;
+
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${student.code}</td>
                 <td><strong>${student.firstName} ${student.lastName}</strong></td>
                 <td>${student.dni}</td>
+                <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
                 <td>Promoción ${student.promotion}</td>
                 <td>${enrollment.enrollmentDate}</td>
                 <td><span class="badge-status ${statusClass}">${statusLabel}</span></td>
@@ -3521,10 +3638,17 @@ class SAIIApp {
         const modalityLabel = group.modality === 'regular' ? 'Curso regular' : 'Examen de suficiencia';
 
         // Columnas de cabecera (Fechas)
-        let headerCols = '<th class="attendance-code-cell">Código</th><th class="attendance-student-cell">Alumno</th>';
+        let headerCols = '<th class="attendance-code-cell">Código</th><th class="attendance-student-cell">Alumno</th><th>Tipo</th>';
         lista.days.forEach(d => {
             headerCols += `<th class="attendance-day-cell">${d}</th>`;
         });
+
+        const typeLabels = {
+            'pregrado': 'Pregrado',
+            'egresado': 'Egresado',
+            'posgrado': 'Posgrado',
+            'externo': 'Externo'
+        };
 
         // Filas de alumnos
         let studentRows = '';
@@ -3532,9 +3656,13 @@ class SAIIApp {
             const student = DataManager.getStudentById(s.studentId);
             if (!student) return;
 
+            const typeLabel = typeLabels[student.studentType] || 'Pregrado';
+            const typeClass = `badge-${student.studentType || 'pregrado'}`;
+
             let rowHtml = `<tr>
                 <td class="attendance-code-cell">${student.code}</td>
                 <td class="attendance-student-cell"><strong>${student.firstName} ${student.lastName}</strong></td>
+                <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
             `;
 
             lista.days.forEach(d => {
@@ -3642,6 +3770,51 @@ class SAIIApp {
             } else {
                 btn.innerHTML = '&#128470; Expandir';
             }
+            this.adjustCertificateScale();
+        }
+    }
+
+    adjustCertificateScale() {
+        const wrapper = document.querySelector('.certificate-diploma-wrapper');
+        if (!wrapper) return;
+        const container = document.getElementById('certificatePreview');
+        if (!container) return;
+
+        // Reset styles first to read original offsetHeight
+        wrapper.style.setProperty('transform', 'none', 'important');
+        wrapper.style.setProperty('webkit-transform', 'none', 'important');
+        wrapper.style.setProperty('transform-origin', 'top center', 'important');
+        wrapper.style.setProperty('webkit-transform-origin', 'top center', 'important');
+        wrapper.style.setProperty('margin', '0 auto', 'important');
+        container.style.setProperty('height', 'auto', 'important');
+
+        // Force exact 800px layout width so text wrapping and alignment is stable
+        wrapper.style.setProperty('width', '800px', 'important');
+        wrapper.style.setProperty('min-width', '800px', 'important');
+        wrapper.style.setProperty('max-width', '800px', 'important');
+
+        // Check viewport width
+        const containerWidth = container.clientWidth;
+        if (containerWidth <= 0) return;
+
+        // Designed original width of the certificate
+        const originalWidth = 800;
+        
+        let scale = 1.0;
+        if (containerWidth < originalWidth) {
+            scale = containerWidth / originalWidth;
+        }
+
+        // Apply scale
+        wrapper.style.setProperty('transform', `scale(${scale})`, 'important');
+        wrapper.style.setProperty('webkit-transform', `scale(${scale})`, 'important');
+        wrapper.style.setProperty('transform-origin', 'top center', 'important');
+        wrapper.style.setProperty('webkit-transform-origin', 'top center', 'important');
+
+        // Set container height to the scaled height of the wrapper to prevent overflow/extra blank space
+        const originalHeight = wrapper.offsetHeight;
+        if (originalHeight > 0) {
+            container.style.setProperty('height', `${originalHeight * scale}px`, 'important');
         }
     }
 
@@ -4315,11 +4488,18 @@ class SAIIApp {
         const role = DataManager.currentUser ? DataManager.currentUser.role : 'admin';
         const canEdit = role === 'teacher' && isBorrador;
 
-        let headers = '<th>Código</th><th>Alumno</th>';
+        let headers = '<th>Código</th><th>Alumno</th><th>Tipo</th>';
         course.modules.forEach(m => {
             headers += `<th>${m.name} (${m.percentage}%)</th>`;
         });
         headers += '<th>Promedio</th><th>Estado</th>';
+
+        const typeLabels = {
+            'pregrado': 'Pregrado',
+            'egresado': 'Egresado',
+            'posgrado': 'Posgrado',
+            'externo': 'Externo'
+        };
 
         let rows = '';
         enrolled.forEach(student => {
@@ -4338,10 +4518,14 @@ class SAIIApp {
             const isApproved = avg >= 11;
             const statusLabel = isComplete ? (isApproved ? 'Aprobado' : 'Desaprobado') : 'Pendiente';
             const statusClass = isComplete ? (isApproved ? 'badge-approved' : 'badge-rejected') : 'badge-pending';
+            
+            const typeLabel = typeLabels[student.studentType] || 'Pregrado';
+            const typeClass = `badge-${student.studentType || 'pregrado'}`;
 
             rows += `<tr data-student-id="${student.id}">
                 <td>${student.code}</td>
                 <td><strong>${student.firstName} ${student.lastName}</strong></td>
+                <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
             `;
 
             course.modules.forEach(m => {
@@ -4835,6 +5019,7 @@ class SAIIApp {
                     <tr>
                         <th>Código Alumno</th>
                         <th>Alumno</th>
+                        <th>Tipo</th>
                         <th>Curso</th>
                         <th>Modalidad</th>
                         <th>Tipo Doc.</th>
@@ -4850,6 +5035,7 @@ class SAIIApp {
                     <tr>
                         <th>Código Alumno</th>
                         <th>Alumno</th>
+                        <th>Tipo</th>
                         <th>Curso</th>
                         <th>Modalidad</th>
                         <th>Tipo Doc.</th>
@@ -4866,6 +5052,7 @@ class SAIIApp {
                     <tr>
                         <th>Código Alumno</th>
                         <th>Alumno</th>
+                        <th>Tipo</th>
                         <th>Curso</th>
                         <th>Modalidad</th>
                         <th>Tipo Doc.</th>
@@ -4873,12 +5060,6 @@ class SAIIApp {
                         <th>Asistencia</th>
                         <th>Estado</th>
                         <th>Fecha Solicitud</th>
-                        <th>Acciones</th>
-                    </tr>
-                `;
-            }
-        }
-
         // Apply Dean filters
         if (DataManager.currentUser && DataManager.currentUser.role === 'dean') {
             const filteredRows = certificateRows.filter(item => 
@@ -4891,9 +5072,16 @@ class SAIIApp {
         }
 
         if (certificateRows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">No se encontraron alumnos para constancias o certificados</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">No se encontraron alumnos para constancias o certificados</td></tr>';
             return;
         }
+
+        const typeLabels = {
+            'pregrado': 'Pregrado',
+            'egresado': 'Egresado',
+            'posgrado': 'Posgrado',
+            'externo': 'Externo'
+        };
 
         certificateRows.forEach(item => {
             const row = document.createElement('tr');
@@ -4963,6 +5151,9 @@ class SAIIApp {
                 actionBtn = `<span style="font-size: 0.8rem; color: var(--color-text-light); font-style:italic;">${item.reason}</span>`;
             }
 
+            const typeLabel = typeLabels[item.student.studentType] || 'Pregrado';
+            const typeClass = `badge-${item.student.studentType || 'pregrado'}`;
+
             if (isDirector) {
                 const deanSignedBadge = item.certificate && item.certificate.deanSigned 
                     ? '<span class="badge-status badge-active">Firmado</span>' 
@@ -4975,6 +5166,7 @@ class SAIIApp {
                 row.innerHTML = `
                     <td>${item.student.code}</td>
                     <td><strong>${item.student.firstName} ${item.student.lastName}</strong></td>
+                    <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
                     <td>${item.course.name}</td>
                     <td>${item.group.modality === 'regular' ? 'Curso regular' : 'Examen'}</td>
                     <td>${docTypeLabel}</td>
@@ -4990,6 +5182,7 @@ class SAIIApp {
                 row.innerHTML = `
                     <td>${item.student.code}</td>
                     <td><strong>${item.student.firstName} ${item.student.lastName}</strong></td>
+                    <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
                     <td>${item.course.name}</td>
                     <td>${item.group.modality === 'regular' ? 'Curso regular' : 'Examen'}</td>
                     <td>${docTypeLabel}</td>
@@ -5014,9 +5207,16 @@ class SAIIApp {
         tbody.innerHTML = '';
 
         if (rows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">No hay documentos pendientes de su firma.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">No hay documentos pendientes de su firma.</td></tr>';
             return;
         }
+
+        const typeLabels = {
+            'pregrado': 'Pregrado',
+            'egresado': 'Egresado',
+            'posgrado': 'Posgrado',
+            'externo': 'Externo'
+        };
 
         rows.forEach(item => {
             const row = document.createElement('tr');
@@ -5047,9 +5247,13 @@ class SAIIApp {
                 </div>
             `;
 
+            const typeLabel = typeLabels[item.student.studentType] || 'Pregrado';
+            const typeClass = `badge-${item.student.studentType || 'pregrado'}`;
+
             row.innerHTML = `
                 <td>${item.student.code}</td>
                 <td><strong>${item.student.firstName} ${item.student.lastName}</strong></td>
+                <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
                 <td>${item.course.name}</td>
                 <td>${item.group.modality === 'regular' ? 'Curso regular' : 'Examen'}</td>
                 <td>${docTypeLabel}</td>
@@ -5432,6 +5636,8 @@ class SAIIApp {
 
         document.getElementById('modalOverlay').style.display = 'block';
         document.getElementById('certificateModal').style.display = 'block';
+        
+        setTimeout(() => this.adjustCertificateScale(), 50);
     }
 
     async openCertificateModal() {
@@ -5837,7 +6043,7 @@ class SAIIApp {
             'reportTypeFilter', 
             'reportCourseFilter', 
             'reportPromotionFilter', 
-            'reportCycleFilter', 
+            'reportStudentTypeFilter', 
             'reportStatusFilter', 
             'reportYearFilter', 
             'reportMonthFilter', 
@@ -5929,7 +6135,7 @@ class SAIIApp {
         const type = document.getElementById('reportTypeFilter').value;
         const courseId = document.getElementById('reportCourseFilter').value;
         const promotion = document.getElementById('reportPromotionFilter').value;
-        const cycle = document.getElementById('reportCycleFilter').value;
+        const studentType = document.getElementById('reportStudentTypeFilter').value;
         const status = document.getElementById('reportStatusFilter').value;
         const year = document.getElementById('reportYearFilter').value;
         const month = document.getElementById('reportMonthFilter').value;
@@ -5981,15 +6187,15 @@ class SAIIApp {
 
                 if (type === 'enrollments' && status && group.modality !== status) return;
 
-                // Enrolled students filtered by promotion and cycle
+                // Enrolled students filtered by promotion and studentType
                 const students = DataManager.getStudentsByGroup(group.id).filter(student => {
                     if (promotion && student.promotion !== promotion) return false;
-                    if (cycle && student.cycle !== cycle) return false;
+                    if (studentType && student.studentType !== studentType) return false;
                     return true;
                 });
 
                 const enrolledCount = students.length;
-                if (enrolledCount === 0 && (promotion || cycle)) return;
+                if (enrolledCount === 0 && (promotion || studentType)) return;
 
                 let groupApproved = 0;
                 let groupDisapproved = 0;
@@ -6106,7 +6312,7 @@ class SAIIApp {
                     if (courseId && group.courseId != courseId) return;
                     if (year && group.startDate.split('-')[0] !== year) return;
                     if (promotion && student.promotion !== promotion) return;
-                    if (cycle && student.cycle !== cycle) return;
+                    if (studentType && student.studentType !== studentType) return;
 
                     if (month) {
                         const groupMonth = group.startDate.split('-')[1];
@@ -6191,7 +6397,7 @@ class SAIIApp {
                     if (courseId && group.courseId != courseId) return;
                     if (year && group.startDate.split('-')[0] !== year) return;
                     if (promotion && student.promotion !== promotion) return;
-                    if (cycle && student.cycle !== cycle) return;
+                    if (studentType && student.studentType !== studentType) return;
 
                     if (month) {
                         const groupMonth = group.startDate.split('-')[1];
@@ -6260,7 +6466,7 @@ class SAIIApp {
                     if (year && certYear !== year) return;
 
                     if (promotion && student.promotion !== promotion) return;
-                    if (cycle && student.cycle !== cycle) return;
+                    if (studentType && student.studentType !== studentType) return;
 
                     if (month) {
                         const certMonth = cert.issueDate.split('-')[1];
@@ -6323,6 +6529,7 @@ class SAIIApp {
                         <th>Alumno</th>
                         <th>Código</th>
                         <th>DNI</th>
+                        <th>Tipo</th>
                         <th>Curso</th>
                         <th>Grupo</th>
                         <th>Fecha Matrícula</th>
@@ -6339,7 +6546,7 @@ class SAIIApp {
                     if (courseId && group.courseId != courseId) return;
                     if (year && enr.enrollmentDate.split('-')[0] !== year) return;
                     if (promotion && student.promotion !== promotion) return;
-                    if (cycle && student.cycle !== cycle) return;
+                    if (studentType && student.studentType !== studentType) return;
 
                     if (month) {
                         const enrMonth = enr.enrollmentDate.split('-')[1];
@@ -6352,6 +6559,14 @@ class SAIIApp {
                 });
 
                 totalSt = results.length;
+                
+                const typeLabels = {
+                    'pregrado': 'Pregrado',
+                    'egresado': 'Egresado',
+                    'posgrado': 'Posgrado',
+                    'externo': 'Externo'
+                };
+
                 results.forEach(r => {
                     const course = DataManager.getCourseById(r.group.courseId);
                     const gradeRecord = (DataManager.getGrades() || []).find(g => g.groupId == r.group.id && g.studentId == r.student.id);
@@ -6370,11 +6585,15 @@ class SAIIApp {
                     totalAttDays += 100;
                     totalPresentDays += attPct;
 
+                    const typeLabel = typeLabels[r.student.studentType] || 'Pregrado';
+                    const typeClass = `badge-${r.student.studentType || 'pregrado'}`;
+
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td><strong>${r.student.firstName} ${r.student.lastName}</strong></td>
                         <td>${r.student.code}</td>
                         <td>${r.student.dni}</td>
+                        <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
                         <td>${r.group.courseName}</td>
                         <td>${r.group.code}</td>
                         <td>${r.enr.enrollmentDate}</td>
@@ -6468,7 +6687,7 @@ class SAIIApp {
             if (rep.queryConfig) {
                 document.getElementById('reportCourseFilter').value = rep.queryConfig.courseId || '';
                 document.getElementById('reportPromotionFilter').value = rep.queryConfig.promotion || '';
-                document.getElementById('reportCycleFilter').value = rep.queryConfig.cycle || '';
+                document.getElementById('reportStudentTypeFilter').value = rep.queryConfig.studentType || '';
                 document.getElementById('reportStatusFilter').value = rep.queryConfig.status || '';
                 document.getElementById('reportYearFilter').value = rep.queryConfig.year || '';
                 document.getElementById('reportMonthFilter').value = rep.queryConfig.month || '';
@@ -6496,7 +6715,7 @@ class SAIIApp {
         const type = document.getElementById('reportTypeFilter').value;
         const courseId = document.getElementById('reportCourseFilter').value;
         const promotion = document.getElementById('reportPromotionFilter').value;
-        const cycle = document.getElementById('reportCycleFilter').value;
+        const studentType = document.getElementById('reportStudentTypeFilter').value;
         const status = document.getElementById('reportStatusFilter').value;
         const year = document.getElementById('reportYearFilter').value;
         const month = document.getElementById('reportMonthFilter').value;
@@ -6509,7 +6728,7 @@ class SAIIApp {
             queryConfig: {
                 courseId,
                 promotion,
-                cycle,
+                studentType,
                 status,
                 year,
                 month,

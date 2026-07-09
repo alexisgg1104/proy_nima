@@ -1088,6 +1088,46 @@ html.dark-mode .nav-item.active .nav-icon {
     color: #c62828;
 }
 
+/* Student Type Badge Colors (Soft pastel theme) */
+.badge-pregrado {
+    background: rgba(30, 144, 255, 0.12) !important;
+    color: #1e90ff !important;
+    border: 1px solid rgba(30, 144, 255, 0.2) !important;
+}
+.badge-egresado {
+    background: rgba(46, 204, 113, 0.12) !important;
+    color: #27ae60 !important;
+    border: 1px solid rgba(46, 204, 113, 0.2) !important;
+}
+.badge-posgrado {
+    background: rgba(155, 89, 182, 0.12) !important;
+    color: #8e44ad !important;
+    border: 1px solid rgba(155, 89, 182, 0.2) !important;
+}
+.badge-externo {
+    background: rgba(230, 126, 34, 0.12) !important;
+    color: #d35400 !important;
+    border: 1px solid rgba(230, 126, 34, 0.2) !important;
+}
+
+/* Dark mode overrides for Student Type Badges */
+html.dark-mode .badge-pregrado {
+    background: rgba(30, 144, 255, 0.2) !important;
+    color: #82b1ff !important;
+}
+html.dark-mode .badge-egresado {
+    background: rgba(46, 204, 113, 0.2) !important;
+    color: #2ecc71 !important;
+}
+html.dark-mode .badge-posgrado {
+    background: rgba(155, 89, 182, 0.2) !important;
+    color: #d78dfa !important;
+}
+html.dark-mode .badge-externo {
+    background: rgba(230, 126, 34, 0.2) !important;
+    color: #ffb74d !important;
+}
+
 /* ============================================
    ACTION ICON BUTTONS (Fase 1)
    ============================================ */

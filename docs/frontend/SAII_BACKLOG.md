@@ -852,7 +852,7 @@ El agente debe actualizar esta sección al terminar cada fase.
   - **Alineación de Botones de Cabecera en Mobile**: Se introdujo el span `.btn-text-extra` para simplificar dinámicamente los botones de agregar en los módulos Alumnos, Docentes y Grupos a "➕ Nuevo" en pantallas móviles, alineando la barra de búsqueda y el botón en el mismo nivel.
   - **Botones de Certificados**: Alineados a la derecha en pantallas de escritorio. En móviles, se simplificaron las etiquetas a "➕ Emitir" y "⚙️ Generar Pendientes" y se alinearon side-by-side (50% de ancho cada uno) con padding generoso y altura mínima de 44px.
   - **Filtros Alineados en la Misma Fila**: En los módulos Alumnos y Grupos Académicos, los dos selectores se redujeron a la mitad (50% de ancho) y se alinearon en la misma fila en dispositivos móviles.
-  - **Rejilla de Filtros (2 Columnas)**: Los selectores de Asistencia de Alumnos y Reportes ahora forman una rejilla de 2 columnas de ancho igual (grid con 2 columnas) en móviles. En Reportes, se alineó a la derecha el botón "🔎 Filtrar" y las acciones se alinearon lado a lado.
+- **Rejilla de Filtros (2 Columnas)**: Los selectores de Asistencia de Alumnos y Reportes ahora forman una rejilla de 2 columnas de ancho igual (grid con 2 columnas) en móviles. En Reportes, se alineó a la derecha el botón "🔎 Filtrar" y las acciones se alinearon lado a lado.
   - **Alineación de Botón de Nuevo Curso**: En Cursos y Módulos, el botón "➕ Nuevo Curso" se ajustó a 50% de ancho y se alinea a la derecha en dispositivos móviles.
   - **Optimización de Header y Tap Targets**: Se incrementó el tamaño del botón de menú hamburguesa (☰) y todos los botones interactivos derechos de la cabecera (selector de rol, campana de notificaciones, luna de tema y avatar del perfil) a `44px x 44px` con alineación consolidada al extremo derecho en móviles, y se aumentó el alto de la cabecera `.header` a `70px` en escritorio y `64px` en móviles con controles de mayor tamaño.
   - **Corrección de Desbordamiento y Posición de Certificados**: Se corrigió el desajuste de posición al expandir a pantalla completa agregando `transform: none !important;` en `.modal.modal-fullscreen` (evitando la traslación de centrado por defecto de los modales del -50% que los desplazaba fuera de la pantalla). En móviles, el contenedor se alinea a la izquierda para permitir scroll táctil lateral sin recortes.
@@ -864,6 +864,46 @@ El agente debe actualizar esta sección al terminar cada fase.
   - Comprobar que en el módulo Cursos, el botón "➕ Nuevo Curso" se reduce a 50% de ancho y se alinea a la derecha.
   - Comprobar que la barra superior muestra los botones ☰, selector de rol, 🔔, 🌙, 👤 redimensionados a `44px` para fácil selección táctil y alineados a la derecha.
   - Comprobar que al pulsar "Expandir" en el modal de certificados, el diploma se alinea a la izquierda de la ventana permitiendo deslizarse horizontalmente sin recortes de texto.
+- Pendientes o riesgos: ninguno.
+
+#### Fase 7 Ajustes Finales — Integración de Tipo de Alumno y Optimización de Certificado Expandido (Fullscreen)
+
+- Fecha: 2026-07-09
+- Rama: `alexis/fase-7-ajustes-finales`
+- Commit o mensaje sugerido: `feat: integrar tipo de alumno con badges pastel y escala dinamica en certificado expandido`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `public/index.html`
+  - `public/css/styles.css`
+  - `public/js/app.js`
+  - `docs/frontend/SAII_BACKLOG.md`
+  - `docs/frontend/SAII_CSS_GUIDE.md`
+  - `docs/frontend/SAII_CONTEXTO_CONTINUIDAD.md`
+  - `docs/backend/SAII_BACKEND_DB_SCHEMA.md`
+  - `docs/backend/SAII_BACKEND_API_CONTRATO.md`
+- Funciones creadas o modificadas:
+  - En `public/js/app.js`:
+    - `adjustCertificateScale()` (creada: escala proporcionalmente el diploma para ajustarlo al ancho de su contenedor y recalcula la altura del contenedor dinámicamente)
+    - `toggleCertFullscreen()` (modificada: invoca `adjustCertificateScale()` tras alternar la clase fullscreen)
+    - `viewCertificate()` (modificada: invoca `adjustCertificateScale()` con un retardo tras renderizar el certificado)
+    - `setupEventListeners()` (modificada: añade evento `resize` global para re-evaluar la escala del certificado en vivo)
+    - `viewGradeSheetDetail()` (modificada: muestra el tipo de alumno y su badge pastel)
+    - `viewAttendanceDetail()` (modificada: renderiza el tipo de alumno y su badge en la matriz)
+    - `loadCertificates()` (modificada: añade columna `Tipo` y dibuja el badge respectivo)
+    - `renderDeanCertificatesTable()` (modificada: añade columna `Tipo` y dibuja el badge respectivo en la vista de Decano)
+    - `filterReportResults()` (modificada: filtra estudiantes por `studentType` en lugar de `cycle`, y añade columna `Tipo` al reporte de matrículas detalladas)
+    - `loadSavedReport()` y `handleSaveQuerySubmit()` (modificadas: guarda y restaura el filtro `studentType` en lugar de `cycle` en las plantillas)
+    - `translatePage()` (modificada: traduce tipos de alumnos y sus opciones)
+- Cambios principales:
+  - **Tipo de Alumno (studentType)**: Se anuló por completo el campo `cycle` y se reemplazó con `studentType` en todos los listados de Alumnos, Matrículas, Notas, Asistencias, Certificados y Reportes con badges color pastel suaves de alto contraste.
+  - **Corrección de Certificado en Fullscreen**: Se solucionó el bug de desborde y recortes a la izquierda en pantallas grandes y móviles de los certificados al expandirse. Se implementó la escala dinámica en JS y CSS, forzando la maquetación a 800px de ancho estable y aplicando un factor de zoom/escala proporcional que encaja exactamente en el ancho del viewport de manera responsiva en todos los navegadores (Firefox, Chrome, Safari).
+  - **Actualización Documental**: Se actualizaron todos los manuales y diagramas técnicos del frontend y del backend MVC para reflejar la eliminación del ciclo y la adición del tipo de alumno con sus respectivos badges.
+- Pruebas realizadas:
+  - Visualización del listado y modal de detalle sin el campo ciclo.
+  - Generación de certificados verificando la correcta visualización de la columna Tipo.
+  - Simular rol Decano y corroborar la adición de la columna Tipo en la bandeja de firmas.
+  - Cargar reporte detallado de Matrículas comprobando el filtro Tipo de Alumno.
+  - Abrir previsualización de certificado en modal y pulsar "Expandir" (pantalla completa); verificar que el diploma se escala proporcionalmente cubriendo el ancho, sin cortarse a la izquierda y permitiendo scroll vertical. Redimensionar ventana del navegador y corroborar el auto-escalado dinámico en tiempo real.
 - Pendientes o riesgos: ninguno.
 
 ---

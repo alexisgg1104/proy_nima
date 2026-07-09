@@ -107,14 +107,19 @@ Para mantener una consistencia visual rigurosa en todo el sistema:
   - `.icon-print` (Color púrpura `#7c3aed` / hover `#6d28d9`): Utilizado para imprimir reportes o actas (impresora).
 * **Prohibición**: No colocar etiquetas de texto largo (ej: "Descargar", "Ver detalle") dentro de las celdas de la tabla. El espacio en celdas de acciones está reservado únicamente para iconos con su respectivo atributo descriptivo `title` para accesibilidad.
 
-### 3. Badges de Estado
-* Los estados deben representarse mediante etiquetas estilizadas usando la clase base `.badge-status` combinada con un modificador semántico predefinido:
+### 3. Badges de Estado y Tipo de Alumno
+* Los estados y tipos de alumno deben representarse mediante etiquetas estilizadas usando la clase base `.badge-status` combinada con un modificador semántico predefinido:
   - `.badge-active` / `.badge-approved` (Verde): Indica un estado activo, exitoso o aprobado.
   - `.badge-rejected` (Rojo): Indica un error, estado rechazado o fallido.
   - `.badge-pending` (Naranja): Indica un estado pendiente o en espera.
   - `.badge-inactive` (Gris): Indica inactividad, desactivación o estados neutrales como formatos de archivo.
   - `.badge-inprogress` / `.badge-open` (Celeste/Azul): Indica estados dinámicos, automáticos o en curso.
   - `.badge-finished` / `.badge-closed` (Gris Oscuro): Indica estados finalizados o manuales.
+* **Tipos de Alumno (Colores Pastel)**:
+  - `.badge-pregrado` (Azul pastel): Estudiantes regulares de pregrado.
+  - `.badge-egresado` (Verde pastel): Egresados de la facultad.
+  - `.badge-posgrado` (Morado pastel): Alumnos de maestría, doctorado o posgrados.
+  - `.badge-externo` (Naranja pastel): Alumnos de cursos externos o público general.
 
 ---
 

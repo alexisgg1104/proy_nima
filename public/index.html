@@ -451,6 +451,13 @@
                             <option value="active">Activo</option>
                             <option value="inactive">Inactivo</option>
                         </select>
+                        <select id="studentTypeFilter" class="filter-select">
+                            <option value="">Todos los tipos</option>
+                            <option value="pregrado">Pregrado</option>
+                            <option value="egresado">Egresado</option>
+                            <option value="posgrado">Posgrado</option>
+                            <option value="externo">Externo</option>
+                        </select>
                         <select id="studentYearFilter" class="filter-select">
                             <option value="">Todas las promociones</option>
                             <option value="2026">Promoción 2026</option>
@@ -473,6 +480,7 @@
                                     <th>Código</th>
                                     <th>DNI</th>
                                     <th>Alumno</th>
+                                    <th>Tipo</th>
                                     <th>Correo</th>
                                     <th>Promoción</th>
                                     <th>Estado</th>
@@ -609,6 +617,7 @@
                                             <th>Código</th>
                                             <th>Alumno</th>
                                             <th>DNI</th>
+                                            <th>Tipo</th>
                                             <th>Promoc.</th>
                                             <th>Agregar</th>
                                         </tr>
@@ -635,6 +644,7 @@
                                             <th>Código</th>
                                             <th>Alumno</th>
                                             <th>DNI</th>
+                                            <th>Tipo</th>
                                             <th>Promoción</th>
                                             <th>Fecha de matrícula</th>
                                             <th>Estado</th>
@@ -895,12 +905,12 @@
                                 <option value="2018">Promoción 2018</option>
                                 <option value="2017">Promoción 2017</option>
                             </select>
-                            <select id="reportCycleFilter" class="filter-select" style="min-width: 140px;">
-                                <option value="">Todos los ciclos</option>
-                                <option value="I">Ciclo I</option>
-                                <option value="II">Ciclo II</option>
-                                <option value="III">Ciclo III</option>
-                                <option value="IV">Ciclo IV</option>
+                            <select id="reportStudentTypeFilter" class="filter-select" style="min-width: 140px;">
+                                <option value="">Todos los tipos</option>
+                                <option value="pregrado">Pregrado</option>
+                                <option value="egresado">Egresado</option>
+                                <option value="posgrado">Posgrado</option>
+                                <option value="externo">Externo</option>
                             </select>
                             <select id="reportStatusFilter" class="filter-select" style="min-width: 180px;">
                                 <option value="">Todos los estados</option>
@@ -1338,9 +1348,20 @@
                 <form id="studentForm" class="form-modal">
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Código de Alumno *</label>
+                            <label>Tipo de Alumno *</label>
+                            <select id="studentType" required onchange="app.handleStudentTypeChange(this.value)">
+                                <option value="pregrado">Pregrado</option>
+                                <option value="egresado">Egresado</option>
+                                <option value="posgrado">Posgrado</option>
+                                <option value="externo">Externo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label id="studentCodeLabel">Código de Alumno *</label>
                             <input type="text" id="studentCode" maxlength="10" placeholder="10 dígitos" required>
-                            <small class="form-help">Formato: 10 dígitos</small>
+                            <small class="form-help" id="studentCodeHelp">Formato: 10 dígitos</small>
                         </div>
                         <div class="form-group">
                             <label>DNI *</label>

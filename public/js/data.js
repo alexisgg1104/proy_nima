@@ -12,16 +12,16 @@ const mockData = {
 
     // Students
     students: [
-        { id: 'ALU001', code: '2024001000', dni: '12345678', firstName: 'Juan', lastName: 'Pérez García', email: 'juan.perez@student.edu.pe', phone: '987654321', cycle: 'I', promotion: '2024', status: 'active', observations: '' },
-        { id: 'ALU002', code: '2024002000', dni: '23456789', firstName: 'María', lastName: 'López Rodríguez', email: 'maria.lopez@student.edu.pe', phone: '987654322', cycle: 'II', promotion: '2024', status: 'active', observations: '' },
-        { id: 'ALU003', code: '2024003000', dni: '34567890', firstName: 'Carlos', lastName: 'Martínez Sánchez', email: 'carlos.martinez@student.edu.pe', phone: '987654323', cycle: 'I', promotion: '2023', status: 'active', observations: '' },
-        { id: 'ALU004', code: '2024004000', dni: '45678901', firstName: 'Ana', lastName: 'García Flores', email: 'ana.garcia@student.edu.pe', phone: '987654324', cycle: 'III', promotion: '2024', status: 'active', observations: '' },
-        { id: 'ALU005', code: '2024005000', dni: '56789012', firstName: 'Pedro', lastName: 'Gutiérrez López', email: 'pedro.gutierrez@student.edu.pe', phone: '987654325', cycle: 'II', promotion: '2023', status: 'inactive', observations: 'Solicitud de retiro' },
-        { id: 'ALU006', code: '2024006000', dni: '67890123', firstName: 'Rosa', lastName: 'Hernández Torres', email: 'rosa.hernandez@student.edu.pe', phone: '987654326', cycle: 'IV', promotion: '2022', status: 'active', observations: '' },
-        { id: 'ALU007', code: '2024007000', dni: '78901234', firstName: 'Diego', lastName: 'Ramírez Cruz', email: 'diego.ramirez@student.edu.pe', phone: '987654327', cycle: 'I', promotion: '2024', status: 'active', observations: '' },
-        { id: 'ALU008', code: '2024008000', dni: '89012345', firstName: 'Sofia', lastName: 'Castillo Mendoza', email: 'sofia.castillo@student.edu.pe', phone: '987654328', cycle: 'II', promotion: '2024', status: 'active', observations: '' },
-        { id: 'ALU009', code: '2024009000', dni: '90123456', firstName: 'Luis', lastName: 'Vargas Ruiz', email: 'luis.vargas@student.edu.pe', phone: '987654329', cycle: 'III', promotion: '2023', status: 'active', observations: '' },
-        { id: 'ALU010', code: '2024010000', dni: '01234567', firstName: 'Carmen', lastName: 'Jiménez Morales', email: 'carmen.jimenez@student.edu.pe', phone: '987654330', cycle: 'I', promotion: '2024', status: 'active', observations: '' },
+        { id: 'ALU001', code: '2024001000', dni: '12345678', firstName: 'Juan', lastName: 'Pérez García', email: 'juan.perez@student.edu.pe', phone: '987654321', studentType: 'pregrado', promotion: '2024', status: 'active', observations: '' },
+        { id: 'ALU002', code: '2024002000', dni: '23456789', firstName: 'María', lastName: 'López Rodríguez', email: 'maria.lopez@student.edu.pe', phone: '987654322', studentType: 'pregrado', promotion: '2024', status: 'active', observations: '' },
+        { id: 'ALU003', code: '2024003000', dni: '34567890', firstName: 'Carlos', lastName: 'Martínez Sánchez', email: 'carlos.martinez@student.edu.pe', phone: '987654323', studentType: 'pregrado', promotion: '2023', status: 'active', observations: '' },
+        { id: 'ALU004', code: '2024004000', dni: '45678901', firstName: 'Ana', lastName: 'García Flores', email: 'ana.garcia@student.edu.pe', phone: '987654324', studentType: 'pregrado', promotion: '2024', status: 'active', observations: '' },
+        { id: 'ALU005', code: '2024005000', dni: '56789012', firstName: 'Pedro', lastName: 'Gutiérrez López', email: 'pedro.gutierrez@student.edu.pe', phone: '987654325', studentType: 'egresado', promotion: '2023', status: 'inactive', observations: 'Solicitud de retiro' },
+        { id: 'ALU006', code: '2024006000', dni: '67890123', firstName: 'Rosa', lastName: 'Hernández Torres', email: 'rosa.hernandez@student.edu.pe', phone: '987654326', studentType: 'egresado', promotion: '2022', status: 'active', observations: '' },
+        { id: 'ALU007', code: '2024007000', dni: '78901234', firstName: 'Diego', lastName: 'Ramírez Cruz', email: 'diego.ramirez@student.edu.pe', phone: '987654327', studentType: 'egresado', promotion: '2024', status: 'active', observations: '' },
+        { id: 'ALU008', code: '2024008000', dni: '89012345', firstName: 'Sofia', lastName: 'Castillo Mendoza', email: 'sofia.castillo@student.edu.pe', phone: '987654328', studentType: 'posgrado', promotion: '2024', status: 'active', observations: '' },
+        { id: 'ALU009', code: '2024009000', dni: '90123456', firstName: 'Luis', lastName: 'Vargas Ruiz', email: 'luis.vargas@student.edu.pe', phone: '987654329', studentType: 'posgrado', promotion: '2023', status: 'active', observations: '' },
+        { id: 'ALU010', code: 'E000000010', dni: '01234567', firstName: 'Carmen', lastName: 'Jiménez Morales', email: 'carmen.jimenez@student.edu.pe', phone: '987654330', studentType: 'externo', promotion: '2024', status: 'active', observations: '' },
     ],
 
     // Courses
@@ -378,7 +378,7 @@ const mappers = {
             lastName: s.last_name,
             email: s.email,
             phone: s.phone,
-            cycle: s.cycle || 'I',
+            studentType: s.student_type || 'pregrado',
             promotion: s.promotion || '2024',
             status: s.status,
             observations: s.observations || ''
@@ -793,7 +793,7 @@ const DataManager = {
             email: studentData.email,
             phone: studentData.phone,
             status: studentData.status,
-            cycle: studentData.cycle,
+            student_type: studentData.studentType,
             promotion: studentData.promotion,
             observations: studentData.observations || ''
         };
@@ -825,7 +825,7 @@ const DataManager = {
             email: updates.email !== undefined ? updates.email : existing.email,
             phone: updates.phone !== undefined ? updates.phone : existing.phone,
             status: updates.status !== undefined ? updates.status : existing.status,
-            cycle: updates.cycle !== undefined ? updates.cycle : existing.cycle,
+            student_type: updates.studentType !== undefined ? updates.studentType : existing.studentType,
             promotion: updates.promotion !== undefined ? updates.promotion : existing.promotion,
             observations: updates.observations !== undefined ? updates.observations : existing.observations
         };
@@ -836,6 +836,24 @@ const DataManager = {
         const mapped = mappers.student(res.data);
         await this.preload();
         return mapped;
+    },
+
+    getNextExternalStudentCode: async function() {
+        const students = await this.getStudents();
+        const externals = students.filter(s => s.studentType === 'externo');
+        
+        let maxSeq = 0;
+        externals.forEach(s => {
+            if (s.code && s.code.startsWith('E')) {
+                const num = parseInt(s.code.substring(1));
+                if (!isNaN(num) && num > maxSeq) {
+                    maxSeq = num;
+                }
+            }
+        });
+        
+        const nextSeq = maxSeq + 1;
+        return 'E' + String(nextSeq).padStart(9, '0');
     },
 
     getStudentById: function(id) {
