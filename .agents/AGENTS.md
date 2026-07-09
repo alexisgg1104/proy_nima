@@ -299,6 +299,12 @@ Resumen para pegar en SAII_BACKLOG.md:
 
 ---
 
+## Reglas Generales de Negocio y Base de Datos
+
+- **Regla de Integridad de Datos (Auditoría)**: Un dato grabado en la base de datos no debe ser borrado físicamente. Esta es una regla de negocio inmutable. En su lugar, el registro debe ser desactivado cambiando su estado (por ejemplo, a `'inactive'`), permaneciendo en la tabla correspondiente para fines de auditoría e historial.
+
+---
+
 ## Regla sobre el resumen en el backlog
 
 Al terminar cada fase:

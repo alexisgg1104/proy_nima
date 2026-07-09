@@ -272,7 +272,7 @@ CREATE TABLE backups (
     file_name VARCHAR(255) NOT NULL,
     file_size VARCHAR(50) NULL,
     format VARCHAR(10) NOT NULL DEFAULT 'sql',
-    status ENUM('pending', 'success', 'failed') NOT NULL DEFAULT 'pending',
+    status ENUM('pending', 'success', 'failed', 'inactive') NOT NULL DEFAULT 'pending',
     type ENUM('manual', 'automatic') NOT NULL DEFAULT 'manual',
     created_at DATETIME NOT NULL,
     tables_included TEXT NULL

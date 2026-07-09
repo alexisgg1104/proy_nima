@@ -86,12 +86,19 @@ class Database {
                     file_name VARCHAR(255) NOT NULL,
                     file_size VARCHAR(50) NULL,
                     format VARCHAR(10) NOT NULL DEFAULT 'sql',
-                    status ENUM('pending', 'success', 'failed') NOT NULL DEFAULT 'pending',
+                    status ENUM('pending', 'success', 'failed', 'inactive') NOT NULL DEFAULT 'pending',
                     type ENUM('manual', 'automatic') NOT NULL DEFAULT 'manual',
                     created_at DATETIME NOT NULL,
                     tables_included TEXT NULL
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
             ");
+
+            // 3.5. Asegurar columna status ENUM con 'inactive' para bases de datos existentes
+            try {
+                $this->conn->exec("ALTER TABLE backups MODIFY COLUMN status ENUM('pending', 'success', 'failed', 'inactive') NOT NULL DEFAULT 'pending'");
+            } catch (\PDOException $ex) {
+                // Ignorar si falla por alguna razón
+            }
 
             // 4. Intentar habilitar el Event Scheduler global de MySQL
             try {

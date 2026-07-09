@@ -7149,11 +7149,20 @@ class SAIIApp {
                 } else if (bk.status === 'failed') {
                     statusClass = 'badge-rejected';
                     statusText = 'Fallido';
+                } else if (bk.status === 'inactive') {
+                    statusClass = 'badge-inactive';
+                    statusText = 'Inactivo';
                 }
 
-                // Tablas truncadas para visualización limpia
-                const tablesList = bk.tables_included || 'Todas';
-                const tablesTruncated = tablesList.length > 30 ? tablesList.substring(0, 30) + '...' : tablesList;
+                // Cantidad de tablas (Solo mostrar conteo en la tabla)
+                const tablesList = bk.tables_included || '';
+                let tablesCountText = '';
+                if (!tablesList) {
+                    tablesCountText = 'Todas';
+                } else {
+                    const count = tablesList.split(',').filter(Boolean).length;
+                    tablesCountText = `${count} ${count === 1 ? 'tabla' : 'tablas'}`;
+                }
 
                 // Formato en mayúsculas (SQL)
                 const formatText = (bk.format || 'sql').toUpperCase();
@@ -7163,15 +7172,18 @@ class SAIIApp {
                     <td>${bk.created_at}</td>
                     <td><span class="badge-status badge-inactive">${formatText}</span></td>
                     <td><span class="badge-status ${typeClass}">${typeText}</span></td>
-                    <td title="${tablesList}">${tablesTruncated}</td>
+                    <td>${tablesCountText}</td>
                     <td>${bk.file_size || '---'}</td>
                     <td><span class="badge-status ${statusClass}">${statusText}</span></td>
                     <td>
                         <div class="action-icons" style="justify-content: flex-end;">
+                            <button class="icon-btn icon-view" onclick="app.showBackupDetail(${bk.id})" title="Ver detalle de tablas">🔍</button>
                             ${bk.status === 'success' ? `
                                 <button class="icon-btn icon-download" onclick="app.downloadBackup(${bk.id})" title="Descargar copia SQL">📥</button>
                             ` : ''}
-                            <button class="icon-btn icon-delete" onclick="app.deleteBackup(${bk.id})" title="Eliminar copia de seguridad">🗑️</button>
+                            ${bk.status !== 'inactive' ? `
+                                <button class="icon-btn icon-delete" onclick="app.deleteBackup(${bk.id})" title="Desactivar respaldo">🗑️</button>
+                            ` : ''}
                         </div>
                     </td>
                 `;
@@ -7180,6 +7192,58 @@ class SAIIApp {
         } catch (error) {
             console.error("Error al cargar copias de seguridad:", error);
             this.showToast("Error al cargar historial de backups", "error");
+        }
+    }
+
+    async showBackupDetail(id) {
+        try {
+            const backups = await DataManager.getBackups();
+            const bk = backups.find(b => b.id === id);
+            if (!bk) return;
+
+            document.getElementById('detailBackupCode').textContent = bk.backup_code;
+            document.getElementById('detailBackupDate').textContent = bk.created_at;
+            document.getElementById('detailBackupSize').textContent = bk.file_size || '---';
+
+            // Formato
+            const formatSpan = document.getElementById('detailBackupFormat');
+            formatSpan.className = 'badge-status badge-inactive';
+            formatSpan.textContent = (bk.format || 'sql').toUpperCase();
+
+            // Ejecución
+            const execSpan = document.getElementById('detailBackupExecution');
+            const isAuto = bk.type === 'automatic';
+            execSpan.className = `badge-status ${isAuto ? 'badge-inprogress' : 'badge-finished'}`;
+            execSpan.textContent = isAuto ? 'Automático' : 'Manual';
+
+            // Estado
+            const statusSpan = document.getElementById('detailBackupStatus');
+            let statusClass = 'badge-pending';
+            let statusText = 'Pendiente';
+            if (bk.status === 'success') {
+                statusClass = 'badge-active';
+                statusText = 'Exitoso';
+            } else if (bk.status === 'failed') {
+                statusClass = 'badge-rejected';
+                statusText = 'Fallido';
+            } else if (bk.status === 'inactive') {
+                statusClass = 'badge-inactive';
+                statusText = 'Inactivo';
+            }
+            statusSpan.className = `badge-status ${statusClass}`;
+            statusSpan.textContent = statusText;
+
+            // Lista de tablas
+            const tablesDiv = document.getElementById('detailBackupTables');
+            const tablesList = bk.tables_included || 'Todas';
+            tablesDiv.innerHTML = tablesList.split(',').map(t => `<div style="padding: 2px 0;">• ${t}</div>`).join('');
+
+            // Mostrar modal
+            document.getElementById('modalOverlay').style.display = 'block';
+            document.getElementById('backupDetailModal').style.display = 'block';
+        } catch (error) {
+            console.error("Error al mostrar detalle del backup:", error);
+            this.showToast("Error al obtener detalles del respaldo", "error");
         }
     }
 

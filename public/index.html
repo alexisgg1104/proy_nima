@@ -1225,6 +1225,50 @@
             </div>
         </div>
     </div>
+    <!-- Backup Detail Modal -->
+    <div id="backupDetailModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Detalle del Respaldo</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-grid" style="display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px;">
+                    <div>
+                        <strong>Código:</strong>
+                        <span id="detailBackupCode"></span>
+                    </div>
+                    <div>
+                        <strong>Fecha/Hora:</strong>
+                        <span id="detailBackupDate"></span>
+                    </div>
+                    <div>
+                        <strong>Formato:</strong>
+                        <span id="detailBackupFormat" class="badge-status"></span>
+                    </div>
+                    <div>
+                        <strong>Ejecución:</strong>
+                        <span id="detailBackupExecution" class="badge-status"></span>
+                    </div>
+                    <div>
+                        <strong>Tamaño:</strong>
+                        <span id="detailBackupSize"></span>
+                    </div>
+                    <div>
+                        <strong>Estado:</strong>
+                        <span id="detailBackupStatus" class="badge-status"></span>
+                    </div>
+                    <div>
+                        <strong>Tablas Incluidas:</strong>
+                        <div id="detailBackupTables" style="margin-top: 5px; padding: 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-bg-secondary); max-height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.85rem; line-height: 1.4;"></div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <div id="studentModal" class="modal" style="display: none;">
         <div class="modal-content">

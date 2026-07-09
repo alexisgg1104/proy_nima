@@ -95,13 +95,19 @@ class BackupController extends BaseController {
         $backup = $stmt->fetch();
 
         if (!$backup || $backup['status'] !== 'success') {
-            $this->error('Archivo de respaldo no encontrado o fallido.', 404);
+            $this->error('Archivo de respaldo no encontrado, fallido o inactivo.', 404);
         }
 
         $filePath = __DIR__ . '/../../public/backups/' . $backup['file_name'];
 
         if (!file_exists($filePath)) {
-            $this->error('El archivo de respaldo físico no existe en el servidor.', 404);
+            // Re-generar el archivo SQL en caliente si no existe físicamente (ej: reinicio de contenedor efímero)
+            $tables = !empty($backup['tables_included']) ? explode(',', $backup['tables_included']) : [];
+            $success = $this->generateBackupFile($backup['id'], $backup['file_name'], $tables);
+
+            if (!$success || !file_exists($filePath)) {
+                $this->error('El archivo de respaldo físico no existe y no pudo ser auto-regenerado.', 404);
+            }
         }
 
         // Transmitir archivo al cliente para descarga forzada segura
@@ -117,7 +123,7 @@ class BackupController extends BaseController {
         exit;
     }
 
-    // Eliminar un respaldo (DELETE /api/backups/{id}) - Protegido: Solo Admin
+    // Desactivar un respaldo (DELETE /api/backups/{id}) - Protegido: Solo Admin
     public function delete($id) {
         $this->requireAuth(['admin']);
         $db = \Config\Database::getInstance()->getConnection();
@@ -130,15 +136,22 @@ class BackupController extends BaseController {
             $this->error('El registro de respaldo no existe.', 404);
         }
 
+        // 1. Eliminar el archivo físico de respaldo para liberar espacio en disco
         $filePath = __DIR__ . '/../../public/backups/' . $backup['file_name'];
         if (file_exists($filePath)) {
             unlink($filePath);
         }
 
-        $stmt = $db->prepare("DELETE FROM backups WHERE id = :id");
+        // 2. Regla de Negocio obligatoria: "Dato grabado no debe ser borrado".
+        // El registro del backup permanece en la base de datos cambiando su estado a 'inactive'.
+        $stmt = $db->prepare("
+            UPDATE backups 
+            SET status = 'inactive', file_size = NULL 
+            WHERE id = :id
+        ");
         $stmt->execute(['id' => (int)$id]);
 
-        $this->json(['message' => 'Respaldo eliminado correctamente.']);
+        $this->json(['message' => 'Respaldo desactivado correctamente. El archivo físico fue eliminado y el registro se mantiene para auditoría.']);
     }
 
     // Obtener la configuración actual y lista de tablas (GET /api/backups/settings) - Protegido: Solo Admin
