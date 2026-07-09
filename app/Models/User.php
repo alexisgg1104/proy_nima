@@ -35,7 +35,8 @@ class User extends BaseModel {
     // Obtener un usuario por su ID
     public function getById($id) {
         $stmt = $this->db->prepare("
-            SELECT u.id, u.username, u.full_name, u.email, u.role_id, u.status, u.last_login, u.created_at, u.updated_at,
+            SELECT u.id, u.username, u.full_name, u.email, u.role_id, u.status, u.last_login,
+                   u.session_id, u.last_activity, u.created_at, u.updated_at,
                    r.key_name as role_key, r.name as role_name
             FROM users u
             JOIN roles r ON u.role_id = r.id
