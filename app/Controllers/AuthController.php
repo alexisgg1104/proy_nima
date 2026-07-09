@@ -55,8 +55,9 @@ class AuthController extends BaseController {
             $diff = time() - $lastActivity;
             
             // Si la última actividad fue hace menos de 300 segundos (5 minutos)
+            // y la diferencia es no-negativa (para evitar fallas de timezone si la base de datos se desincroniza)
             // y no es el mismo identificador de sesión actual.
-            if ($diff < 300 && $user['session_id'] !== session_id()) {
+            if ($diff >= 0 && $diff < 300 && $user['session_id'] !== session_id()) {
                 $this->error('Ya existe una sesión activa para este usuario en otro dispositivo. Cierre la sesión existente antes de ingresar.', 409);
             }
         }
