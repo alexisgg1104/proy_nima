@@ -2,7 +2,7 @@
 // check_roles.php
 // Diagnóstico de tablas y columnas en la base de datos
 
-require_once __DIR__ . '/config/Database.php';
+require_once __DIR__ . '/../config/Database.php';
 
 // Cargar variables de entorno si existe .env local
 if (file_exists(__DIR__ . '/.env')) {

@@ -5060,6 +5060,12 @@ class SAIIApp {
                         <th>Asistencia</th>
                         <th>Estado</th>
                         <th>Fecha Solicitud</th>
+                        <th>Acciones</th>
+                    </tr>
+                `;
+            }
+        }
+
         // Apply Dean filters
         if (DataManager.currentUser && DataManager.currentUser.role === 'dean') {
             const filteredRows = certificateRows.filter(item => 
