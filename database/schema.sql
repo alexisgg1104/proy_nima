@@ -48,6 +48,10 @@ CREATE TABLE students (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- MIGRACIÓN / ACTUALIZACIÓN: Ejecutar si se está actualizando una base de datos existente sin la columna student_type
+-- ALTER TABLE students ADD COLUMN IF NOT EXISTS student_type ENUM('pregrado', 'egresado', 'posgrado', 'externo') NOT NULL DEFAULT 'pregrado';
+-- ALTER TABLE students DROP COLUMN IF EXISTS cycle;
+
 -- 4. Teachers
 CREATE TABLE teachers (
     id INT AUTO_INCREMENT PRIMARY KEY,

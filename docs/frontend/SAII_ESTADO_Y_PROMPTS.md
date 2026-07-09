@@ -1007,3 +1007,20 @@ Prepara la etapa backend PHP MVC + MySQL para SAII.
 No modifiques el frontend funcional sin explicar por qué.
 Primero crea la arquitectura, las tablas y el plan de integración.
 ```
+
+---
+
+## Fase 7 Ajustes Finales — Tipo de Alumno y Optimización de Certificado Fullscreen
+
+### Prompt operativo
+
+Lee `AGENTS.md`, `SAII_CONTEXTO_CONTINUIDAD.md`, `SAII_BACKLOG.md` y `SAII_ESTADO_Y_PROMPTS.md`.
+
+Aplica la fase para implementar el campo **Tipo de Alumno** (`studentType`) en todo el sistema SAII (distinguiendo entre pregrado, egresado, posgrado, externo) y corregir el bug del certificado cortado al expandir en modo fullscreen (desktop y responsive).
+
+### Cambios realizados:
+- **Base de Datos y Modelos**: Añadida la columna `student_type` a `students` en MySQL y en el script DDL `schema.sql`. Implementada migración automática en `config/Database.php`.
+- **Datos Mock**: Estudiantes clasificados en los 4 tipos. Agregada la función `DataManager.getNextExternalStudentCode()` para generar y autocompletar códigos de tipo "Externo" con formato secuencial `E000000XXX`.
+- **Formularios e Interfaces**: Añadido selector `Tipo de Alumno` como primer campo en el formulario de alumnos y configurada la visibilidad inteligente del código (autocompletado/solo lectura para externos, editable para pregrado/egresado/posgrado).
+- **Módulos del Sistema**: Adaptadas cabeceras, tablas, vistas detalladas y filtros en Alumnos, Matrículas, Notas, Asistencias, Certificados y Reportes con badges color pastel.
+- **Certificado Fullscreen**: Implementada escala dinámica y proporcional a través de la función `adjustCertificateScale()` en JS y CSS, logrando que el certificado se visualice completo sin cortes en todos los navegadores y dispositivos.
