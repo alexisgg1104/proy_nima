@@ -207,7 +207,8 @@ class BackupController extends BaseController {
             try {
                 $db->exec("
                     ALTER EVENT automatic_backup_trigger
-                    ON SCHEDULE EVERY $interval;
+                    ON SCHEDULE EVERY $interval
+                    STARTS CURRENT_TIMESTAMP + INTERVAL $interval;
                 ");
             } catch (Exception $evEx) {
                 // Registrar advertencia si el host restringe ALTER EVENT, pero no bloquear la operación

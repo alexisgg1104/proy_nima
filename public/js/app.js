@@ -7138,16 +7138,16 @@ class SAIIApp {
                 
                 // Tipo de Ejecución badge
                 const typeText = bk.type === 'automatic' ? 'Automático' : 'Manual';
-                const typeClass = bk.type === 'automatic' ? 'badge-primary' : 'badge-secondary';
+                const typeClass = bk.type === 'automatic' ? 'badge-inprogress' : 'badge-finished';
                 
                 // Estado badge
-                let statusClass = 'badge-secondary';
+                let statusClass = 'badge-pending';
                 let statusText = 'Pendiente';
                 if (bk.status === 'success') {
-                    statusClass = 'badge-success';
+                    statusClass = 'badge-active';
                     statusText = 'Exitoso';
                 } else if (bk.status === 'failed') {
-                    statusClass = 'badge-danger';
+                    statusClass = 'badge-rejected';
                     statusText = 'Fallido';
                 }
 
@@ -7161,20 +7161,18 @@ class SAIIApp {
                 tr.innerHTML = `
                     <td><strong>${bk.backup_code}</strong></td>
                     <td>${bk.created_at}</td>
-                    <td><span class="badge badge-secondary">${formatText}</span></td>
-                    <td><span class="badge ${typeClass}">${typeText}</span></td>
+                    <td><span class="badge-status badge-inactive">${formatText}</span></td>
+                    <td><span class="badge-status ${typeClass}">${typeText}</span></td>
                     <td title="${tablesList}">${tablesTruncated}</td>
                     <td>${bk.file_size || '---'}</td>
-                    <td><span class="badge ${statusClass}">${statusText}</span></td>
-                    <td style="text-align: right; white-space: nowrap;">
-                        ${bk.status === 'success' ? `
-                            <button class="btn btn-sm btn-success" onclick="app.downloadBackup(${bk.id})" title="Descargar copia SQL" style="margin-right: 5px; padding: 4px 8px;">
-                                📥 Descargar
-                            </button>
-                        ` : ''}
-                        <button class="btn btn-sm btn-danger" onclick="app.deleteBackup(${bk.id})" title="Eliminar copia de seguridad" style="padding: 4px 8px;">
-                            🗑️
-                        </button>
+                    <td><span class="badge-status ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <div class="action-icons" style="justify-content: flex-end;">
+                            ${bk.status === 'success' ? `
+                                <button class="icon-btn icon-download" onclick="app.downloadBackup(${bk.id})" title="Descargar copia SQL">📥</button>
+                            ` : ''}
+                            <button class="icon-btn icon-delete" onclick="app.deleteBackup(${bk.id})" title="Eliminar copia de seguridad">🗑️</button>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);

@@ -3867,3 +3867,14 @@ select {
     background: rgba(255, 193, 60, 0.15) !important;
     color: #f57f17 !important;
 }
+
+.icon-download {
+    color: #2e7d32;
+    border-color: rgba(46, 125, 50, 0.25);
+    background: rgba(46, 125, 50, 0.06);
+}
+.icon-download:hover {
+    background: #2e7d32;
+    color: white;
+    border-color: #2e7d32;
+}
