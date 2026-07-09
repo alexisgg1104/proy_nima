@@ -3479,9 +3479,24 @@ select {
         max-width: none !important;
         white-space: normal !important;
     }
+
+    /* Fix notifications dropdown overflowing left edge of screen */
+    .dropdown-menu.notifications-dropdown {
+        position: fixed !important;
+        top: 70px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 90% !important;
+        max-width: 400px !important;
+        margin: 0 !important;
+    }
 }
 
 @media (max-width: 576px) {
+    .dropdown-menu.notifications-dropdown {
+        top: 64px !important;
+    }
+
     .certificate-diploma-wrapper {
         zoom: 0.45; /* Zoom out a bit more on narrow screens */
         -moz-transform: scale(0.45);
