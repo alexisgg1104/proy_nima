@@ -2082,8 +2082,9 @@ select option {
     }
 
     .header {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
     }
 
     .dashboard-grid {
@@ -3359,17 +3360,21 @@ select {
     #certificatePreview {
         width: 100% !important;
         overflow-x: auto !important;
+        overflow-y: hidden !important;
         -webkit-overflow-scrolling: touch !important;
         padding: 5px !important;
+        height: 270px !important;
     }
     .certificate-diploma-wrapper {
         min-width: 700px !important;
         width: 700px !important;
-        margin: 0 auto !important;
+        margin: 0 !important;
         padding: var(--spacing-lg) !important;
-        zoom: 0.5; /* Default scale down to fit cellphones completely */
-        -moz-transform: scale(0.5);
-        -moz-transform-origin: top left;
+        zoom: 1 !important;
+        transform: scale(0.5) !important;
+        -webkit-transform: scale(0.5) !important;
+        transform-origin: top left !important;
+        -webkit-transform-origin: top left !important;
     }
     
     /* Decent vertical space around the attendance matrix */
@@ -3645,17 +3650,32 @@ select {
     /* Fix expanded certificate modal cutoff: left-align wrapper so overflow goes right and is scrollable */
     #certificateModal.modal-fullscreen .certificate-diploma-wrapper {
         margin: 0 !important;
-        zoom: 0.9 !important;
-        -moz-transform: scale(0.9) !important;
-        -moz-transform-origin: top left !important;
+        zoom: 1 !important;
+        transform: scale(0.9) !important;
+        -webkit-transform: scale(0.9) !important;
         transform-origin: top left !important;
+        -webkit-transform-origin: top left !important;
     }
     #certificateModal.modal-fullscreen #certificatePreview {
+        height: 480px !important; /* fit scale 0.9 */
         overflow-x: auto !important;
         overflow-y: auto !important;
         display: block !important;
         width: 100% !important;
         box-sizing: border-box !important;
+    }
+
+    /* Default certificate scale on smaller mobile devices */
+    #certificatePreview {
+        height: 240px !important; /* height limit to hide transformed overflow height */
+    }
+    .certificate-diploma-wrapper {
+        zoom: 1 !important;
+        transform: scale(0.45) !important;
+        -webkit-transform: scale(0.45) !important;
+        transform-origin: top left !important;
+        -webkit-transform-origin: top left !important;
+        margin: 0 !important;
     }
 
     /* Format Courses "Nuevo Curso" button to 50% width aligned right on mobile */
@@ -3676,15 +3696,20 @@ select {
         height: 60px !important;
         padding: 0 var(--spacing-sm) !important;
         display: flex !important;
+        flex-direction: row !important; /* force row direction explicitly on mobile */
         justify-content: space-between !important;
         align-items: center !important;
     }
     .header-left {
         flex: 0 0 auto !important;
+        display: flex !important;
+        align-items: center !important;
     }
     .header-right {
         flex: 1 !important;
+        display: flex !important;
         justify-content: flex-end !important;
+        align-items: center !important;
         gap: 8px !important;
     }
     
@@ -3692,10 +3717,11 @@ select {
     #menuToggleBtn {
         width: 44px !important;
         height: 44px !important;
-        font-size: 1.6rem !important;
+        font-size: 1.8rem !important; /* enlarged ☰ menu hamburger */
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        color: var(--color-text-primary) !important;
     }
 
     /* Role Selector Header */
@@ -3706,14 +3732,15 @@ select {
         margin: 0 !important;
     }
     .role-selector-header {
-        height: 40px !important;
-        max-width: 130px !important;
-        font-size: 0.8rem !important;
-        padding: 4px 8px !important;
+        height: 44px !important; /* enlarged selector height */
+        max-width: 140px !important;
+        font-size: 0.95rem !important; /* enlarged selector text size */
+        padding: 6px 8px !important;
         border-radius: var(--radius-md) !important;
         background: var(--color-bg-secondary) !important;
         border: 1px solid var(--color-border) !important;
         margin: 0 !important;
+        color: var(--color-text-primary) !important;
     }
 
     /* Header buttons: notification, theme, profile */
@@ -3724,7 +3751,7 @@ select {
         height: 44px !important;
         min-width: 44px !important;
         min-height: 44px !important;
-        font-size: 1.3rem !important;
+        font-size: 1.5rem !important; /* enlarged emojis */
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -3735,8 +3762,11 @@ select {
     .user-avatar {
         width: 36px !important;
         height: 36px !important;
-        font-size: 1.1rem !important;
+        font-size: 1.3rem !important; /* enlarged profile avatar */
         margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
     
     /* Align notifications badge correctly */
