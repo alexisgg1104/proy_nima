@@ -3129,6 +3129,28 @@ html.dark-mode .badge-status.badge-pending-generation {
         align-items: stretch;
         gap: var(--spacing-xs);
     }
+
+    /* 1. Stacking detail grid fields on mobile (Alumnos y Docentes) */
+    .detail-grid {
+        grid-template-columns: 1fr !important;
+        gap: var(--spacing-sm);
+    }
+
+    /* 2. Responsive adjustments for attendance modal (Asistencia) */
+    .modal.modal-attendance {
+        width: 96vw !important;
+        height: 95vh !important;
+        max-height: 95vh !important;
+    }
+    .att-matrix-scroll table {
+        width: max-content !important;
+        min-width: 100% !important;
+        table-layout: auto !important;
+    }
+    .att-matrix-scroll th.attendance-day-cell,
+    .att-matrix-scroll td.attendance-day-cell {
+        min-width: 130px !important;
+    }
 }
 
 @media (max-width: 576px) {
@@ -3160,7 +3182,7 @@ html.dark-mode .badge-status.badge-pending-generation {
         min-width: 100%;
     }
 
-    /* Course Modules Editor Mobile adjustments */
+    /* Course Modules Editor Mobile adjustments (Cursos) */
     .module-editor-row {
         grid-template-columns: 1fr 70px 30px !important;
         gap: 6px !important;
@@ -3176,8 +3198,37 @@ html.dark-mode .badge-status.badge-pending-generation {
     #modulesEditorRows {
         padding: var(--spacing-sm) !important;
     }
+
+    /* 3. Reordering course header items vertically on mobile to avoid squeezing */
     .modules-section-header {
-        padding: var(--spacing-sm) !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: var(--spacing-sm) !important;
+        padding: var(--spacing-md) !important;
+    }
+    .modules-section-header strong {
+        text-align: left;
+    }
+    .modules-section-header .modules-percentage-badge {
+        align-self: flex-start;
+    }
+    .modules-section-header button {
+        width: 100%;
+        margin-top: 4px;
+        justify-content: center;
+    }
+
+    /* 4. Align and center enrollment cupos display on mobile */
+    .enrollment-table-header {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: var(--spacing-xs) !important;
+    }
+    .enrollment-counter {
+        justify-content: center !important;
+        width: 100% !important;
+        margin-top: 4px;
     }
 }
 
@@ -3217,5 +3268,16 @@ select {
     vertical-align: middle;
     height: auto !important;
 }
+
+/* Scrollable container for student search results to avoid hidden buttons on mobile */
+.enrollment-search-results {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    margin-top: var(--spacing-sm);
+}
+
 
 
