@@ -3153,6 +3153,20 @@ html.dark-mode .badge-status.badge-pending-generation {
     }
 }
 
+/* General/Desktop alignments */
+#certificates .module-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end; /* Align right on desktop */
+}
+
+.filters-grid-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
 @media (max-width: 576px) {
     .module-controls {
         flex-direction: column;
@@ -3467,21 +3481,60 @@ select {
 
     /* 3. Align reports Filtrar button to the right on mobile */
     .filters-bar button[onclick="app.handleReportReportSubmit()"],
-    .filters-bar button[onclick="app.handleReportFilterSubmit()"] {
+    #reports .filters-bar .btn-filter-submit {
+        align-self: flex-end !important;
+        margin-left: auto !important;
+        width: auto !important;
+        min-width: 120px !important;
+        padding: 12px 16px !important;
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* 4. Align and size down all "Nuevo..." add buttons in module headers to 50% width aligned to the right */
+    [onclick="app.openNewUserModal()"] {
         width: 50% !important;
         align-self: flex-end !important;
         justify-content: center !important;
     }
 
-    /* 4. Align and size down all "Nuevo..." add buttons in module headers to 50% width aligned to the right */
-    [onclick="app.openNewUserModal()"],
-    .module-controls button[data-action="new-student"],
-    .module-controls button[data-action="new-course"],
-    .module-controls button[data-action="new-teacher"],
-    .module-controls button[data-action="new-group"] {
-        width: 50% !important;
-        align-self: flex-end !important;
+    #students .module-controls,
+    #teachers .module-controls,
+    #groups .module-controls {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+
+    #students .module-controls .search-field,
+    #teachers .module-controls .search-field,
+    #groups .module-controls .search-field {
+        flex: 1 !important;
+        width: auto !important;
+        min-width: 0 !important;
+    }
+
+    #students .module-controls button,
+    #teachers .module-controls button,
+    #groups .module-controls button {
+        width: auto !important;
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+        margin: 0 !important;
+        padding: 10px 12px !important;
+        font-size: 14px !important;
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
         justify-content: center !important;
+    }
+
+    .btn-text-extra {
+        display: none !important;
     }
 
     /* 5. Keep Certificates buttons side-by-side at 50% width on mobile (same level) */
@@ -3491,14 +3544,18 @@ select {
         width: 100% !important;
         gap: 8px !important;
     }
-    #certificates .module-header .module-controls button {
+    #certificates .module-header .module-controls button,
+    #certificates .module-header .module-controls .btn {
         flex: 1 !important;
         width: 50% !important;
         margin: 0 !important;
-        padding: 10px 4px !important;
-        font-size: 0.82rem !important;
+        padding: 12px 6px !important;
+        font-size: 14px !important;
+        min-height: 44px !important;
         white-space: nowrap !important;
         justify-content: center !important;
+        display: flex !important;
+        align-items: center !important;
     }
 
     /* Grades detailed view summary stacked into a single column on phone */
@@ -3520,6 +3577,70 @@ select {
     .att-institution-header span {
         display: block !important;
         margin: 0 !important;
+    }
+
+    /* Align filters side-by-side on mobile */
+    #students .filters-bar,
+    #groups .filters-bar {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+    #students .filters-bar .filter-select,
+    #groups .filters-bar .filter-select {
+        flex: 1 !important;
+        width: 50% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* 2-column grid layout for Attendance filters */
+    #attendanceAdminView .filters-bar {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+    #attendanceAdminView .filters-bar .filter-select,
+    #attendanceAdminView .filters-bar input[type="date"] {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* 2-column grid layout for Reports filters wrapper */
+    .filters-grid-wrapper {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+    .filters-grid-wrapper .filter-select {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+    #reports .filters-bar {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        gap: 12px !important;
+    }
+    #reports .filters-bar .report-action-buttons {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+    #reports .filters-bar .report-action-buttons .btn {
+        flex: 1 !important;
+        margin: 0 !important;
+        justify-content: center !important;
+        padding: 12px 8px !important;
+        min-height: 44px !important;
     }
 }
 

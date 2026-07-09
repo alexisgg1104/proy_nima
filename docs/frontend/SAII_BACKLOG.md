@@ -840,6 +840,31 @@ El agente debe actualizar esta sección al terminar cada fase.
   - Marcar notificaciones como leídas en Decano no altera el estado inicial del Docente o la Secretaria al cambiar el rol simulado.
 - Pendientes o riesgos: ninguno.
 
+#### Fase 7 Ajustes — Mejoras de Diseño Responsivo (Alineación de Botones y Rejillas de Filtros en Mobile)
+
+- Fecha: 2026-07-09
+- Rama: main
+- Commit o mensaje sugerido: `style: implementar mejoras de diseno responsivo en botones de cabecera y rejillas de filtros en mobile`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `public/index.html`
+  - `public/css/styles.css`
+  - `docs/frontend/SAII_BACKLOG.md`
+- Funciones creadas o modificadas:
+  - Ninguna (cambios de estructura HTML y estilos CSS puros para distribución).
+- Cambios principales:
+  - **Alineación de Botones de Cabecera en Mobile**: Se introdujo el span `.btn-text-extra` para simplificar dinámicamente los botones de agregar en los módulos Alumnos, Docentes y Grupos a "➕ Nuevo" en pantallas móviles, alineando la barra de búsqueda y el botón en el mismo nivel.
+  - **Botones de Certificados**: Alineados a la derecha en pantallas de escritorio. En móviles, se simplificaron las etiquetas a "➕ Emitir" y "⚙️ Generar Pendientes" y se alinearon side-by-side (50% de ancho cada uno) con padding generoso y altura mínima de 44px.
+  - **Filtros Alineados en la Misma Fila**: En los módulos Alumnos y Grupos Académicos, los dos selectores se redujeron a la mitad (50% de ancho) y se alinearon en la misma fila en dispositivos móviles.
+  - **Rejilla de Filtros (2 Columnas)**: Los selectores de Asistencia de Alumnos y Reportes ahora forman una rejilla de 2 columnas de ancho igual (grid con 2 columnas) en móviles. En Reportes, se alineó a la derecha el botón "🔎 Filtrar" y las acciones se alinearon lado a lado.
+- Pruebas realizadas:
+  - Cambiar vista a modo responsive en el navegador (ancho inferior a 576px) y validar la simplificación de los textos de los botones a "➕ Nuevo".
+  - Verificar que la barra de búsqueda y el botón "Nuevo" comparten la misma fila en Alumnos, Docentes y Grupos.
+  - Verificar que en el módulo de Certificados, los botones ocupan la misma fila con padding adecuado y min-height de 44px.
+  - Validar la alineación en la misma fila para los filtros de Alumnos y Grupos Académicos.
+  - Validar la distribución en rejilla de 2 columnas de los filtros de Asistencias y Reportes.
+- Pendientes o riesgos: ninguno.
+
 ---
 
 ## Regla final del backlog

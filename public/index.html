@@ -386,7 +386,7 @@
                     <div class="module-header">
                         <div class="module-controls">
                             <input type="text" class="search-field" id="studentSearch" placeholder="Buscar por código, DNI, nombre...">
-                            <button class="btn btn-primary icon-add-btn" data-action="new-student" title="Nuevo Alumno">➕ Nuevo Alumno</button>
+                            <button class="btn btn-primary icon-add-btn" data-action="new-student" title="Nuevo Alumno">➕ Nuevo<span class="btn-text-extra"> Alumno</span></button>
                         </div>
                     </div>
 
@@ -447,7 +447,7 @@
                     <div class="module-header">
                         <div class="module-controls">
                             <input type="text" class="search-field" id="teacherSearch" placeholder="Buscar por código, DNI, nombre...">
-                            <button class="btn btn-primary icon-add-btn" data-action="new-teacher" title="Nuevo Docente">➕ Nuevo Docente</button>
+                            <button class="btn btn-primary icon-add-btn" data-action="new-teacher" title="Nuevo Docente">➕ Nuevo<span class="btn-text-extra"> Docente</span></button>
                         </div>
                     </div>
 
@@ -476,7 +476,7 @@
                     <div class="module-header">
                         <div class="module-controls">
                             <input type="text" class="search-field" id="groupSearch" placeholder="Buscar por código o curso...">
-                            <button class="btn btn-primary icon-add-btn" data-action="new-group" title="Abrir Nuevo Grupo">➕ Abrir Nuevo Grupo</button>
+                            <button class="btn btn-primary icon-add-btn" data-action="new-group" title="Abrir Nuevo Grupo">➕ <span class="btn-text-extra">Abrir </span>Nuevo<span class="btn-text-extra"> Grupo</span></button>
                         </div>
                     </div>
 
@@ -763,9 +763,9 @@
                 <!-- Certificates View -->
                 <div id="certificates" class="view">
                     <div class="module-header">
-                        <div class="module-controls" style="display: flex; gap: 10px;">
-                            <button class="btn btn-primary icon-add-btn" id="emitCertBtn" disabled>➕ Emitir Documento</button>
-                            <button class="btn btn-secondary" onclick="app.generateBulkCertificates()" title="Generar todos los certificados aptos pendientes">⚙️ Generar Certificados Pendientes</button>
+                        <div class="module-controls">
+                            <button class="btn btn-primary icon-add-btn" id="emitCertBtn" disabled>➕ Emitir<span class="btn-text-extra"> Documento</span></button>
+                            <button class="btn btn-secondary" onclick="app.generateBulkCertificates()" title="Generar todos los certificados aptos pendientes">⚙️ Generar<span class="btn-text-extra"> Certificados</span> Pendientes</button>
                         </div>
                     </div>
 
@@ -808,66 +808,68 @@
                 <div id="reports" class="view">
                     <!-- Filters Bar (Interactive Query Dashboard) -->
                     <div class="filters-bar" style="margin-bottom: var(--spacing-lg); flex-wrap: wrap; gap: 10px; display: flex; align-items: center;">
-                        <select id="reportTypeFilter" class="filter-select" style="min-width: 180px;">
-                            <option value="grades">Notas y Calificaciones</option>
-                            <option value="attendance">Asistencia de Alumnos</option>
-                            <option value="certificates">Certificados y Constancias</option>
-                            <option value="enrollments">Matrículas por Período</option>
-                        </select>
-                        <select id="reportCourseFilter" class="filter-select" style="min-width: 180px;">
-                            <option value="">Todos los cursos</option>
-                        </select>
-                        <select id="reportPromotionFilter" class="filter-select" style="min-width: 160px;">
-                            <option value="">Todas las promociones</option>
-                            <option value="2026">Promoción 2026</option>
-                            <option value="2025">Promoción 2025</option>
-                            <option value="2024">Promoción 2024</option>
-                            <option value="2023">Promoción 2023</option>
-                            <option value="2022">Promoción 2022</option>
-                            <option value="2021">Promoción 2021</option>
-                            <option value="2020">Promoción 2020</option>
-                            <option value="2019">Promoción 2019</option>
-                            <option value="2018">Promoción 2018</option>
-                            <option value="2017">Promoción 2017</option>
-                        </select>
-                        <select id="reportCycleFilter" class="filter-select" style="min-width: 140px;">
-                            <option value="">Todos los ciclos</option>
-                            <option value="I">Ciclo I</option>
-                            <option value="II">Ciclo II</option>
-                            <option value="III">Ciclo III</option>
-                            <option value="IV">Ciclo IV</option>
-                        </select>
-                        <select id="reportStatusFilter" class="filter-select" style="min-width: 180px;">
-                            <option value="">Todos los estados</option>
-                        </select>
-                        <select id="reportYearFilter" class="filter-select" style="min-width: 140px;">
-                            <option value="">Todos los años</option>
-                            <option value="2026">2026</option>
-                            <option value="2025">2025</option>
-                            <option value="2024">2024</option>
-                            <option value="2023">2023</option>
-                            <option value="2022">2022</option>
-                        </select>
-                        <select id="reportMonthFilter" class="filter-select" style="min-width: 140px;">
-                            <option value="">Todos los meses</option>
-                            <option value="01">Enero</option>
-                            <option value="02">Febrero</option>
-                            <option value="03">Marzo</option>
-                            <option value="04">Abril</option>
-                            <option value="05">Mayo</option>
-                            <option value="06">Junio</option>
-                            <option value="07">Julio</option>
-                            <option value="08">Agosto</option>
-                            <option value="09">Septiembre</option>
-                            <option value="10">Octubre</option>
-                            <option value="11">Noviembre</option>
-                            <option value="12">Diciembre</option>
-                        </select>
-                        <select id="reportViewModeFilter" class="filter-select" style="min-width: 150px;">
-                            <option value="detailed">Vista Detallada</option>
-                            <option value="summary">Vista General (Curso/Grupo)</option>
-                        </select>
-                        <button class="btn btn-primary" onclick="app.handleReportFilterSubmit()">🔎 Filtrar</button>
+                        <div class="filters-grid-wrapper">
+                            <select id="reportTypeFilter" class="filter-select" style="min-width: 180px;">
+                                <option value="grades">Notas y Calificaciones</option>
+                                <option value="attendance">Asistencia de Alumnos</option>
+                                <option value="certificates">Certificados y Constancias</option>
+                                <option value="enrollments">Matrículas por Período</option>
+                            </select>
+                            <select id="reportCourseFilter" class="filter-select" style="min-width: 180px;">
+                                <option value="">Todos los cursos</option>
+                            </select>
+                            <select id="reportPromotionFilter" class="filter-select" style="min-width: 160px;">
+                                <option value="">Todas las promociones</option>
+                                <option value="2026">Promoción 2026</option>
+                                <option value="2025">Promoción 2025</option>
+                                <option value="2024">Promoción 2024</option>
+                                <option value="2023">Promoción 2023</option>
+                                <option value="2022">Promoción 2022</option>
+                                <option value="2021">Promoción 2021</option>
+                                <option value="2020">Promoción 2020</option>
+                                <option value="2019">Promoción 2019</option>
+                                <option value="2018">Promoción 2018</option>
+                                <option value="2017">Promoción 2017</option>
+                            </select>
+                            <select id="reportCycleFilter" class="filter-select" style="min-width: 140px;">
+                                <option value="">Todos los ciclos</option>
+                                <option value="I">Ciclo I</option>
+                                <option value="II">Ciclo II</option>
+                                <option value="III">Ciclo III</option>
+                                <option value="IV">Ciclo IV</option>
+                            </select>
+                            <select id="reportStatusFilter" class="filter-select" style="min-width: 180px;">
+                                <option value="">Todos los estados</option>
+                            </select>
+                            <select id="reportYearFilter" class="filter-select" style="min-width: 140px;">
+                                <option value="">Todos los años</option>
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                                <option value="2022">2022</option>
+                            </select>
+                            <select id="reportMonthFilter" class="filter-select" style="min-width: 140px;">
+                                <option value="">Todos los meses</option>
+                                <option value="01">Enero</option>
+                                <option value="02">Febrero</option>
+                                <option value="03">Marzo</option>
+                                <option value="04">Abril</option>
+                                <option value="05">Mayo</option>
+                                <option value="06">Junio</option>
+                                <option value="07">Julio</option>
+                                <option value="08">Agosto</option>
+                                <option value="09">Septiembre</option>
+                                <option value="10">Octubre</option>
+                                <option value="11">Noviembre</option>
+                                <option value="12">Diciembre</option>
+                            </select>
+                            <select id="reportViewModeFilter" class="filter-select" style="min-width: 150px;">
+                                <option value="detailed">Vista Detallada</option>
+                                <option value="summary">Vista General (Curso/Grupo)</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary btn-filter-submit" onclick="app.handleReportFilterSubmit()">🔎 Filtrar</button>
                         <div class="report-action-buttons">
                             <button class="btn btn-secondary" onclick="app.openSaveQueryModal()">💾 Guardar</button>
                             <button class="btn btn-secondary" onclick="app.printCurrentReport()">🖨️ Imprimir</button>
