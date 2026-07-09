@@ -94,6 +94,38 @@ class SAIIApp {
         
         // Initial run
         this.replaceUnicodeIcons();
+        this.populatePromotionDropdowns();
+    }
+
+    populatePromotionDropdowns() {
+        const studentPromo = document.getElementById('studentPromotion');
+        const reportPromo = document.getElementById('reportPromotionFilter');
+        
+        // Generate years from 2026 down to 1990
+        const startYear = 2026;
+        const endYear = 1990;
+        
+        if (studentPromo) {
+            // Keep first option (-- Seleccione --)
+            studentPromo.innerHTML = '<option value="">-- Seleccione --</option>';
+            for (let year = startYear; year >= endYear; year--) {
+                const opt = document.createElement('option');
+                opt.value = year;
+                opt.textContent = `Promoción ${year}`;
+                studentPromo.appendChild(opt);
+            }
+        }
+        
+        if (reportPromo) {
+            // Keep first option (Todas las promociones)
+            reportPromo.innerHTML = '<option value="">Todas las promociones</option>';
+            for (let year = startYear; year >= endYear; year--) {
+                const opt = document.createElement('option');
+                opt.value = year;
+                opt.textContent = `Promoción ${year}`;
+                reportPromo.appendChild(opt);
+            }
+        }
     }
 
     // ========== LOGIN MANAGEMENT ==========
@@ -2497,6 +2529,10 @@ class SAIIApp {
         }
         if (data.email && !this.validateEmail(data.email)) {
             this.showToast('Correo electrónico no válido', 'error');
+            return false;
+        }
+        if (data.phone && (data.phone.length !== 9 || isNaN(data.phone))) {
+            this.showToast('El teléfono debe tener exactamente 9 dígitos numéricos', 'error');
             return false;
         }
         return true;
