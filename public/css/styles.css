@@ -3324,6 +3324,41 @@ select {
     overflow-y: auto !important;
 }
 
+/* Specific high-specificity overrides for certificate modal fullscreen (Desktop & Mobile fallback) */
+#certificateModal.modal-fullscreen {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+}
+#certificateModal.modal-fullscreen .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+}
+#certificateModal.modal-fullscreen #certificatePreview {
+    height: auto !important;
+    max-height: calc(100vh - 140px) !important;
+    overflow: auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+}
+#certificateModal.modal-fullscreen .certificate-diploma-wrapper {
+    zoom: 1.0 !important;
+    transform: none !important;
+    margin: 0 auto !important;
+}
+.modal-header h2 {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 60% !important;
+}
+
 /* 1. Matrix wrapper and scrollable table styling with a clean border */
 .att-matrix-wrapper {
     width: 100% !important;
@@ -3364,13 +3399,14 @@ select {
         overflow: auto !important;
         -webkit-overflow-scrolling: touch !important;
         padding: 5px !important;
-        display: flex !important;
-        justify-content: center !important;
+        display: block !important;
+        text-align: center !important;
         box-sizing: border-box !important;
     }
     .certificate-diploma-wrapper {
         min-width: 700px !important;
         width: 700px !important;
+        display: inline-block !important;
         margin: 0 auto !important;
         padding: var(--spacing-lg) !important;
         zoom: 0.5 !important;
@@ -3651,6 +3687,7 @@ select {
 
     /* Fix expanded certificate modal cutoff: left-align wrapper so overflow goes right and is scrollable */
     #certificateModal.modal-fullscreen .certificate-diploma-wrapper {
+        display: inline-block !important;
         margin: 0 !important;
         zoom: 0.9 !important;
         -moz-transform: scale(0.9) !important;
@@ -3662,6 +3699,7 @@ select {
         max-height: calc(100vh - 140px) !important;
         overflow: auto !important;
         display: block !important;
+        text-align: left !important;
         width: 100% !important;
         box-sizing: border-box !important;
     }
@@ -3671,16 +3709,23 @@ select {
         height: auto !important;
         max-height: 70vh !important;
         overflow: auto !important;
-        display: flex !important;
-        justify-content: center !important;
+        display: block !important;
+        text-align: center !important;
         box-sizing: border-box !important;
     }
     .certificate-diploma-wrapper {
+        display: inline-block !important;
         zoom: 0.45 !important;
         -moz-transform: scale(0.45) !important;
         -moz-transform-origin: top left !important;
         transform: none !important;
         margin: 0 auto !important;
+    }
+
+    /* Minimize title font-size to prevent wrap on mobile */
+    .modal-header h2 {
+        font-size: 1.1rem !important;
+        max-width: 50% !important;
     }
 
     /* Format Courses "Nuevo Curso" button to 50% width aligned right on mobile */
