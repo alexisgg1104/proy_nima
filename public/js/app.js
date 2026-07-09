@@ -619,7 +619,9 @@ class SAIIApp {
             if (kpiEnrollments) {
                 try {
                     const enrollments = await DataManager.getEnrollments();
-                    kpiEnrollments.innerText = enrollments.length;
+                    // Solo matrículas activas
+                    const activeEnrollments = enrollments.filter(e => e.status === 'active' || e.status === 'activa');
+                    kpiEnrollments.innerText = activeEnrollments.length > 0 ? activeEnrollments.length : enrollments.length;
                 } catch (e) {
                     kpiEnrollments.innerText = kpis.active_students;
                 }
@@ -627,17 +629,40 @@ class SAIIApp {
             
             const kpiPendingGrades = document.getElementById('kpiPendingGrades');
             if (kpiPendingGrades) {
-                kpiPendingGrades.innerText = kpis.disapproved_count;
-            }
-            
-            const kpiCertificates = document.getElementById('kpiCertificates');
-            if (kpiCertificates) {
-                kpiCertificates.innerText = kpis.certificates_generated + kpis.constancias_generated;
+                try {
+                    // Grupos activos sin planilla de notas cerrada/registrada
+                    const groups = DataManager.cache.groups || [];
+                    const gradeSheets = DataManager.cache.gradeSheets || [];
+                    const closedSheetGroupIds = new Set(
+                        gradeSheets
+                            .filter(gs => gs.status === 'cerrada' || gs.status === 'registrada' || gs.status === 'closed')
+                            .map(gs => Number(gs.group_id))
+                    );
+                    const activeGroups = groups.filter(g => g.status === 'active' || g.status === 'activo');
+                    const pendingGradesCount = activeGroups.filter(g => !closedSheetGroupIds.has(Number(g.id))).length;
+                    kpiPendingGrades.innerText = pendingGradesCount;
+                } catch (e) {
+                    kpiPendingGrades.innerText = kpis.disapproved_count;
+                }
             }
             
             const kpiPendingAttendance = document.getElementById('kpiPendingAttendance');
             if (kpiPendingAttendance) {
-                kpiPendingAttendance.innerText = kpis.graded_count;
+                try {
+                    // Listas de asistencia en estado borrador (pendientes de cerrar)
+                    const attendanceLists = DataManager.cache.attendanceLists || [];
+                    const draftCount = attendanceLists.filter(
+                        al => al.status === 'borrador' || al.status === 'draft' || al.status === 'pendiente'
+                    ).length;
+                    kpiPendingAttendance.innerText = draftCount;
+                } catch (e) {
+                    kpiPendingAttendance.innerText = kpis.graded_count;
+                }
+            }
+
+            const kpiCertificates = document.getElementById('kpiCertificates');
+            if (kpiCertificates) {
+                kpiCertificates.innerText = kpis.certificates_generated + kpis.constancias_generated;
             }
 
             // Update Approved vs Disapproved Chart
