@@ -834,37 +834,32 @@ El agente debe actualizar esta sección al terminar cada fase.
   - **Notificaciones Reales por Rol**: Reemplazadas las notificaciones estáticas por alertas en tiempo real generadas dinámicamente sobre la base de datos MySQL (certificados por firmar, constancias listas para entregar, asistencias y nuevos grupos). Las alertas se filtran en tiempo real para que al Decano solo le aparezcan documentos pendientes de firma, al Docente los de sus grupos y a la Secretaria/Admin los del sistema general.
   - **Persistencia Individual por Rol**: La lectura de notificaciones se guarda por rol en el `localStorage`, logrando que la simulación refleje estados de lectura independientes por cada usuario.
   - **Corrección de undefined en nombres**: Solucionado el error que mostraba nombres `undefined` de alumnos y docentes en la alerta combinando los atributos `firstName` y `lastName`.
-- Pruebas realizadas:
-  - Clic en el botón ☰ contrae el menú lateral en pantallas mayores a 1024px de manera fluida.
-  - Simular rol Decano muestra el badge de firmas y un listado de documentos pendientes sin nombres `undefined`.
-  - Marcar notificaciones como leídas en Decano no altera el estado inicial del Docente o la Secretaria al cambiar el rol simulado.
-- Pendientes o riesgos: ninguno.
 
 #### Fase 7 Ajustes — Mejoras de Diseño Responsivo (Alineación de Botones y Rejillas de Filtros en Mobile)
 
 - Fecha: 2026-07-09
 - Rama: main
-- Commit o mensaje sugerido: `style: implementar mejoras de diseno responsivo en botones de cabecera y rejillas de filtros en mobile`
+- Commit o mensaje sugerido: `style: agregar transform none a modal-fullscreen y aumentar altura de header con controles mas grandes`
 - Estado final: **Completada**.
 - Archivos modificados:
   - `public/index.html`
   - `public/css/styles.css`
+  - `public/js/app.js`
   - `docs/frontend/SAII_BACKLOG.md`
 - Funciones creadas o modificadas:
-  - Ninguna (cambios de estructura HTML y estilos CSS puros para distribución).
+  - `closeModal()` (actualizada para restablecer el texto del botón de pantalla completa a "Expandir").
 - Cambios principales:
   - **Alineación de Botones de Cabecera en Mobile**: Se introdujo el span `.btn-text-extra` para simplificar dinámicamente los botones de agregar en los módulos Alumnos, Docentes y Grupos a "➕ Nuevo" en pantallas móviles, alineando la barra de búsqueda y el botón en el mismo nivel.
   - **Botones de Certificados**: Alineados a la derecha en pantallas de escritorio. En móviles, se simplificaron las etiquetas a "➕ Emitir" y "⚙️ Generar Pendientes" y se alinearon side-by-side (50% de ancho cada uno) con padding generoso y altura mínima de 44px.
   - **Filtros Alineados en la Misma Fila**: En los módulos Alumnos y Grupos Académicos, los dos selectores se redujeron a la mitad (50% de ancho) y se alinearon en la misma fila en dispositivos móviles.
   - **Rejilla de Filtros (2 Columnas)**: Los selectores de Asistencia de Alumnos y Reportes ahora forman una rejilla de 2 columnas de ancho igual (grid con 2 columnas) en móviles. En Reportes, se alineó a la derecha el botón "🔎 Filtrar" y las acciones se alinearon lado a lado.
-  - **Alineación de Botón de Nuevo Curso**: En Cursos y Módulos, el botón "➕ Nuevo Curso" se ajustó a 50% de ancho y se alineó a la derecha en dispositivos móviles.
-  - **Optimización de Header y Tap Targets**: Se incrementó el tamaño del botón de menú hamburguesa (☰) y todos los botones interactivos derechos de la cabecera (selector de rol, campana de notificaciones, luna de tema y avatar del perfil) a `44px x 44px` con alineación consolidada al extremo derecho en móviles.
-  - **Corrección de Desbordamiento de Certificados**: Corregido el desplazamiento y corte izquierdo al expandir el certificado en móviles, forzando la alineación izquierda (`margin: 0`) para permitir el desplazamiento por arrastre de forma segura en el contenedor scrollable `#certificatePreview`.
+  - **Alineación de Botón de Nuevo Curso**: En Cursos y Módulos, el botón "➕ Nuevo Curso" se ajustó a 50% de ancho y se alinea a la derecha en dispositivos móviles.
+  - **Optimización de Header y Tap Targets**: Se incrementó el tamaño del botón de menú hamburguesa (☰) y todos los botones interactivos derechos de la cabecera (selector de rol, campana de notificaciones, luna de tema y avatar del perfil) a `44px x 44px` con alineación consolidada al extremo derecho en móviles, y se aumentó el alto de la cabecera `.header` a `70px` en escritorio y `64px` en móviles con controles de mayor tamaño.
+  - **Corrección de Desbordamiento y Posición de Certificados**: Se corrigió el desajuste de posición al expandir a pantalla completa agregando `transform: none !important;` en `.modal.modal-fullscreen` (evitando la traslación de centrado por defecto de los modales del -50% que los desplazaba fuera de la pantalla). En móviles, el contenedor se alinea a la izquierda para permitir scroll táctil lateral sin recortes.
 - Pruebas realizadas:
-  - Cambiar vista a modo responsive en el navegador (ancho inferior a 576px) y validar la simplificación de los textos de los botones a "➕ Nuevo".
-  - Verificar que la barra de búsqueda y el botón "Nuevo" comparten la misma fila en Alumnos, Docentes y Grupos.
-  - Verificar que en el módulo de Certificados, los botones ocupan la misma fila con padding adecuado y min-height de 44px.
-  - Validar la alineación en la misma fila para los filtros de Alumnos y Grupos Académicos.
+  - Validar que al pulsar "Expandir" en Certificados, el modal ocupe toda la pantalla de forma simétrica sin cortes ni desplazamientos y con el botón "Minimizar" visible en la cabecera.
+  - Verificar la altura mejorada de la barra superior a `70px` en desktop y `64px` en mobile con botones e iconos de mayor tamaño.
+  - Verificar la alineación en la misma fila de filtros y botones simplificados en dispositivos móviles.
   - Validar la distribución en rejilla de 2 columnas de los filtros de Asistencias y Reportes.
   - Comprobar que en el módulo Cursos, el botón "➕ Nuevo Curso" se reduce a 50% de ancho y se alinea a la derecha.
   - Comprobar que la barra superior muestra los botones ☰, selector de rol, 🔔, 🌙, 👤 redimensionados a `44px` para fácil selección táctil y alineados a la derecha.
