@@ -7072,13 +7072,16 @@ class SAIIApp {
         }
     }
 
-    // ========== MODAL MANAGEMENT ==========
     closeModal() {
         document.getElementById('modalOverlay').style.display = 'none';
         document.querySelectorAll('.modal').forEach(m => {
             m.style.display = 'none';
             m.classList.remove('modal-fullscreen');
         });
+        const btn = document.getElementById('btnToggleCertFullscreen');
+        if (btn) {
+            btn.innerHTML = '&#128470; Expandir';
+        }
     }
 
     // ========== UTILITIES ==========
