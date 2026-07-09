@@ -2959,3 +2959,209 @@ html.dark-mode .badge-status.badge-pending-generation {
         grid-template-columns: 1fr;
     }
 }
+
+/* ============================================
+   RESPONSIVE LAYOUT & MOBILE OPTIMIZATIONS
+   ============================================ */
+
+/* Base Layout Controls and Filters (Mobile-ready Flexbox) */
+.module-header {
+    margin-bottom: var(--spacing-lg);
+}
+
+.module-controls {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.module-controls .search-field {
+    flex: 1;
+    min-width: 250px;
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+}
+
+.filters-bar {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.filters-bar .filter-select {
+    flex: 1;
+    min-width: 180px;
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+}
+
+/* Scrollable Responsive Tables Container */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+    background: var(--color-bg-primary);
+}
+
+.table-responsive .data-table {
+    min-width: 750px; /* Forces horizontal scroll on narrow viewports instead of shrinking */
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Desktop Collapse logic */
+.app-container.sidebar-collapsed .sidebar {
+    margin-left: -280px;
+}
+
+/* General Media Queries */
+@media (max-width: 1024px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        box-shadow: none;
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+        box-shadow: 5px 0 25px rgba(0, 0, 0, 0.2);
+    }
+    
+    .sidebar-toggle {
+        display: block !important;
+    }
+
+    .page-header {
+        padding: var(--spacing-lg);
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-xs);
+    }
+
+    .content-area {
+        padding: 0 var(--spacing-lg) var(--spacing-lg);
+    }
+
+    /* Modal dialogs responsiveness */
+    .modal {
+        width: 95% !important;
+        margin: var(--spacing-md) auto;
+        padding: var(--spacing-lg) !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        padding: 10px var(--spacing-md);
+        gap: var(--spacing-sm);
+    }
+
+    .header-institution-label {
+        display: none;
+    }
+
+    .role-simulator-wrapper {
+        padding: 4px var(--spacing-sm);
+        margin-right: 0;
+    }
+
+    .role-simulator-label {
+        display: none; /* Hide label, keep select input only */
+    }
+
+    .role-selector-header {
+        max-width: 120px;
+        font-size: 0.725rem !important;
+    }
+
+    .user-name {
+        display: none; /* Show avatar only */
+    }
+
+    .user-btn {
+        padding: 4px;
+    }
+
+    .user-arrow {
+        display: none;
+    }
+
+    .kpi-card {
+        padding: var(--spacing-md);
+        gap: var(--spacing-md);
+    }
+
+    .kpi-icon {
+        font-size: 1.5rem;
+        min-width: 35px;
+    }
+
+    .kpi-value {
+        font-size: 1.4rem;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on mobile is much better than vertical stacking */
+        gap: var(--spacing-sm);
+    }
+    
+    .enrollment-selector-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-xs);
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr; /* Single column on very small phones */
+    }
+
+    .module-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .module-controls .search-field {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .module-controls button,
+    .module-controls .btn {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .filters-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-xs);
+    }
+
+    .filters-bar .filter-select {
+        width: 100%;
+        min-width: 100%;
+    }
+}
+
