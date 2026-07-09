@@ -37,6 +37,7 @@ class Database {
 
         try {
             $this->conn = new PDO($dsn, $user, $pass, $options);
+            $this->conn->exec("SET time_zone = '-05:00'");
             $this->runMigrations();
         } catch (PDOException $e) {
             // Registrar error de manera segura en log interno

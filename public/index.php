@@ -1,5 +1,7 @@
 <?php
 
+date_default_timezone_set('America/Lima');
+
 use App\Core\Router;
 use App\Core\BaseController;
 use App\Controllers\AuthController;

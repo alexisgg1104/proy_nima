@@ -7125,7 +7125,7 @@ class SAIIApp {
             if (backups.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; color: var(--color-text-secondary); padding: var(--spacing-xl) 0;">
+                        <td colspan="8" style="text-align: center; color: var(--color-text-secondary); padding: var(--spacing-xl) 0;">
                             No se han generado copias de seguridad aún.
                         </td>
                     </tr>
@@ -7136,7 +7136,7 @@ class SAIIApp {
             backups.forEach(bk => {
                 const tr = document.createElement('tr');
                 
-                // Tipo badge
+                // Tipo de Ejecución badge
                 const typeText = bk.type === 'automatic' ? 'Automático' : 'Manual';
                 const typeClass = bk.type === 'automatic' ? 'badge-primary' : 'badge-secondary';
                 
@@ -7155,9 +7155,13 @@ class SAIIApp {
                 const tablesList = bk.tables_included || 'Todas';
                 const tablesTruncated = tablesList.length > 30 ? tablesList.substring(0, 30) + '...' : tablesList;
 
+                // Formato en mayúsculas (SQL)
+                const formatText = (bk.format || 'sql').toUpperCase();
+
                 tr.innerHTML = `
                     <td><strong>${bk.backup_code}</strong></td>
                     <td>${bk.created_at}</td>
+                    <td><span class="badge badge-secondary">${formatText}</span></td>
                     <td><span class="badge ${typeClass}">${typeText}</span></td>
                     <td title="${tablesList}">${tablesTruncated}</td>
                     <td>${bk.file_size || '---'}</td>
