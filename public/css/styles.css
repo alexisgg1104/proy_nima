@@ -3232,12 +3232,12 @@ html.dark-mode .badge-status.badge-pending-generation {
     }
 }
 
-/* Ensure no input/select overflows its container */
-.form-group input,
+/* Ensure no input/select overflows its container (excluding checkboxes and radios to keep them aligned) */
+.form-group input:not([type="checkbox"]):not([type="radio"]),
 .form-group select,
 .form-group textarea,
 .form-modal select,
-.form-modal input,
+.form-modal input:not([type="checkbox"]):not([type="radio"]),
 .enrollment-group-select,
 .filter-select,
 select {
@@ -3278,6 +3278,165 @@ select {
     border-radius: var(--radius-md);
     margin-top: var(--spacing-sm);
 }
+
+/* Specific Mobile Overrides for New Components */
+@media (max-width: 768px) {
+    /* 1. Prevent detail items from overflowing and wrapping vertically */
+    .detail-item {
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    .detail-value {
+        word-break: break-all !important;
+    }
+
+    /* 2. Scrollable landscape mode for certificates on mobile */
+    #certificatePreview {
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 5px !important;
+    }
+    .certificate-diploma-wrapper {
+        min-width: 680px !important; /* Keep it wide enough so it renders like a real document */
+        width: 680px !important;
+        margin: 0 auto !important;
+        padding: var(--spacing-lg) !important;
+    }
+    
+    /* Decent vertical space around the attendance matrix */
+    #attendanceDetailModal .modal-body {
+        padding: var(--spacing-md) !important;
+    }
+    .att-matrix-wrapper {
+        margin: var(--spacing-md) 0 !important;
+    }
+
+    /* 3. Stacking Decano/Director seals and top logos of certificates */
+    .certificate-diploma-wrapper > div:first-child {
+        flex-direction: column !important;
+        gap: var(--spacing-md) !important;
+    }
+    .certificate-diploma-wrapper > div:first-child img {
+        width: 80px !important;
+        height: 80px !important;
+    }
+
+    /* 4. Grades detailed view summary columns grid on tablet */
+    .grades-summary-card > div {
+        grid-template-columns: 1fr 1fr !important;
+        gap: var(--spacing-sm) !important;
+    }
+
+    /* 5. Padding/Margins for report tables and cards */
+    .card-body {
+        padding: var(--spacing-md) !important;
+    }
+    .table-responsive {
+        margin: var(--spacing-sm) 0 !important;
+    }
+
+    /* 7. Align settings checkboxes to the left and size them up */
+    .settings-form .form-group label {
+        justify-content: flex-start !important;
+        text-align: left !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .settings-form input[type="checkbox"] {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        min-height: 24px !important;
+        margin-right: 8px !important;
+    }
+
+    /* Disable sticky columns in attendance matrix on mobile to allow swiping to dates */
+    .att-matrix-scroll th.attendance-code-cell,
+    .att-matrix-scroll td.attendance-code-cell,
+    .att-matrix-scroll th.attendance-student-cell,
+    .att-matrix-scroll td.attendance-student-cell {
+        position: static !important;
+        width: auto !important;
+        min-width: auto !important;
+        max-width: none !important;
+        white-space: normal !important;
+    }
+}
+
+@media (max-width: 576px) {
+    /* 5. Reports page action buttons aligned side-by-side */
+    .report-action-buttons {
+        display: flex !important;
+        gap: 6px !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+    }
+    .report-action-buttons .btn {
+        flex: 1 !important;
+        justify-content: center !important;
+        padding: var(--spacing-sm) 4px !important;
+        font-size: 0.78rem !important;
+        white-space: nowrap !important;
+    }
+
+    /* 5. Reports page KPI cards in a 3-column row */
+    .reports-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
+        margin-bottom: var(--spacing-md) !important;
+    }
+    .reports-grid .card {
+        padding: var(--spacing-xs) !important;
+    }
+    .reports-grid .card-header {
+        padding: var(--spacing-xs) var(--spacing-xs) 0 !important;
+    }
+    .reports-grid .card-header h3 {
+        font-size: 0.72rem !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: center;
+    }
+    .reports-grid .stat-value {
+        font-size: 1.2rem !important;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    /* 6. Roles y Permisos: Nuevo Usuario button 50% width and right aligned */
+    [onclick="app.openNewUserModal()"] {
+        width: 50% !important;
+        align-self: flex-end !important;
+        justify-content: center !important;
+    }
+
+    /* 3. Grades detailed view summary stacked into a single column on phone */
+    .grades-summary-card > div {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* 2. Stack institutional header in attendance detailed matrix */
+    .att-institution-header {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: var(--spacing-xs) !important;
+    }
+    .att-institution-header div {
+        text-align: center !important;
+        margin: 0 !important;
+    }
+    .att-institution-header span {
+        display: block !important;
+        margin: 0 !important;
+    }
+}
+
 
 
 

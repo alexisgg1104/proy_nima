@@ -868,9 +868,11 @@
                             <option value="summary">Vista General (Curso/Grupo)</option>
                         </select>
                         <button class="btn btn-primary" onclick="app.handleReportFilterSubmit()">🔎 Filtrar</button>
-                        <button class="btn btn-secondary" onclick="app.openSaveQueryModal()">💾 Guardar Consulta</button>
-                        <button class="btn btn-secondary" onclick="app.printCurrentReport()">🖨️ Imprimir</button>
-                        <button class="btn btn-secondary" onclick="app.exportCurrentReportToExcel()">📥 Exportar Excel</button>
+                        <div class="report-action-buttons">
+                            <button class="btn btn-secondary" onclick="app.openSaveQueryModal()">💾 Guardar</button>
+                            <button class="btn btn-secondary" onclick="app.printCurrentReport()">🖨️ Imprimir</button>
+                            <button class="btn btn-secondary" onclick="app.exportCurrentReportToExcel()">📥 Exportar</button>
+                        </div>
                     </div>
 
                     <div class="reports-grid">
