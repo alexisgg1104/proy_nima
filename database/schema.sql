@@ -224,6 +224,8 @@ CREATE TABLE settings (
     enable_auto_save TINYINT(1) NOT NULL DEFAULT 1,
     system_language VARCHAR(5) NOT NULL DEFAULT 'es',
     responsible_academic VARCHAR(100) NOT NULL,
+    backup_frequency VARCHAR(20) NOT NULL DEFAULT 'daily',
+    backup_tables TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -262,3 +264,31 @@ CREATE TABLE classrooms (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 20. Backups Table
+CREATE TABLE backups (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    backup_code VARCHAR(20) NOT NULL UNIQUE,
+    file_name VARCHAR(255) NOT NULL,
+    file_size VARCHAR(50) NULL,
+    format VARCHAR(10) NOT NULL DEFAULT 'sql',
+    status ENUM('pending', 'success', 'failed') NOT NULL DEFAULT 'pending',
+    type ENUM('manual', 'automatic') NOT NULL DEFAULT 'manual',
+    created_at DATETIME NOT NULL,
+    tables_included TEXT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 21. Scheduled Event for Automatic Backup
+CREATE EVENT IF NOT EXISTS automatic_backup_trigger
+ON SCHEDULE EVERY 1 DAY
+STARTS CURRENT_TIMESTAMP
+DO
+  INSERT INTO backups (backup_code, file_name, format, status, type, created_at)
+  VALUES (
+    CONCAT('BK', DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')), 
+    CONCAT('backup_', DATE_FORMAT(NOW(), '%Y%m%d_%H%i%s'), '.sql'),
+    'sql', 
+    'pending', 
+    'automatic', 
+    NOW()
+  );

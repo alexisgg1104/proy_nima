@@ -13,6 +13,7 @@ use App\Controllers\AttendanceController;
 use App\Controllers\GradeController;
 use App\Controllers\CertificateController;
 use App\Controllers\ReportController;
+use App\Controllers\BackupController;
 
 // 1. Desviar y servir archivos estáticos si se ejecuta en el servidor de desarrollo CLI de PHP
 if (php_sapi_name() === 'cli-server') {
@@ -655,6 +656,14 @@ $router->addRoute('PUT', '/api/settings', function() {
 
     \App\Core\BaseController::sendJson(['message' => 'Configuración actualizada exitosamente.']);
 });
+
+// --- RUTAS DEL MÓDULO DE COPIAS DE SEGURIDAD (BACKUP) ---
+$router->addRoute('GET', '/api/backups', [BackupController::class, 'index']);
+$router->addRoute('POST', '/api/backups', [BackupController::class, 'create']);
+$router->addRoute('GET', '/api/backups/download/{id}', [BackupController::class, 'download']);
+$router->addRoute('DELETE', '/api/backups/{id}', [BackupController::class, 'delete']);
+$router->addRoute('GET', '/api/backups/settings', [BackupController::class, 'getSettings']);
+$router->addRoute('POST', '/api/backups/settings', [BackupController::class, 'saveSettings']);
 
 // Validar tokens CSRF para peticiones POST/PUT/DELETE que modifican datos
 if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'])) {

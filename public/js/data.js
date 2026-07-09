@@ -335,7 +335,7 @@ const mockData = {
 
     // Role Permissions (Fase 7)
     rolePermissions: {
-        admin: ['dashboard', 'students', 'courses', 'teachers', 'groups', 'enrollments', 'attendance', 'grades', 'certificates', 'reports', 'users', 'settings'],
+        admin: ['dashboard', 'students', 'courses', 'teachers', 'groups', 'enrollments', 'attendance', 'grades', 'certificates', 'reports', 'users', 'settings', 'backups'],
         secretary: ['dashboard', 'students', 'enrollments', 'certificates', 'reports'],
         teacher: ['dashboard', 'grades', 'attendance', 'reports'],
         coordinator: ['dashboard', 'courses', 'groups', 'reports', 'students'],
@@ -1981,6 +1981,83 @@ const DataManager = {
         }
         const res = await APIClient.request('/reports/dashboard');
         return res.data;
+    },
+
+    // Backup operations
+    getBackups: async function() {
+        if (USE_MOCK) {
+            if (!mockData.backups) {
+                mockData.backups = [
+                    { id: 1, backup_code: 'BK0001', file_name: 'backup_20260701_020000.sql', file_size: '12.4 KB', format: 'sql', status: 'success', type: 'automatic', created_at: '2026-07-01 02:00:00', tables_included: 'users,roles,students,teachers' },
+                    { id: 2, backup_code: 'BK0002', file_name: 'backup_20260708_143022.sql', file_size: '14.2 KB', format: 'sql', status: 'success', type: 'manual', created_at: '2026-07-08 14:30:22', tables_included: 'users,roles,students,teachers,courses' }
+                ];
+            }
+            return mockData.backups;
+        }
+        const res = await APIClient.request('/backups');
+        return res.data;
+    },
+
+    createBackup: async function(backupData) {
+        if (USE_MOCK) {
+            const newBackup = {
+                id: (mockData.backups ? mockData.backups.length : 0) + 1,
+                backup_code: 'BK' + Date.now().toString().slice(-6),
+                file_name: 'backup_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.sql',
+                file_size: '11.8 KB',
+                format: 'sql',
+                status: 'success',
+                type: 'manual',
+                created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
+                tables_included: backupData.tables.join(',') || 'todas'
+            };
+            if (!mockData.backups) mockData.backups = [];
+            mockData.backups.unshift(newBackup);
+            return newBackup;
+        }
+        const res = await APIClient.request('/backups', {
+            method: 'POST',
+            body: backupData
+        });
+        return res.data;
+    },
+
+    deleteBackup: async function(id) {
+        if (USE_MOCK) {
+            mockData.backups = mockData.backups.filter(b => b.id !== id);
+            return { message: 'Respaldo eliminado correctamente.' };
+        }
+        return await APIClient.request(`/backups/${id}`, {
+            method: 'DELETE'
+        });
+    },
+
+    getBackupSettings: async function() {
+        if (USE_MOCK) {
+            if (!mockData.backupSettings) {
+                mockData.backupSettings = {
+                    settings: {
+                        frequency: 'daily',
+                        tables: ['users', 'roles', 'students', 'teachers', 'courses', 'academic_groups']
+                    },
+                    tables: ['users', 'roles', 'students', 'teachers', 'courses', 'academic_groups', 'enrollments', 'student_attendance_lists']
+                };
+            }
+            return mockData.backupSettings;
+        }
+        const res = await APIClient.request('/backups/settings');
+        return res.data;
+    },
+
+    saveBackupSettings: async function(settingsData) {
+        if (USE_MOCK) {
+            mockData.backupSettings.settings = settingsData;
+            return { message: 'Configuración de copias de seguridad guardada exitosamente.' };
+        }
+        return await APIClient.request('/backups/settings', {
+            method: 'POST',
+            body: settingsData
+        });
     },
 
     getTeacherIdForUser: function(user) {

@@ -9,7 +9,7 @@ INSERT INTO settings (id, system_name, institute_name, university_name, institut
 
 -- 2. Roles
 INSERT INTO roles (id, name, key_name, permissions) VALUES 
-(1, 'Administrador', 'admin', '["dashboard","students","courses","teachers","groups","enrollments","attendance","grades","certificates","reports","users","settings"]'),
+(1, 'Administrador', 'admin', '["dashboard","students","courses","teachers","groups","enrollments","attendance","grades","certificates","reports","users","settings","backups"]'),
 (2, 'Secretaria Académica', 'secretary', '["dashboard","students","enrollments","certificates","reports"]'),
 (3, 'Docente', 'teacher', '["dashboard","grades","attendance","reports"]'),
 (4, 'Coordinador Académico', 'coordinator', '["dashboard","courses","groups","reports","students"]'),

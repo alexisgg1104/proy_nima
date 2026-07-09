@@ -532,7 +532,8 @@ class SAIIApp {
             certificates: { title: 'Certificates & Documents', desc: 'Issue academic documents' },
             reports: { title: 'Reports', desc: 'Academic analysis and statistics' },
             users: { title: 'Users & Roles', desc: 'System users administration' },
-            settings: { title: 'Configuration', desc: 'General system settings' }
+            settings: { title: 'Configuration', desc: 'General system settings' },
+            backups: { title: 'Backups', desc: 'Manage system database backups' }
         } : {
             dashboard: { title: 'Dashboard', desc: 'Resumen general del sistema académico' },
             students: { title: 'Gestión de Alumnos', desc: 'Administrar base de datos de estudiantes' },
@@ -545,7 +546,8 @@ class SAIIApp {
             certificates: { title: 'Certificados y Constancias', desc: 'Emitir documentos académicos' },
             reports: { title: 'Reportes', desc: 'Análisis y estadísticas académicas' },
             users: { title: 'Usuarios y Roles', desc: 'Administración de usuarios del sistema' },
-            settings: { title: 'Configuración', desc: 'Parámetros generales del sistema' }
+            settings: { title: 'Configuración', desc: 'Parámetros generales del sistema' },
+            backups: { title: 'Copias de Seguridad', desc: 'Gestionar respaldos de la base de datos' }
         };
 
         const info = titles[viewName] || { title: 'Página', desc: 'Contenido' };
@@ -589,6 +591,9 @@ class SAIIApp {
                 break;
             case 'settings':
                 this.loadSettings();
+                break;
+            case 'backups':
+                this.loadBackups();
                 break;
         }
 
@@ -7106,6 +7111,187 @@ class SAIIApp {
             this.showToast(defaults.systemLanguage === 'en' ? 'Default values restored' : 'Valores restaurados por defecto', 'success');
             if (defaults.defaultTheme === 'light' && this.isDarkMode) {
                 this.toggleTheme();
+            }
+        }
+    }
+
+    // ========== BACKUPS MODULE ==========
+    async loadBackups() {
+        try {
+            const backups = await DataManager.getBackups();
+            const tbody = document.getElementById('backupsTableBody');
+            tbody.innerHTML = '';
+
+            if (backups.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--color-text-secondary); padding: var(--spacing-xl) 0;">
+                            No se han generado copias de seguridad aún.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            backups.forEach(bk => {
+                const tr = document.createElement('tr');
+                
+                // Tipo badge
+                const typeText = bk.type === 'automatic' ? 'Automático' : 'Manual';
+                const typeClass = bk.type === 'automatic' ? 'badge-primary' : 'badge-secondary';
+                
+                // Estado badge
+                let statusClass = 'badge-secondary';
+                let statusText = 'Pendiente';
+                if (bk.status === 'success') {
+                    statusClass = 'badge-success';
+                    statusText = 'Exitoso';
+                } else if (bk.status === 'failed') {
+                    statusClass = 'badge-danger';
+                    statusText = 'Fallido';
+                }
+
+                // Tablas truncadas para visualización limpia
+                const tablesList = bk.tables_included || 'Todas';
+                const tablesTruncated = tablesList.length > 30 ? tablesList.substring(0, 30) + '...' : tablesList;
+
+                tr.innerHTML = `
+                    <td><strong>${bk.backup_code}</strong></td>
+                    <td>${bk.created_at}</td>
+                    <td><span class="badge ${typeClass}">${typeText}</span></td>
+                    <td title="${tablesList}">${tablesTruncated}</td>
+                    <td>${bk.file_size || '---'}</td>
+                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        ${bk.status === 'success' ? `
+                            <button class="btn btn-sm btn-success" onclick="app.downloadBackup(${bk.id})" title="Descargar copia SQL" style="margin-right: 5px; padding: 4px 8px;">
+                                📥 Descargar
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-sm btn-danger" onclick="app.deleteBackup(${bk.id})" title="Eliminar copia de seguridad" style="padding: 4px 8px;">
+                            🗑️
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            console.error("Error al cargar copias de seguridad:", error);
+            this.showToast("Error al cargar historial de backups", "error");
+        }
+    }
+
+    async runManualBackup() {
+        try {
+            const data = await DataManager.getBackupSettings();
+            const tables = data.tables || [];
+
+            const confirmMsg = `¿Desea generar una copia de seguridad SQL completa en este momento? (${tables.length} tablas)`;
+            if (confirm(confirmMsg)) {
+                this.showToast('Iniciando respaldo de base de datos...', 'info');
+                await DataManager.createBackup({
+                    tables: tables,
+                    format: 'sql'
+                });
+                this.showToast('Copia de seguridad SQL generada exitosamente.', 'success');
+                this.loadBackups();
+            }
+        } catch (error) {
+            console.error("Error al generar backup manual:", error);
+            this.showToast("Fallo al generar respaldo: " + error.message, "error");
+        }
+    }
+
+    async openBackupSettingsModal() {
+        try {
+            const data = await DataManager.getBackupSettings();
+            const settings = data.settings || {};
+            const dbTables = data.tables || [];
+
+            document.getElementById('backupFrequency').value = settings.frequency || 'daily';
+
+            const container = document.getElementById('backupTablesContainer');
+            container.innerHTML = '';
+
+            dbTables.forEach(table => {
+                const isChecked = !settings.tables || settings.tables.length === 0 || settings.tables.includes(table);
+                
+                const label = document.createElement('label');
+                label.style.display = 'flex';
+                label.style.alignItems = 'center';
+                label.style.gap = '8px';
+                label.style.cursor = 'pointer';
+                label.style.fontSize = '0.85rem';
+                label.style.padding = '4px';
+
+                label.innerHTML = `
+                    <input type="checkbox" name="backup_tables" value="${table}" ${isChecked ? 'checked' : ''} style="width: 16px; height: 16px; min-width: 16px;">
+                    <span>${table}</span>
+                `;
+                container.appendChild(label);
+            });
+
+            // Registrar el listener de envío del formulario
+            const form = document.getElementById('backupSettingsForm');
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                const frequency = document.getElementById('backupFrequency').value;
+                const checkedCheckboxes = document.querySelectorAll('input[name="backup_tables"]:checked');
+                const selectedTables = Array.from(checkedCheckboxes).map(cb => cb.value);
+
+                try {
+                    await DataManager.saveBackupSettings({
+                        frequency: frequency,
+                        tables: selectedTables
+                    });
+                    this.showToast('Configuración de respaldos guardada exitosamente.', 'success');
+                    this.closeModal();
+                    this.loadBackups();
+                } catch (err) {
+                    console.error("Error saving backup settings:", err);
+                    this.showToast("Error al guardar configuraciones: " + err.message, "error");
+                }
+            };
+
+            // Mostrar el modal
+            document.getElementById('modalOverlay').style.display = 'block';
+            document.getElementById('backupSettingsModal').style.display = 'block';
+        } catch (error) {
+            console.error("Error al abrir modal de configuración de backup:", error);
+            this.showToast("Fallo al obtener configuraciones", "error");
+        }
+    }
+
+    selectAllBackupTables(select) {
+        document.querySelectorAll('input[name="backup_tables"]').forEach(cb => {
+            cb.checked = select;
+        });
+    }
+
+    async downloadBackup(id) {
+        if (USE_MOCK) {
+            this.showToast("Modo simulación: Descargando archivo SQL...", "success");
+            const blob = new Blob(["-- SAII MOCK DATABASE BACKUP\nSELECT 1;"], { type: "text/plain" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `saii_mock_backup_${id}.sql`;
+            link.click();
+            return;
+        }
+
+        const url = APIClient.getBaseURL() + `/backups/download/${id}`;
+        window.open(url, '_blank');
+    }
+
+    async deleteBackup(id) {
+        if (confirm('¿Está seguro de que desea eliminar permanentemente esta copia de seguridad? Esta acción no se puede deshacer.')) {
+            try {
+                await DataManager.deleteBackup(id);
+                this.showToast('Copia de seguridad eliminada.', 'success');
+                this.loadBackups();
+            } catch (error) {
+                console.error("Error al eliminar copia de seguridad:", error);
+                this.showToast("Error al eliminar el respaldo", "error");
             }
         }
     }

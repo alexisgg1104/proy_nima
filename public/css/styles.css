@@ -3846,7 +3846,24 @@ select {
     }
 }
 
-
-
-
-
+/* Standard badges styling for Backup module */
+.badge-primary {
+    background: rgba(0, 61, 130, 0.15) !important;
+    color: var(--color-primary) !important;
+}
+.badge-secondary {
+    background: rgba(148, 163, 184, 0.2) !important;
+    color: var(--color-text-secondary) !important;
+}
+.badge-success {
+    background: rgba(76, 175, 80, 0.15) !important;
+    color: #388e3c !important;
+}
+.badge-danger {
+    background: rgba(211, 47, 47, 0.15) !important;
+    color: #c62828 !important;
+}
+.badge-warning {
+    background: rgba(255, 193, 60, 0.15) !important;
+    color: #f57f17 !important;
+}
