@@ -1922,6 +1922,10 @@ class SAIIApp {
         document.getElementById('modalOverlay').style.display = 'block';
         modal.style.display = 'block';
 
+        // Bind input handler and trigger initial logic
+        codeInput.oninput = (e) => this.handleStudentCodeInput(e.target.value);
+        this.handleStudentCodeInput(codeInput.value);
+
         form.onsubmit = (e) => this.handleStudentSubmit(e, studentId);
     }
 
@@ -1949,6 +1953,58 @@ class SAIIApp {
             codeInput.placeholder = "10 dígitos";
             codeHelp.textContent = "Formato: 10 dígitos";
         }
+
+        this.handleStudentCodeInput(codeInput.value);
+    }
+
+    handleStudentCodeInput(code) {
+        const studentType = document.getElementById('studentType').value;
+        const promoSelect = document.getElementById('studentPromotion');
+        if (!promoSelect) return;
+
+        if (['pregrado', 'egresado', 'posgrado'].includes(studentType)) {
+            // Lock promotion dropdown
+            promoSelect.disabled = true;
+
+            // Extract promotion from code if length is >= 7
+            if (code && code.length >= 7) {
+                const promo = code.substring(3, 7);
+                if (/^\d{4}$/.test(promo)) {
+                    this.setStudentPromotionValue(promo);
+                }
+            }
+        } else {
+            // If external, unlock it
+            promoSelect.disabled = false;
+        }
+    }
+
+    setStudentPromotionValue(year) {
+        const select = document.getElementById('studentPromotion');
+        if (!select) return;
+
+        const cleanYear = String(year).trim();
+        if (!cleanYear) return;
+
+        // Check if option already exists
+        let exists = false;
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === cleanYear) {
+                exists = true;
+                break;
+            }
+        }
+
+        // If it doesn't exist, add it
+        if (!exists) {
+            const opt = document.createElement('option');
+            opt.value = cleanYear;
+            opt.textContent = `Promoción ${cleanYear}`;
+            select.appendChild(opt);
+        }
+
+        // Select the option
+        select.value = cleanYear;
     }
 
     async handleStudentSubmit(e, studentId) {
@@ -2010,6 +2066,10 @@ class SAIIApp {
         }
         if (data.email && !this.validateEmail(data.email)) {
             this.showToast('Correo electrónico no válido', 'error');
+            return false;
+        }
+        if (data.phone && (data.phone.length !== 9 || isNaN(data.phone))) {
+            this.showToast('El teléfono debe tener exactamente 9 dígitos numéricos', 'error');
             return false;
         }
         return true;
@@ -3069,11 +3129,22 @@ class SAIIApp {
 
         const statusLabel = enrollment.status === 'active' ? 'Activo' : 'Retirado';
         const statusClass = enrollment.status === 'active' ? 'badge-active' : 'badge-inactive';
+        
+        const typeLabels = {
+            'pregrado': 'Pregrado',
+            'egresado': 'Egresado',
+            'posgrado': 'Posgrado',
+            'externo': 'Externo'
+        };
+        const typeLabel = typeLabels[student.studentType] || 'Pregrado';
+        const typeClass = `badge-${student.studentType || 'pregrado'}`;
+
         const body = document.getElementById('studentDetailBody');
         body.innerHTML = `
             <div class="detail-grid">
                 <div class="detail-item"><span class="detail-label">Código alumno</span><span class="detail-value">${student.code}</span></div>
                 <div class="detail-item"><span class="detail-label">DNI</span><span class="detail-value">${student.dni}</span></div>
+                <div class="detail-item"><span class="detail-label">Tipo Alumno</span><span class="detail-value"><span class="badge-status ${typeClass}">${typeLabel}</span></span></div>
                 <div class="detail-item detail-full"><span class="detail-label">Alumno</span><span class="detail-value">${student.firstName} ${student.lastName}</span></div>
                 <div class="detail-item"><span class="detail-label">Promoción</span><span class="detail-value">Promoción ${student.promotion}</span></div>
                 <div class="detail-item"><span class="detail-label">Grupo</span><span class="detail-value">${group.code}</span></div>
@@ -6297,11 +6368,19 @@ class SAIIApp {
 
         } else {
             // Detailed View (by Student)
+            const typeLabels = {
+                'pregrado': 'Pregrado',
+                'egresado': 'Egresado',
+                'posgrado': 'Posgrado',
+                'externo': 'Externo'
+            };
+
             if (type === 'grades') {
                 tableHead.innerHTML = `
                     <tr>
                         <th>Alumno</th>
                         <th>Código</th>
+                        <th>Tipo</th>
                         <th>Curso</th>
                         <th>Grupo</th>
                         <th>Promedio</th>
@@ -6370,10 +6449,14 @@ class SAIIApp {
                         totalPresentDays += attPct;
                     }
 
+                    const typeLabel = typeLabels[r.student.studentType] || 'Pregrado';
+                    const typeClass = `badge-${r.student.studentType || 'pregrado'}`;
+
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td><strong>${r.student.firstName} ${r.student.lastName}</strong></td>
                         <td>${r.student.code}</td>
+                        <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
                         <td>${r.course.name}</td>
                         <td>${r.group.code}</td>
                         <td><strong>${r.average > 0 ? r.average.toFixed(1) : '-'}</strong></td>
@@ -6387,6 +6470,7 @@ class SAIIApp {
                     <tr>
                         <th>Alumno</th>
                         <th>Código</th>
+                        <th>Tipo</th>
                         <th>Curso</th>
                         <th>Grupo</th>
                         <th>% Asistencia</th>
@@ -6436,10 +6520,14 @@ class SAIIApp {
                     totalAttDays += 100;
                     totalPresentDays += r.attPct;
 
+                    const typeLabel = typeLabels[r.student.studentType] || 'Pregrado';
+                    const typeClass = `badge-${r.student.studentType || 'pregrado'}`;
+
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td><strong>${r.student.firstName} ${r.student.lastName}</strong></td>
                         <td>${r.student.code}</td>
+                        <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
                         <td>${r.group.courseName}</td>
                         <td>${r.group.code}</td>
                         <td><strong>${r.attPct}%</strong></td>
@@ -6453,8 +6541,9 @@ class SAIIApp {
                     <tr>
                         <th>Alumno</th>
                         <th>Código Alumno</th>
+                        <th>Tipo Alumno</th>
                         <th>Curso</th>
-                        <th>Tipo</th>
+                        <th>Tipo Doc.</th>
                         <th>Código Certificado</th>
                         <th>Fecha Emisión</th>
                         <th>Estado</th>
@@ -6516,10 +6605,14 @@ class SAIIApp {
                         annulled: 'badge-inactive'
                     }[r.cert.status] || 'badge-pending';
 
+                    const typeLabel = typeLabels[r.student.studentType] || 'Pregrado';
+                    const typeClass = `badge-${r.student.studentType || 'pregrado'}`;
+
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td><strong>${r.student.firstName} ${r.student.lastName}</strong></td>
                         <td>${r.student.code}</td>
+                        <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
                         <td>${r.group.courseName}</td>
                         <td>${r.cert.type.toUpperCase()}</td>
                         <td><strong>${r.cert.code || '-'}</strong></td>
