@@ -3575,14 +3575,14 @@ class SAIIApp {
             if (modal.classList.contains('modal-fullscreen')) {
                 btn.innerHTML = '&#128471; Minimizar';
                 if (wrapper) {
-                    wrapper.style.setProperty('zoom', '0.9', 'important');
-                    wrapper.style.setProperty('-moz-transform', 'scale(0.9)', 'important');
+                    wrapper.style.setProperty('transform', 'scale(0.9)', 'important');
+                    wrapper.style.setProperty('-webkit-transform', 'scale(0.9)', 'important');
                 }
             } else {
                 btn.innerHTML = '&#128470; Expandir';
                 if (wrapper) {
-                    wrapper.style.setProperty('zoom', '', '');
-                    wrapper.style.setProperty('-moz-transform', '', '');
+                    wrapper.style.setProperty('transform', '', '');
+                    wrapper.style.setProperty('-webkit-transform', '', '');
                 }
             }
         }
