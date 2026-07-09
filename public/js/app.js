@@ -190,7 +190,16 @@ class SAIIApp {
         });
     }
 
-    logout() {
+    async logout() {
+        try {
+            // Notificar al servidor el cierre de sesión para limpiar el estado activo
+            await APIClient.request('/auth/logout', {
+                method: 'POST'
+            });
+        } catch (err) {
+            console.error('Error al cerrar sesión en el servidor:', err);
+        }
+
         localStorage.removeItem('saii_currentUser');
         DataManager.currentUser = null;
         mockData.currentUser = null;
