@@ -231,6 +231,7 @@ class SAIIApp {
         localStorage.removeItem('saii_currentUser');
         DataManager.currentUser = null;
         mockData.currentUser = null;
+        APIClient.csrfToken = null; // Limpiar token CSRF guardado en memoria
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('appContainer').style.display = 'none';
         document.getElementById('loginForm').reset();

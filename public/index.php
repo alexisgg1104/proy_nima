@@ -658,19 +658,25 @@ $router->addRoute('PUT', '/api/settings', function() {
 
 // Validar tokens CSRF para peticiones POST/PUT/DELETE que modifican datos
 if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'])) {
-    // Buscar el token en $_SERVER (HTTP_X_CSRF_TOKEN) o getallheaders() de forma insensible a mayúsculas/minúsculas
-    $clientToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-    if (empty($clientToken)) {
-        $headers = function_exists('getallheaders') ? array_change_key_case(getallheaders(), CASE_LOWER) : [];
-        $clientToken = $headers['x-csrf-token'] ?? '';
-    }
-    
-    // Cabeceras de depuración para diagnosticar el problema exacto en la respuesta
-    header('X-Debug-CSRF-Session: ' . ($_SESSION['csrf_token'] ?? 'empty'));
-    header('X-Debug-CSRF-Client: ' . $clientToken);
-    
-    if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $clientToken)) {
-        \App\Core\BaseController::sendError("Token CSRF inválido o ausente.", 403);
+    $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+    $isExcludeCSRF = (strpos($requestUri, '/api/auth/login') !== false) || 
+                     (strpos($requestUri, '/api/auth/logout') !== false);
+                     
+    if (!$isExcludeCSRF) {
+        // Buscar el token en $_SERVER (HTTP_X_CSRF_TOKEN) o getallheaders() de forma insensible a mayúsculas/minúsculas
+        $clientToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (empty($clientToken)) {
+            $headers = function_exists('getallheaders') ? array_change_key_case(getallheaders(), CASE_LOWER) : [];
+            $clientToken = $headers['x-csrf-token'] ?? '';
+        }
+        
+        // Cabeceras de depuración para diagnosticar el problema exacto en la respuesta
+        header('X-Debug-CSRF-Session: ' . ($_SESSION['csrf_token'] ?? 'empty'));
+        header('X-Debug-CSRF-Client: ' . $clientToken);
+        
+        if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $clientToken)) {
+            \App\Core\BaseController::sendError("Token CSRF inválido o ausente.", 403);
+        }
     }
 }
 
