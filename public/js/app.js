@@ -2886,7 +2886,7 @@ class SAIIApp {
                 <td>${student.dni}</td>
                 <td>Prom. ${student.promotion}</td>
                 <td>
-                    <button class="icon-btn icon-add" onclick="app.addEnrollment('${groupId}', '${student.id}')" title="Agregar al grupo">&#43;&#10003;</button>
+                    <button class="icon-btn icon-add" onclick="app.addEnrollment('${groupId}', '${student.id}')" title="Agregar al grupo">&#43;</button>
                 </td>
             `;
             tbody.appendChild(row);
