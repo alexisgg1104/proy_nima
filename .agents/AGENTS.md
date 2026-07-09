@@ -305,6 +305,36 @@ Resumen para pegar en SAII_BACKLOG.md:
 
 ---
 
+## Arquitectura, Seguridad, Lógica y Componentes de SAII
+
+Para mantener la robustez, limpieza y escalabilidad del proyecto **SAII**, cualquier agente de IA debe adherirse estrictamente a las siguientes especificaciones técnicas de diseño e implementación:
+
+### 1. Arquitectura y División de Responsabilidades (Clean Architecture)
+El sistema divide su lógica de negocio de la siguiente manera:
+* **Base de Datos**: Los DDL estructurados residen en `database/schema.sql`. Las semillas iniciales residen en `database/seeds.sql`. Toda modificación del esquema debe soportar una auto-migración en `config/Database.php`.
+* **Backend (Vanilla PHP MVC)**:
+  - **Modelos**: Residen en `app/Models/`. Representan tablas de la base de datos y contienen únicamente consultas SQL mediante PDO.
+  - **Controladores**: Residen en `app/Controllers/`. Manejan la validación de entrada, autenticación/autorización y devuelven respuestas estructuradas únicamente en formato JSON.
+  - **Router**: El archivo `public/index.php` actúa como el despachador único y manejador del enrutamiento.
+* **Frontend (Vanilla HTML/CSS/JS)**:
+  - **Modelos/Datos**: `public/js/data.js` maneja la abstracción de datos (`DataManager`) y soporta indistintamente llamadas al API REST o simulación local mediante datos ficticios (`USE_MOCK = true/false`).
+  - **Controladores/Vistas**: `public/js/app.js` maneja el enrutamiento visual, la carga de vistas dinámicas, el renderizado de tablas, la validación de formularios en el cliente y la interactividad.
+
+### 2. Normas de Seguridad Obligatorias
+* **Control de Concurrencia (Sesión Única)**: Al iniciar sesión, se graba en la base de datos el `session_id` del PHP actual y el timestamp `last_activity`. Si el usuario intenta iniciar sesión desde otro dispositivo mientras la última actividad tiene menos de 5 minutos, la autenticación es rechazada con un código `409 Conflict`.
+* **Prevención CSRF**: Las peticiones de modificación de datos (`POST`, `PUT`, `DELETE`) validan estrictamente el token CSRF contenido en la cabecera `X-CSRF-TOKEN` contra el token almacenado en la sesión, excepto para los endpoints de `/api/auth/login` y `/api/auth/logout`.
+* **Prevención de Inyección SQL**: Queda estrictamente prohibido concatenar variables en consultas SQL. Se deben usar únicamente consultas parametrizadas y preparadas con PDO (`prepare` y `execute`).
+* **Seguridad de Archivos**: Los archivos delicados generados por el servidor (ej. copias de seguridad SQL o certificados) se almacenan en carpetas protegidas por un archivo `.htaccess` conteniendo `Deny from all`. Su descarga se realiza exclusivamente mediante transmisión binaria segura controlada por el backend en controladores autorizados.
+* **Verificación de Roles (Rbac)**: Los endpoints protegidos en los controladores validan los privilegios llamando a `$this->requireAuth(['admin', ...])`. En el frontend, `loadView()` redirige automáticamente al usuario si no posee el permiso en su matriz de roles.
+
+### 3. Consistencia de Interfaz y Componentes (UI/UX)
+* **Rejillas y Tablas**: Las tablas de datos deben ser responsive (`.table-responsive`) y estructuradas obligatoriamente bajo la clase `.data-table`.
+* **Badges Semánticos**: Los estados y badges se estilizan con la clase base `.badge-status` acompañada de su modificador semántico (`badge-active`, `badge-inactive`, `badge-pending`, `badge-rejected`, `badge-inprogress`, `badge-finished`), garantizando una consistencia visual absoluta en todos los módulos.
+* **Iconografía Lineal**: Queda terminantemente prohibido utilizar emojis coloridos o pesados en tablas o botones interactivos de celdas. Se deben usar símbolos Unicode lineales y estilizados (ej. `🔎`, `📥`, `🗑`, `✏️`, `🔑`) o iconos SVG vectoriales con trazo fino.
+* **Acciones en Celdas**: Las operaciones se colocan bajo un contenedor `<div class="action-icons">` en botones de iconos compactos `.icon-btn` con clase de color específica. No se permite insertar texto como "Editar" o "Eliminar" en celdas de tablas.
+
+---
+
 ## Regla sobre el resumen en el backlog
 
 Al terminar cada fase:

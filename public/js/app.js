@@ -7177,7 +7177,7 @@ class SAIIApp {
                     <td><span class="badge-status ${statusClass}">${statusText}</span></td>
                     <td>
                         <div class="action-icons" style="justify-content: flex-end;">
-                            <button class="icon-btn icon-view" onclick="app.showBackupDetail(${bk.id})" title="Ver detalle de tablas">🔍</button>
+                            <button class="icon-btn icon-view" onclick="app.showBackupDetail(${bk.id})" title="Ver detalle de tablas">🔎</button>
                             ${bk.status === 'success' ? `
                                 <button class="icon-btn icon-download" onclick="app.downloadBackup(${bk.id})" title="Descargar copia SQL">📥</button>
                             ` : ''}

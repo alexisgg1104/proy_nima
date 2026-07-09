@@ -1139,12 +1139,8 @@
 
                 <!-- Backups View -->
                 <div id="backups" class="view" style="display: none;">
-                    <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                        <div>
-                            <h2>Copias de Seguridad (Backup)</h2>
-                            <p style="color: var(--color-text-secondary); margin: 0; font-size: 0.9rem;">Gestione respaldos manuales y programe respaldos automáticos en la base de datos.</p>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
+                    <div class="module-header">
+                        <div class="module-controls" style="justify-content: flex-end; width: 100%;">
                             <button class="btn btn-secondary" onclick="app.openBackupSettingsModal()">
                                 ⚙️ Configurar
                             </button>

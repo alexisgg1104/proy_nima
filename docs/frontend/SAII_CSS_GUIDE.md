@@ -84,3 +84,47 @@ El diseño debe adaptarse sin deformar tablas ni encoger textos excesivamente.
 * **No usar placeholders**. Todas las vistas deben renderizar datos formateados legibles y limpios.
 * **No usar posicionamientos absolutos en modales que vayan a pantalla completa** sin neutralizar la propiedad `transform` (`transform: none !important;`).
 * **No deformar las tablas**. Usar `overflow-x: auto;` y `-webkit-overflow-scrolling: touch;` en los contenedores de las tablas grandes para permitir deslizamiento táctil horizontal fluido.
+
+---
+
+## 🛠️ Estilos Comunes de Componentes Reutilizables
+
+Para mantener una consistencia visual rigurosa en todo el sistema:
+
+### 1. Tablas de Datos
+* Todas las tablas de datos deben usar la clase `.data-table` para aplicar estilos institucionales de tipografía, bordes suaves y efectos hover.
+* Siempre deben estar envueltas en un contenedor con la clase `.table-responsive` (`overflow-x: auto;`) para garantizar la visualización fluida en pantallas táctiles y móviles sin deformar el layout.
+
+### 2. Botones de Acciones en Tablas
+* La columna de acciones debe estructurarse usando un contenedor `<div class="action-icons">`.
+* Los botones interactivos dentro de las celdas deben ser botones de icono compactos con la clase `.icon-btn`, acompañados de su respectivo modificador semántico:
+  - `.icon-view` (azul/celeste) para ver detalles o lupas.
+  - `.icon-edit` (naranja) para editar registros.
+  - `.icon-delete` (rojo) para desactivar o inhabilitar registros.
+  - `.icon-download` (verde) para descargas de archivos o certificados.
+* **Prohibición**: No colocar etiquetas de texto largo (ej: "Descargar", "Ver detalle") dentro de las celdas de la tabla. El espacio en celdas de acciones está reservado únicamente para iconos con su respectivo atributo descriptivo `title` para accesibilidad.
+
+### 3. Badges de Estado
+* Los estados deben representarse mediante etiquetas estilizadas usando la clase base `.badge-status` combinada con un modificador semántico predefinido:
+  - `.badge-active` / `.badge-approved` (Verde): Indica un estado activo, exitoso o aprobado.
+  - `.badge-rejected` (Rojo): Indica un error, estado rechazado o fallido.
+  - `.badge-pending` (Naranja): Indica un estado pendiente o en espera.
+  - `.badge-inactive` (Gris): Indica inactividad, desactivación o estados neutrales como formatos de archivo.
+  - `.badge-inprogress` / `.badge-open` (Celeste/Azul): Indica estados dinámicos, automáticos o en curso.
+  - `.badge-finished` / `.badge-closed` (Gris Oscuro): Indica estados finalizados o manuales.
+
+---
+
+## 🎨 Iconografía Lineal y Moderna
+
+Para mantener la estética sobria, académica y premium del sistema:
+* **Estilo Lineal**: Queda prohibido el uso de emojis con rellenos pesados de color sólido dentro de tablas de datos, modales o flujos de acciones principales.
+* **Selección de Símbolos**: Se deben utilizar caracteres Unicode lineales y limpios, o iconos SVG vectoriales que utilicen trazos delgados y consistentes.
+* **Mapeo de Iconos Estándar**:
+  - **Ver Detalle**: Usar `🔎` (Magnifying Glass Tilted Right) o `👁` (Linear Eye).
+  - **Descargar**: Usar `📥` (Tray Download) o `⭳` (Linear Down Arrow with bar).
+  - **Desactivar / Papelera**: Usar `🗑` (Trash can) o `&#128683;` (No Entry Sign).
+  - **Guardar / Guardar Borrador**: Usar `💾` (Floppy disk) o `&#128190;`.
+  - **Editar / Firma**: Usar `✎` (`&#9998;`) o `✏️`.
+  - **Seguridad / Contraseña**: Usar `🔑` (`&#128273;`).
+
