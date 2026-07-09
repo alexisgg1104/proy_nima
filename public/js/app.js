@@ -323,18 +323,18 @@ class SAIIApp {
                 this.openForgotPasswordModal();
             });
         }
-
+        
         // Sidebar toggle
         const sidebarToggle = document.getElementById('sidebarToggle');
         const menuToggleBtn = document.getElementById('menuToggleBtn');
+        const sidebar = document.getElementById('sidebar');
         
         const toggleSidebar = () => {
             if (window.innerWidth <= 1024) {
-                const sidebar = document.getElementById('sidebar');
-                sidebar.classList.toggle('active');
+                if (sidebar) sidebar.classList.toggle('active');
             } else {
                 const appContainer = document.getElementById('appContainer');
-                appContainer.classList.toggle('sidebar-collapsed');
+                if (appContainer) appContainer.classList.toggle('sidebar-collapsed');
             }
         };
 
@@ -344,6 +344,17 @@ class SAIIApp {
         if (menuToggleBtn) {
             menuToggleBtn.addEventListener('click', toggleSidebar);
         }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 1024 && sidebar && sidebar.classList.contains('active')) {
+                if (!sidebar.contains(e.target) && 
+                    (!sidebarToggle || !sidebarToggle.contains(e.target)) && 
+                    (!menuToggleBtn || !menuToggleBtn.contains(e.target))) {
+                    sidebar.classList.remove('active');
+                }
+            }
+        });
 
         // Module buttons
         this.setupModuleButtons();

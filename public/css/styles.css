@@ -3120,7 +3120,7 @@ html.dark-mode .badge-status.badge-pending-generation {
     }
 
     .dashboard-grid {
-        grid-template-columns: repeat(2, 1fr); /* 2 columns on mobile is much better than vertical stacking */
+        grid-template-columns: repeat(2, 1fr) !important; /* Force 2 columns on mobile down to smallest screen */
         gap: var(--spacing-sm);
     }
     
@@ -3132,10 +3132,6 @@ html.dark-mode .badge-status.badge-pending-generation {
 }
 
 @media (max-width: 576px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr; /* Single column on very small phones */
-    }
-
     .module-controls {
         flex-direction: column;
         align-items: stretch;
@@ -3163,5 +3159,63 @@ html.dark-mode .badge-status.badge-pending-generation {
         width: 100%;
         min-width: 100%;
     }
+
+    /* Course Modules Editor Mobile adjustments */
+    .module-editor-row {
+        grid-template-columns: 1fr 70px 30px !important;
+        gap: 6px !important;
+    }
+    .module-name-input {
+        padding: 6px var(--spacing-sm) !important;
+        font-size: 0.82rem !important;
+    }
+    .module-pct-input {
+        padding: 6px var(--spacing-sm) !important;
+        font-size: 0.82rem !important;
+    }
+    #modulesEditorRows {
+        padding: var(--spacing-sm) !important;
+    }
+    .modules-section-header {
+        padding: var(--spacing-sm) !important;
+    }
 }
+
+/* Ensure no input/select overflows its container */
+.form-group input,
+.form-group select,
+.form-group textarea,
+.form-modal select,
+.form-modal input,
+.enrollment-group-select,
+.filter-select,
+select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Enrollments counter and available badge layout */
+.enrollment-counter {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+
+.enrollment-available-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 3px 10px !important;
+    border-radius: 20px !important;
+    font-weight: 700;
+    font-size: 0.8rem;
+    line-height: 1 !important;
+    vertical-align: middle;
+    height: auto !important;
+}
+
 
