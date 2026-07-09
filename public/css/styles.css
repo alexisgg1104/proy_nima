@@ -1130,19 +1130,60 @@ html.dark-mode .nav-item.active .nav-icon {
     stroke-linejoin: round;
 }
 
-/* Reset individual color and background overrides */
+/* Reset individual background overrides and apply colorful strokes */
 .icon-view, .icon-edit, .icon-delete, .icon-print, .icon-download, 
-.icon-add, .icon-save, .icon-close, .icon-key, .icon-unlock, .icon-print {
-    color: var(--color-text-secondary) !important;
+.icon-add, .icon-save, .icon-close, .icon-key, .icon-unlock {
     background: transparent !important;
     border: none !important;
 }
 
-.icon-view:hover, .icon-edit:hover, .icon-delete:hover, .icon-print:hover, .icon-download:hover, 
-.icon-add:hover, .icon-save:hover, .icon-close:hover, .icon-key:hover, .icon-unlock:hover, .icon-print:hover {
-    color: var(--color-primary-light) !important;
-    background: transparent !important;
-    border: none !important;
+.icon-view {
+    color: #0284c7 !important; /* Azul */
+}
+.icon-view:hover {
+    color: #0369a1 !important;
+}
+
+.icon-edit {
+    color: #d97706 !important; /* Naranja/Ámbar */
+}
+.icon-edit:hover {
+    color: #b45309 !important;
+}
+
+.icon-delete {
+    color: #dc2626 !important; /* Rojo */
+}
+.icon-delete:hover {
+    color: #b91c1c !important;
+}
+
+.icon-key {
+    color: #6366f1 !important; /* Índigo/Lila */
+}
+.icon-key:hover {
+    color: #4f46e5 !important;
+}
+
+.icon-download, .icon-save, .icon-add, .icon-unlock {
+    color: #059669 !important; /* Verde */
+}
+.icon-download:hover, .icon-save:hover, .icon-add:hover, .icon-unlock:hover {
+    color: #047857 !important;
+}
+
+.icon-close {
+    color: #ea580c !important; /* Naranja oscuro */
+}
+.icon-close:hover {
+    color: #c2410c !important;
+}
+
+.icon-print {
+    color: #7c3aed !important; /* Púrpura */
+}
+.icon-print:hover {
+    color: #6d28d9 !important;
 }
 
 /* Group conditional fields */

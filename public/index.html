@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAII - Sistema Administrativo del Instituto de Informática</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/png" href="img/logo.png">
 </head>
 <body>
     <!-- Login Screen -->
     <div id="loginScreen" class="login-container">
         <div class="login-card">
             <div class="login-header">
+                <img src="img/logo.png" alt="SAII Logo" style="width: 100px; height: auto; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;">
                 <div class="saii-logo">SAII</div>
                 <h1>Sistema Administrativo del Instituto de Informática</h1>
                 <p class="institution-subtitle">Universidad Nacional de Piura</p>
@@ -64,7 +66,8 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-brand">
+                <div class="sidebar-brand" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+                    <img src="img/logo.png" alt="Logo" style="width: 45px; height: auto; margin-bottom: 8px;">
                     <div class="logo">SAII</div>
                     <p class="logo-subtitle">Instituto de Informática</p>
                     <p class="logo-university">Universidad Nacional de Piura</p>
@@ -133,7 +136,7 @@
                     </a>
                     <a href="#" class="nav-item" data-view="certificates">
                         <span class="nav-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="M8 12l3 3 5-5"></path></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="3" ry="3"></rect><line x1="8" y1="7" x2="16" y2="7"></line><line x1="8" y1="11" x2="16" y2="11"></line><line x1="8" y1="15" x2="12" y2="15"></line><circle cx="16" cy="17" r="3.5"></circle><path d="M14.5 20.5l1.5 2 1.5-2"></path></svg>
                         </span>
                         <span class="nav-label">Certificados</span>
                     </a>
@@ -372,23 +375,33 @@
                                 </div>
                                 <div class="card-body quick-actions">
                                     <button class="quick-action-btn" data-view="students" data-action="new">
-                                        <span class="icon">➕</span>
+                                        <span class="icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                        </span>
                                         <span>Registrar Alumno</span>
                                     </button>
                                     <button class="quick-action-btn" data-view="groups" data-action="new">
-                                        <span class="icon">➕</span>
+                                        <span class="icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                        </span>
                                         <span>Abrir Grupo</span>
                                     </button>
                                     <button class="quick-action-btn" data-view="grades" data-action="new">
-                                        <span class="icon">➕</span>
+                                        <span class="icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                        </span>
                                         <span>Registrar Notas</span>
                                     </button>
                                     <button class="quick-action-btn" data-view="attendance" data-action="new">
-                                        <span class="icon">➕</span>
+                                        <span class="icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                        </span>
                                         <span>Registrar Asistencia</span>
                                     </button>
                                     <button class="quick-action-btn" data-view="certificates" data-action="new">
-                                        <span class="icon">➕</span>
+                                        <span class="icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                        </span>
                                         <span>Generar Constancia</span>
                                     </button>
                                 </div>
@@ -426,7 +439,9 @@
                     <div class="module-header">
                         <div class="module-controls">
                             <input type="text" class="search-field" id="studentSearch" placeholder="Buscar por código, DNI, nombre...">
-                            <button class="btn btn-primary icon-add-btn" data-action="new-student" title="Nuevo Alumno">➕ Nuevo<span class="btn-text-extra"> Alumno</span></button>
+                            <button class="btn btn-primary icon-add-btn" data-action="new-student" title="Nuevo Alumno">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Nuevo<span class="btn-text-extra"> Alumno</span>
+                            </button>
                         </div>
                     </div>
 
@@ -474,7 +489,9 @@
                 <div id="courses" class="view">
                     <div class="module-header">
                         <div class="module-controls">
-                            <button class="btn btn-primary icon-add-btn" data-action="new-course" title="Nuevo Curso">➕ Nuevo Curso</button>
+                            <button class="btn btn-primary icon-add-btn" data-action="new-course" title="Nuevo Curso">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Nuevo Curso
+                            </button>
                         </div>
                     </div>
 
@@ -487,7 +504,9 @@
                     <div class="module-header">
                         <div class="module-controls">
                             <input type="text" class="search-field" id="teacherSearch" placeholder="Buscar por código, DNI, nombre...">
-                            <button class="btn btn-primary icon-add-btn" data-action="new-teacher" title="Nuevo Docente">➕ Nuevo<span class="btn-text-extra"> Docente</span></button>
+                            <button class="btn btn-primary icon-add-btn" data-action="new-teacher" title="Nuevo Docente">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Nuevo<span class="btn-text-extra"> Docente</span>
+                            </button>
                         </div>
                     </div>
 
@@ -516,7 +535,9 @@
                     <div class="module-header">
                         <div class="module-controls">
                             <input type="text" class="search-field" id="groupSearch" placeholder="Buscar por código o curso...">
-                            <button class="btn btn-primary icon-add-btn" data-action="new-group" title="Abrir Nuevo Grupo">➕ <span class="btn-text-extra">Abrir </span>Nuevo<span class="btn-text-extra"> Grupo</span></button>
+                            <button class="btn btn-primary icon-add-btn" data-action="new-group" title="Abrir Nuevo Grupo">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span class="btn-text-extra">Abrir </span>Nuevo<span class="btn-text-extra"> Grupo</span>
+                            </button>
                         </div>
                     </div>
 
@@ -715,7 +736,9 @@
                             <div class="att-sessions-card">
                                 <div class="att-sessions-top" style="display: flex; justify-content: space-between; align-items: center;">
                                     <span class="enrollment-table-title">&#128101; Matriz de Asistencia de Alumnos</span>
-                                    <button class="btn btn-primary btn-sm" id="attAddDateColBtn" onclick="app.addNewAttendanceDateCol()" style="display: none;">➕ Agregar Fecha</button>
+                                    <button class="btn btn-primary btn-sm" id="attAddDateColBtn" onclick="app.addNewAttendanceDateCol()" style="display: none;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Agregar Fecha
+                                    </button>
                                 </div>
                                 <div class="table-responsive">
                                     <table class="data-table" id="attendanceStudentsTable">
@@ -804,7 +827,8 @@
                 <div id="certificates" class="view">
                     <div class="module-header">
                         <div class="module-controls">
-                            <button class="btn btn-primary icon-add-btn" id="emitCertBtn" disabled>➕ Emitir<span class="btn-text-extra"> Documento</span></button>
+                            <button class="btn btn-primary icon-add-btn" id="emitCertBtn" disabled>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Emitir<span class="btn-text-extra"> Documento</span></button>
                             <button class="btn btn-secondary" onclick="app.generateBulkCertificates()" title="Generar todos los certificados aptos pendientes">⚙️ Generar<span class="btn-text-extra"> Certificados</span> Pendientes</button>
                         </div>
                     </div>
@@ -909,11 +933,19 @@
                                 <option value="summary">Vista General (Curso/Grupo)</option>
                             </select>
                         </div>
-                        <button class="btn btn-primary btn-filter-submit" onclick="app.handleReportFilterSubmit()">🔎 Filtrar</button>
+                        <button class="btn btn-primary btn-filter-submit" onclick="app.handleReportFilterSubmit()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>Filtrar
+                        </button>
                         <div class="report-action-buttons">
-                            <button class="btn btn-secondary" onclick="app.openSaveQueryModal()">💾 Guardar</button>
-                            <button class="btn btn-secondary" onclick="app.printCurrentReport()">🖨️ Imprimir</button>
-                            <button class="btn btn-secondary" onclick="app.exportCurrentReportToExcel()">📥 Exportar</button>
+                            <button class="btn btn-secondary" onclick="app.openSaveQueryModal()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>Guardar
+                            </button>
+                            <button class="btn btn-secondary" onclick="app.printCurrentReport()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>Imprimir
+                            </button>
+                            <button class="btn btn-secondary" onclick="app.exportCurrentReportToExcel()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>Exportar
+                            </button>
                         </div>
                     </div>
 
@@ -1025,7 +1057,9 @@
                     <div id="usersPanel">
                         <div class="module-header">
                             <div class="module-controls">
-                                <button class="btn btn-primary icon-add-btn" onclick="app.openNewUserModal()" title="Nuevo Usuario">➕ Nuevo Usuario</button>
+                                <button class="btn btn-primary icon-add-btn" onclick="app.openNewUserModal()" title="Nuevo Usuario">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Nuevo Usuario
+                                </button>
                             </div>
                         </div>
 

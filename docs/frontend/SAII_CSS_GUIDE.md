@@ -97,11 +97,14 @@ Para mantener una consistencia visual rigurosa en todo el sistema:
 
 ### 2. Botones de Acciones en Tablas
 * La columna de acciones debe estructurarse usando un contenedor `<div class="action-icons">`.
-* Los botones interactivos dentro de las celdas deben ser botones de icono compactos con la clase `.icon-btn`, acompañados de su respectivo modificador semántico:
-  - `.icon-view` (azul/celeste) para ver detalles o lupas.
-  - `.icon-edit` (naranja) para editar registros.
-  - `.icon-delete` (rojo) para desactivar o inhabilitar registros.
-  - `.icon-download` (verde) para descargas de archivos o certificados.
+* Los botones interactivos dentro de las celdas deben ser botones de icono compactos con la clase `.icon-btn` sin bordes ni fondos opacos (completamente transparentes), aplicando color únicamente a las líneas de trazo vectoriales:
+  - `.icon-view` (Color azul `#0284c7` / hover `#0369a1`): Utilizado para ver detalles (lupa) o vistas previas.
+  - `.icon-edit` (Color naranja `#d97706` / hover `#b45309`): Utilizado para editar registros (lápiz).
+  - `.icon-delete` (Color rojo `#dc2626` / hover `#b91c1c`): Utilizado para desactivar, anular o eliminar registros (basurera/bloqueo).
+  - `.icon-key` (Color lila `#6366f1` / hover `#4f46e5`): Utilizado para credenciales o contraseñas (llave).
+  - `.icon-download` / `.icon-save` / `.icon-add` / `.icon-unlock` (Color verde `#059669` / hover `#047857`): Utilizados para descargar archivos, guardar borradores, agregar elementos o reabrir actas (flecha abajo, disco, más, candado abierto).
+  - `.icon-close` (Color naranja oscuro `#ea580c` / hover `#c2410c`): Utilizado para cerrar grupos o planillas (candado cerrado).
+  - `.icon-print` (Color púrpura `#7c3aed` / hover `#6d28d9`): Utilizado para imprimir reportes o actas (impresora).
 * **Prohibición**: No colocar etiquetas de texto largo (ej: "Descargar", "Ver detalle") dentro de las celdas de la tabla. El espacio en celdas de acciones está reservado únicamente para iconos con su respectivo atributo descriptivo `title` para accesibilidad.
 
 ### 3. Badges de Estado
@@ -119,12 +122,18 @@ Para mantener una consistencia visual rigurosa en todo el sistema:
 
 Para mantener la estética sobria, académica y premium del sistema:
 * **Estilo Lineal**: Queda prohibido el uso de emojis con rellenos pesados de color sólido dentro de tablas de datos, modales o flujos de acciones principales.
-* **Selección de Símbolos**: Se deben utilizar caracteres Unicode lineales y limpios, o iconos SVG vectoriales que utilicen trazos delgados y consistentes.
+* **Trazos Redondeados**: Todos los iconos vectoriales SVG del sistema deben contar con los parámetros de borde redondeados: `stroke-linecap="round"` y `stroke-linejoin="round"`.
+* **Monocromía en Menús y Botones**:
+  - Los iconos del menú lateral (`.nav-icon`) y cabeceras generales deben ser monocromáticos, de color gris (`var(--color-text-secondary)`) por defecto, cambiando al color de acento primario únicamente en estados activos o al pasar el cursor.
+  - Los botones de acción de tablas no poseen fondos ni bordes (fondo transparente), y colorean exclusivamente el trazo lineal del SVG según la acción.
 * **Mapeo de Iconos Estándar**:
-  - **Ver Detalle**: Usar `🔎` (Magnifying Glass Tilted Right) o `👁` (Linear Eye).
-  - **Descargar**: Usar `📥` (Tray Download) o `⭳` (Linear Down Arrow with bar).
-  - **Desactivar / Papelera**: Usar `🗑` (Trash can) o `&#128683;` (No Entry Sign).
-  - **Guardar / Guardar Borrador**: Usar `💾` (Floppy disk) o `&#128190;`.
-  - **Editar / Firma**: Usar `✎` (`&#9998;`) o `✏️`.
-  - **Seguridad / Contraseña**: Usar `🔑` (`&#128273;`).
+  - **Ver Detalle**: Usar `🔎` o SVG de lupa.
+  - **Certificado**: Usar un SVG de documento con un sello circular y listón en la esquina inferior derecha.
+  - **Descargar**: Usar `📥` o SVG de bandeja.
+  - **Desactivar / Papelera**: Usar `🗑` o SVG de papelera.
+  - **Guardar / Guardar Borrador**: Usar SVG de disco flexible.
+  - **Editar / Firma**: Usar SVG de lápiz con hoja.
+  - **Seguridad / Contraseña**: Usar SVG de llave lineal.
+  - **Añadir / Nuevo**: Usar un SVG de signo más lineal delgado en los botones de "Nuevo [Elemento]".
+
 
