@@ -3571,19 +3571,10 @@ class SAIIApp {
         const btn = document.getElementById('btnToggleCertFullscreen');
         if (modal) {
             modal.classList.toggle('modal-fullscreen');
-            const wrapper = modal.querySelector('.certificate-diploma-wrapper');
             if (modal.classList.contains('modal-fullscreen')) {
                 btn.innerHTML = '&#128471; Minimizar';
-                if (wrapper) {
-                    wrapper.style.setProperty('transform', 'scale(0.9)', 'important');
-                    wrapper.style.setProperty('-webkit-transform', 'scale(0.9)', 'important');
-                }
             } else {
                 btn.innerHTML = '&#128470; Expandir';
-                if (wrapper) {
-                    wrapper.style.setProperty('transform', '', '');
-                    wrapper.style.setProperty('-webkit-transform', '', '');
-                }
             }
         }
     }
