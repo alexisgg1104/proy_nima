@@ -307,7 +307,31 @@ html.dark-mode .nav-item.active {
 }
 
 .nav-icon {
-    font-size: 1.2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    color: var(--color-text-secondary);
+}
+
+.nav-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2px;
+}
+
+.nav-item.active .nav-icon {
+    color: var(--color-primary);
+}
+
+html.dark-mode .nav-item.active .nav-icon {
+    color: var(--color-primary-light);
+}
+
+.nav-item:hover .nav-icon {
+    color: var(--color-primary-light);
 }
 
 .nav-label {
@@ -1080,12 +1104,12 @@ html.dark-mode .nav-item.active {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
-    border: 1px solid var(--color-border);
+    width: 28px;
+    height: 28px;
+    border: none !important;
     border-radius: var(--radius-sm);
-    background: var(--color-bg-primary);
-    color: var(--color-text-secondary);
+    background: transparent !important;
+    color: var(--color-text-secondary) !important;
     cursor: pointer;
     font-size: 0.95rem;
     transition: all 0.2s;
@@ -1095,104 +1119,30 @@ html.dark-mode .nav-item.active {
 }
 
 .icon-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
+    transform: scale(1.18) !important;
+    color: var(--color-primary-light) !important;
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
-.icon-view {
-    color: var(--color-primary);
-    border-color: rgba(0, 61, 130, 0.25);
-    background: rgba(0, 61, 130, 0.06);
+.icon-btn svg {
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
-.icon-view:hover {
-    background: var(--color-primary);
-    color: white;
-    border-color: var(--color-primary);
+/* Reset individual color and background overrides */
+.icon-view, .icon-edit, .icon-delete, .icon-print, .icon-download, 
+.icon-add, .icon-save, .icon-close, .icon-key, .icon-unlock, .icon-print {
+    color: var(--color-text-secondary) !important;
+    background: transparent !important;
+    border: none !important;
 }
 
-.icon-edit {
-    color: #e65100;
-    border-color: rgba(230, 81, 0, 0.25);
-    background: rgba(230, 81, 0, 0.06);
-}
-
-.icon-edit:hover {
-    background: #e65100;
-    color: white;
-    border-color: #e65100;
-}
-
-.icon-delete {
-    color: var(--color-accent-red);
-    border-color: rgba(211, 47, 47, 0.25);
-    background: rgba(211, 47, 47, 0.06);
-}
-
-.icon-delete:hover {
-    background: var(--color-accent-red);
-    color: white;
-    border-color: var(--color-accent-red);
-}
-
-.icon-print {
-    color: #5c35a0;
-    border-color: rgba(92, 53, 160, 0.25);
-    background: rgba(92, 53, 160, 0.06);
-}
-
-.icon-print:hover {
-    background: #5c35a0;
-    color: white;
-    border-color: #5c35a0;
-}
-
-.icon-download {
-    color: #00695c;
-    border-color: rgba(0, 105, 92, 0.25);
-    background: rgba(0, 105, 92, 0.06);
-}
-
-.icon-download:hover {
-    background: #00695c;
-    color: white;
-    border-color: #00695c;
-}
-
-.icon-add {
-    color: #2e7d32;
-    border-color: rgba(46, 125, 50, 0.25);
-    background: rgba(46, 125, 50, 0.06);
-}
-
-.icon-add:hover {
-    background: #2e7d32;
-    color: white;
-    border-color: #2e7d32;
-}
-
-.icon-save {
-    color: var(--color-primary);
-    border-color: rgba(0, 61, 130, 0.25);
-    background: rgba(0, 61, 130, 0.06);
-}
-
-.icon-save:hover {
-    background: var(--color-primary);
-    color: white;
-    border-color: var(--color-primary);
-}
-
-.icon-close {
-    color: #e65100;
-    border-color: rgba(230, 81, 0, 0.25);
-    background: rgba(230, 81, 0, 0.06);
-}
-
-.icon-close:hover {
-    background: #e65100;
-    color: white;
-    border-color: #e65100;
+.icon-view:hover, .icon-edit:hover, .icon-delete:hover, .icon-print:hover, .icon-download:hover, 
+.icon-add:hover, .icon-save:hover, .icon-close:hover, .icon-key:hover, .icon-unlock:hover, .icon-print:hover {
+    color: var(--color-primary-light) !important;
+    background: transparent !important;
+    border: none !important;
 }
 
 /* Group conditional fields */
