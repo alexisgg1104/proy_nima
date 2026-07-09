@@ -3332,21 +3332,35 @@ select {
     max-width: 100% !important;
     height: 100% !important;
     max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+#certificateModal.modal-fullscreen .modal-body {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: var(--spacing-md) !important;
 }
 #certificateModal.modal-fullscreen #certificatePreview {
+    flex: 1 !important;
     height: auto !important;
-    max-height: calc(100vh - 140px) !important;
-    overflow: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
     display: flex !important;
     justify-content: center !important;
-    align-items: center !important;
+    align-items: flex-start !important;
     box-sizing: border-box !important;
     width: 100% !important;
+    padding-bottom: 20px !important;
 }
 #certificateModal.modal-fullscreen .certificate-diploma-wrapper {
     zoom: 1.0 !important;
     transform: none !important;
     margin: 0 auto !important;
+    overflow: visible !important;
 }
 .modal-header h2 {
     white-space: nowrap !important;
@@ -3696,23 +3710,36 @@ select {
         min-height: 44px !important;
     }
 
-    /* Fix expanded certificate modal cutoff: left-align wrapper so overflow goes right and is scrollable */
+    /* Fix expanded certificate modal cutoff: let modal-body scroll and cert show fully */
+    #certificateModal.modal-fullscreen .modal-body {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: var(--spacing-sm) !important;
+    }
     #certificateModal.modal-fullscreen .certificate-diploma-wrapper {
         display: inline-block !important;
-        margin: 0 !important;
-        zoom: 0.9 !important;
-        -moz-transform: scale(0.9) !important;
-        -moz-transform-origin: top left !important;
+        margin: 0 auto !important;
+        zoom: 0.8 !important;
+        -moz-transform: scale(0.8) !important;
+        -moz-transform-origin: top center !important;
         transform: none !important;
+        overflow: visible !important;
     }
     #certificateModal.modal-fullscreen #certificatePreview {
+        flex: 1 !important;
         height: auto !important;
-        max-height: calc(100vh - 140px) !important;
-        overflow: auto !important;
-        display: block !important;
-        text-align: left !important;
+        max-height: none !important;
+        overflow: visible !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: flex-start !important;
+        text-align: center !important;
         width: 100% !important;
         box-sizing: border-box !important;
+        padding-bottom: 20px !important;
     }
 
     /* Default certificate scale on smaller mobile devices */
