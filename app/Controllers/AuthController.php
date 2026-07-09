@@ -98,10 +98,17 @@ class AuthController extends BaseController {
 
     // Cerrar Sesión (POST /api/auth/logout)
     public function logout() {
+        $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+        $userId = isset($input['userId']) ? (int)$input['userId'] : null;
+
         $sessionUser = $_SESSION['user'] ?? null;
-        if ($sessionUser) {
+        if (!$userId && $sessionUser) {
+            $userId = (int)$sessionUser['id'];
+        }
+
+        if ($userId) {
             $userModel = new User();
-            $userModel->clearSession($sessionUser['id']);
+            $userModel->clearSession($userId);
         }
 
         // Limpiar el arreglo de sesión y destruir la sesión del servidor
