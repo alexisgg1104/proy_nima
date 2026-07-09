@@ -619,9 +619,9 @@ class SAIIApp {
             if (kpiEnrollments) {
                 try {
                     const enrollments = await DataManager.getEnrollments();
-                    // Solo matrículas activas
-                    const activeEnrollments = enrollments.filter(e => e.status === 'active' || e.status === 'activa');
-                    kpiEnrollments.innerText = activeEnrollments.length > 0 ? activeEnrollments.length : enrollments.length;
+                    // Solo matrículas activas (status: 'active' | 'withdrawn' según el schema)
+                    const activeEnrollments = enrollments.filter(e => e.status === 'active');
+                    kpiEnrollments.innerText = activeEnrollments.length;
                 } catch (e) {
                     kpiEnrollments.innerText = kpis.active_students;
                 }
@@ -630,15 +630,20 @@ class SAIIApp {
             const kpiPendingGrades = document.getElementById('kpiPendingGrades');
             if (kpiPendingGrades) {
                 try {
-                    // Grupos activos sin planilla de notas cerrada/registrada
+                    // Grupos en curso (open/inprogress) sin planilla de notas cerrada
+                    // Schema academic_groups: status ENUM('open','inprogress','finished','closed')
+                    // Schema grade_sheets: status ENUM('borrador','cerrada')
                     const groups = DataManager.cache.groups || [];
                     const gradeSheets = DataManager.cache.gradeSheets || [];
                     const closedSheetGroupIds = new Set(
                         gradeSheets
-                            .filter(gs => gs.status === 'cerrada' || gs.status === 'registrada' || gs.status === 'closed')
+                            .filter(gs => gs.status === 'cerrada')
                             .map(gs => Number(gs.group_id))
                     );
-                    const activeGroups = groups.filter(g => g.status === 'active' || g.status === 'activo');
+                    const activeGroups = groups.filter(g =>
+                        g.status === 'open' || g.status === 'inprogress' ||
+                        g.status === 'active' || g.status === 'activo'
+                    );
                     const pendingGradesCount = activeGroups.filter(g => !closedSheetGroupIds.has(Number(g.id))).length;
                     kpiPendingGrades.innerText = pendingGradesCount;
                 } catch (e) {
