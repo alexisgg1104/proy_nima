@@ -3566,6 +3566,28 @@ class SAIIApp {
         }
     }
 
+    toggleCertFullscreen() {
+        const modal = document.getElementById('certificateModal');
+        const btn = document.getElementById('btnToggleCertFullscreen');
+        if (modal) {
+            modal.classList.toggle('modal-fullscreen');
+            const wrapper = modal.querySelector('.certificate-diploma-wrapper');
+            if (modal.classList.contains('modal-fullscreen')) {
+                btn.innerHTML = '&#128471; Minimizar';
+                if (wrapper) {
+                    wrapper.style.setProperty('zoom', '0.9', 'important');
+                    wrapper.style.setProperty('-moz-transform', 'scale(0.9)', 'important');
+                }
+            } else {
+                btn.innerHTML = '&#128470; Expandir';
+                if (wrapper) {
+                    wrapper.style.setProperty('zoom', '', '');
+                    wrapper.style.setProperty('-moz-transform', '', '');
+                }
+            }
+        }
+    }
+
     async closeAttendance(attendanceId) {
         const lista = DataManager.getStudentAttendanceById(attendanceId);
         if (!lista) return;

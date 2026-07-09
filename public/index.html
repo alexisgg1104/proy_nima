@@ -1215,9 +1215,12 @@
 
     <div id="certificateModal" class="modal modal-cert" style="display: none;">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <h2>Certificado / Constancia</h2>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn btn-secondary btn-sm" id="btnToggleCertFullscreen" onclick="app.toggleCertFullscreen()" style="padding: 4px 8px; font-size: 0.8rem;">&#128470; Expandir</button>
+                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="certificate-preview" id="certificatePreview">
