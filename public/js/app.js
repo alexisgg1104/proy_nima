@@ -929,7 +929,8 @@ class SAIIApp {
             certificates: 'Certificates',
             reports: 'Reports',
             users: 'Users & Roles',
-            settings: 'Settings'
+            settings: 'Settings',
+            backups: 'Backups'
         } : {
             dashboard: 'Dashboard',
             students: 'Alumnos',
@@ -942,7 +943,8 @@ class SAIIApp {
             certificates: 'Certificados',
             reports: 'Reportes',
             users: 'Usuarios y Roles',
-            settings: 'Configuración'
+            settings: 'Configuración',
+            backups: 'Copias de Seguridad'
         };
 
         const navItems = document.querySelectorAll('.nav-item');
@@ -1283,7 +1285,79 @@ class SAIIApp {
             'Guardar Reporte': 'Save Report',
             'Confirmar y Enviar a Firmar': 'Confirm and Send to Sign',
             'Escriba una observación o indicación de revisión *': 'Write an observation or review indication *',
-            'Guardar Observación': 'Save Observation'
+            'Guardar Observación': 'Save Observation',
+
+            // Custom translation requests
+            'Emitir': 'Issue',
+            ' Documento': ' Document',
+            '⚙️ Generar': '⚙️ Generate',
+            ' Certificados': ' Certificates',
+            ' Pendientes': ' Pending',
+            'Constancia': 'Proof of Study',
+            'Certificado': 'Certificate',
+            'CONSTANCIA': 'PROOF OF STUDY',
+            'CERTIFICADO': 'CERTIFICATE',
+            'No apto': 'Not eligible',
+            'Por firmar': 'To be signed',
+            'Pendiente': 'Pending',
+            'Generado': 'Generated',
+            'Firmado': 'Signed',
+            'Aprobado': 'Approved',
+            'Desaprobado': 'Disapproved',
+            'Satisfactorio': 'Satisfactory',
+            'En riesgo': 'At risk',
+            'APROBADO': 'APPROVED',
+            'DESAPROBADO': 'DISAPPROVED',
+            'SATISFACTORIO': 'SATISFACTORY',
+            'EN RIESGO': 'AT RISK',
+            'POR FIRMAR': 'TO BE SIGNED',
+            'PENDIENTE': 'PENDING',
+            'GENERADO': 'GENERATED',
+            'ANULADO': 'ANNULLED',
+            'Pregrado': 'Undergraduate',
+            'Egresado': 'Graduate',
+            'Posgrado': 'Postgraduate',
+            'Externo': 'External',
+
+            // Certificates table headers
+            'Tipo Doc.': 'Doc. Type',
+            'Firma Decano': 'Dean Signature',
+            'Firma Director': 'Director Signature',
+            'Fecha Solicitud': 'Request Date',
+
+            // Backup View & Modals
+            'Copias de Seguridad': 'Backups',
+            'Historial de Respaldos': 'Backup History',
+            'Configurar': 'Configure',
+            'Generar Backup': 'Generate Backup',
+            'Configurar Respaldo Automático': 'Configure Automatic Backup',
+            'Frecuencia del Respaldo Automático': 'Automatic Backup Frequency',
+            'Diario (Cada 24 horas)': 'Daily (Every 24 hours)',
+            'Semanal (Cada 7 días)': 'Weekly (Every 7 days)',
+            'Mensual (Cada 30 días)': 'Monthly (Every 30 days)',
+            'Tablas a Incluir': 'Tables to Include',
+            'Seleccionar Todas': 'Select All',
+            'Deseccionar Todas': 'Deselect All',
+            'Detalle del Respaldo': 'Backup Details',
+            'Código:': 'Code:',
+            'Fecha/Hora:': 'Date/Time:',
+            'Formato:': 'Format:',
+            'Ejecución:': 'Execution:',
+            'Tamaño:': 'Size:',
+            'Estado:': 'Status:',
+            'Tablas Incluidas:': 'Tables Included:',
+            'Exitoso': 'Success',
+            'Fallido': 'Failed',
+            'Manual': 'Manual',
+            'Automático': 'Automatic',
+            'Todas': 'All',
+            
+            // Backup table columns
+            'Fecha/Hora': 'Date/Time',
+            'Formato': 'Format',
+            'Ejecución': 'Execution',
+            'Tablas': 'Tables',
+            'Tamaño': 'Size'
         } : {
             // English back to Spanish mappings
             'Configuration': 'Configuración',
@@ -1598,7 +1672,79 @@ class SAIIApp {
             'Save Report': 'Guardar Reporte',
             'Confirm and Send to Sign': 'Confirmar y Enviar a Firmar',
             'Write an observation or review indication *': 'Escriba una observación o indicación de revisión *',
-            'Save Observation': 'Guardar Observación'
+            'Save Observation': 'Guardar Observación',
+
+            // Custom translation requests reverse
+            'Issue': 'Emitir',
+            ' Document': ' Document',
+            '⚙️ Generate': '⚙️ Generar',
+            ' Certificates': ' Certificados',
+            ' Pending': ' Pendientes',
+            'Proof of Study': 'Constancia',
+            'Certificate': 'Certificado',
+            'PROOF OF STUDY': 'CONSTANCIA',
+            'CERTIFICATE': 'CERTIFICADO',
+            'Not eligible': 'No apto',
+            'To be signed': 'Por firmar',
+            'Pending': 'Pendiente',
+            'Generated': 'Generado',
+            'Signed': 'Firmado',
+            'Approved': 'Aprobado',
+            'Disapproved': 'Desaprobado',
+            'Satisfactory': 'Satisfactorio',
+            'At risk': 'En riesgo',
+            'APPROVED': 'APROBADO',
+            'DISAPPROVED': 'DESAPROBADO',
+            'SATISFACTORY': 'SATISFACTORIO',
+            'AT RISK': 'EN RIESGO',
+            'TO BE SIGNED': 'POR FIRMAR',
+            'PENDING': 'PENDIENTE',
+            'GENERATED': 'GENERADO',
+            'ANNULLED': 'ANULADO',
+            'Undergraduate': 'Pregrado',
+            'Graduate': 'Egresado',
+            'Postgraduate': 'Posgrado',
+            'External': 'Externo',
+
+            // Backup View & Modals
+            'Backups': 'Copias de Seguridad',
+            'Backup History': 'Historial de Respaldos',
+            'Configure': 'Configurar',
+            'Generate Backup': 'Generar Backup',
+            'Configure Automatic Backup': 'Configurar Respaldo Automático',
+            'Automatic Backup Frequency': 'Frecuencia del Respaldo Automático',
+            'Daily (Every 24 hours)': 'Diario (Cada 24 horas)',
+            'Weekly (Every 7 days)': 'Semanal (Cada 7 días)',
+            'Monthly (Every 30 days)': 'Mensual (Cada 30 días)',
+            'Tables to Include': 'Tablas a Incluir',
+            'Select All': 'Seleccionar Todas',
+            'Deselect All': 'Deseccionar Todas',
+            'Backup Details': 'Detalle del Respaldo',
+            'Code:': 'Código:',
+            'Date/Time:': 'Fecha/Hora:',
+            'Format:': 'Formato:',
+            'Execution:': 'Ejecución:',
+            'Size:': 'Tamaño:',
+            'Status:': 'Estado:',
+            'Tables Included:': 'Tablas Incluidas:',
+            'Success': 'Exitoso',
+            'Failed': 'Fallido',
+            'Manual': 'Manual',
+            'Automatic': 'Automático',
+            'All': 'Todas',
+            
+            // Backup table columns
+            'Date/Time': 'Fecha/Hora',
+            'Format': 'Formato',
+            'Execution': 'Ejecución',
+            'Tables': 'Tablas',
+            'Size': 'Tamaño',
+
+            // Certificates table headers reverse
+            'Doc. Type': 'Tipo Doc.',
+            'Dean Signature': 'Firma Decano',
+            'Director Signature': 'Firma Director',
+            'Request Date': 'Fecha Solicitud'
         };
 
         // Recurse and translate DOM text nodes under appContainer
@@ -5184,12 +5330,19 @@ class SAIIApp {
             return;
         }
 
+        const isEn = DataManager.systemLanguage === 'en';
+
         if (certificateRows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">No se encontraron alumnos para constancias o certificados</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">${isEn ? 'No students found for certificates or documents' : 'No se encontraron alumnos para constancias o certificados'}</td></tr>`;
             return;
         }
 
-        const typeLabels = {
+        const typeLabels = isEn ? {
+            'pregrado': 'Undergraduate',
+            'egresado': 'Graduate',
+            'posgrado': 'Postgraduate',
+            'externo': 'External'
+        } : {
             'pregrado': 'Pregrado',
             'egresado': 'Egresado',
             'posgrado': 'Posgrado',
@@ -5209,59 +5362,66 @@ class SAIIApp {
 
             let statusBadge = '';
             let actionBtn = '';
-            const docTypeLabel = item.type === 'constancia' ? 'Constancia' : (item.type === 'certificado' ? 'Certificado' : '-');
+            const docTypeLabel = item.type === 'constancia' ? (isEn ? 'Proof of Study' : 'Constancia') : (item.type === 'certificado' ? (isEn ? 'Certificate' : 'Certificado') : '-');
             const isDirector = DataManager.currentUser && DataManager.currentUser.role === 'admin';
             const isSecretary = DataManager.currentUser && DataManager.currentUser.role === 'secretary';
 
             if (item.status === 'Generado') {
-                statusBadge = '<span class="badge-status badge-active">Generado</span>';
+                statusBadge = `<span class="badge-status badge-active">${isEn ? 'Generated' : 'Generado'}</span>`;
                 actionBtn = `
                     <div class="action-icons">
-                        <button class="icon-btn icon-view" onclick="app.viewCertificate('${item.certificate.id}')" title="Ver Documento">&#128269;</button>
-                        <button class="icon-btn icon-print" onclick="app.printCertificateSimulated('${item.certificate.id}')" title="Imprimir">&#128424;</button>
-                        <button class="icon-btn icon-export" onclick="app.downloadCertificatePDFSimulated('${item.certificate.id}')" title="Descargar PDF">&#128197;</button>
-                        ${isDirector ? `<button class="icon-btn icon-delete" onclick="app.annulCertificate('${item.certificate.id}')" title="Anular Certificado">&#128683;</button>` : ''}
+                        <button class="icon-btn icon-view" onclick="app.viewCertificate('${item.certificate.id}')" title="${isEn ? 'View Document' : 'Ver Documento'}">&#128269;</button>
+                        <button class="icon-btn icon-print" onclick="app.printCertificateSimulated('${item.certificate.id}')" title="${isEn ? 'Print' : 'Imprimir'}">&#128424;</button>
+                        <button class="icon-btn icon-export" onclick="app.downloadCertificatePDFSimulated('${item.certificate.id}')" title="${isEn ? 'Download PDF' : 'Descargar PDF'}">&#128197;</button>
+                        ${isDirector ? `<button class="icon-btn icon-delete" onclick="app.annulCertificate('${item.certificate.id}')" title="${isEn ? 'Annul Certificate' : 'Anular Certificado'}">&#128683;</button>` : ''}
                     </div>
                 `;
             } else if (item.status === 'Por firmar') {
-                statusBadge = '<span class="badge-status badge-pending">Por firmar</span>'; // yellow/orange
+                statusBadge = `<span class="badge-status badge-pending">${isEn ? 'To be signed' : 'Por firmar'}</span>`; // yellow/orange
                 
                 let signBtn = '';
                 if (isDirector && !item.certificate.directorSigned) {
-                    signBtn = `<button class="icon-btn icon-add" onclick="app.signDocument('${item.certificate.id}', 'director')" title="Firmar como Director" style="color: var(--color-primary); font-weight: bold;">&#10003;</button>`;
+                    signBtn = `<button class="icon-btn icon-add" onclick="app.signDocument('${item.certificate.id}', 'director')" title="${isEn ? 'Sign as Director' : 'Firmar como Director'}" style="color: var(--color-primary); font-weight: bold;">&#10003;</button>`;
                 }
                 
                 actionBtn = `
                     <div class="action-icons">
-                        <button class="icon-btn icon-view" onclick="app.viewCertificate('${item.certificate.id}')" title="Ver Documento">&#128269;</button>
+                        <button class="icon-btn icon-view" onclick="app.viewCertificate('${item.certificate.id}')" title="${isEn ? 'View Document' : 'Ver Documento'}">&#128269;</button>
                         ${signBtn}
-                        ${item.certificate.observations ? `<button class="icon-btn icon-edit" onclick="alert('Observación del Decano: ${item.certificate.observations}')" title="Ver Observación" style="color:var(--color-accent);">&#128172;</button>` : ''}
+                        ${item.certificate.observations ? `<button class="icon-btn icon-edit" onclick="alert('${isEn ? 'Dean Observation' : 'Observación del Decano'}: ${item.certificate.observations}')" title="${isEn ? 'View Observation' : 'Ver Observación'}" style="color:var(--color-accent);">&#128172;</button>` : ''}
                     </div>
                 `;
             } else if (item.status === 'Pendiente') {
-                statusBadge = '<span class="badge-status badge-pending-generation">Pendiente</span>'; // purple
+                statusBadge = `<span class="badge-status badge-pending-generation">${isEn ? 'Pending' : 'Pendiente'}</span>`; // purple
                 
                 let genBtn = '';
                 if (isSecretary || isDirector) {
-                    genBtn = `<button class="icon-btn icon-edit" onclick="app.finalizeCertificate('${item.certificate.id}')" style="color: var(--color-accent-green);" title="Generar Documento">&#10003;</button>`;
+                    genBtn = `<button class="icon-btn icon-edit" onclick="app.finalizeCertificate('${item.certificate.id}')" style="color: var(--color-accent-green);" title="${isEn ? 'Generate Document' : 'Generar Documento'}">&#10003;</button>`;
                 }
                 
                 actionBtn = `
                     <div class="action-icons">
-                        <button class="icon-btn icon-view" onclick="app.viewCertificate('${item.certificate.id}')" title="Ver Documento">&#128269;</button>
+                        <button class="icon-btn icon-view" onclick="app.viewCertificate('${item.certificate.id}')" title="${isEn ? 'View Document' : 'Ver Documento'}">&#128269;</button>
                         ${genBtn}
-                        ${isDirector ? `<button class="icon-btn icon-delete" onclick="app.annulCertificate('${item.certificate.id}')" title="Anular Documento">&#128683;</button>` : ''}
+                        ${isDirector ? `<button class="icon-btn icon-delete" onclick="app.annulCertificate('${item.certificate.id}')" title="${isEn ? 'Annul Document' : 'Anular Documento'}">&#128683;</button>` : ''}
                     </div>
                 `;
             } else if (item.status === 'Anulado') {
-                statusBadge = '<span class="badge-status badge-inactive" style="background-color:rgba(120,120,120,0.12); color:#666; border:1px solid rgba(120,120,120,0.2);">Anulado</span>';
-                actionBtn = `<button class="icon-btn icon-view" onclick="app.viewCertificate('${item.certificate.id}')" title="Ver Documento">&#128269;</button>`;
+                statusBadge = `<span class="badge-status badge-inactive" style="background-color:rgba(120,120,120,0.12); color:#666; border:1px solid rgba(120,120,120,0.2);">${isEn ? 'Annulled' : 'Anulado'}</span>`;
+                actionBtn = `<button class="icon-btn icon-view" onclick="app.viewCertificate('${item.certificate.id}')" title="${isEn ? 'View Document' : 'Ver Documento'}">&#128269;</button>`;
             } else if (item.status === 'Apto') {
-                statusBadge = '<span class="badge-status badge-active" style="background-color:rgba(30,91,168,0.12); color:var(--color-primary); border:1px solid rgba(30,91,168,0.2);">Apto</span>';
-                actionBtn = `<span style="font-size:0.8rem; color:var(--color-text-secondary); font-style:italic;">Disponible</span>`;
+                statusBadge = `<span class="badge-status badge-active" style="background-color:rgba(30,91,168,0.12); color:var(--color-primary); border:1px solid rgba(30,91,168,0.2);">${isEn ? 'Eligible' : 'Apto'}</span>`;
+                actionBtn = `<span style="font-size:0.8rem; color:var(--color-text-secondary); font-style:italic;">${isEn ? 'Available' : 'Disponible'}</span>`;
             } else {
-                statusBadge = `<span class="badge-status badge-not-eligible" title="Motivo: ${item.reason}" style="cursor:help;">No apto</span>`;
-                actionBtn = `<span style="font-size: 0.8rem; color: var(--color-text-light); font-style:italic;">${item.reason}</span>`;
+                let reasonText = item.reason;
+                if (isEn) {
+                    if (reasonText === 'Disponible para emitir Certificado') reasonText = 'Available to issue Certificate';
+                    else if (reasonText === 'Disponible para emitir Constancia') reasonText = 'Available to issue Proof of Study';
+                    else if (reasonText === 'Asistencia insuficiente') reasonText = 'Insufficient attendance';
+                    else if (reasonText === 'Nota insuficiente') reasonText = 'Insufficient grade';
+                }
+                statusBadge = `<span class="badge-status badge-not-eligible" title="${isEn ? 'Reason' : 'Motivo'}: ${reasonText}" style="cursor:help;">${isEn ? 'Not eligible' : 'No apto'}</span>`;
+                actionBtn = `<span style="font-size: 0.8rem; color: var(--color-text-light); font-style:italic;">${reasonText}</span>`;
             }
 
             const typeLabel = typeLabels[item.student.studentType] || 'Pregrado';
@@ -5269,19 +5429,19 @@ class SAIIApp {
 
             if (isDirector) {
                 const deanSignedBadge = item.certificate && item.certificate.deanSigned 
-                    ? '<span class="badge-status badge-active">Firmado</span>' 
-                    : (item.certificate ? '<span class="badge-status badge-inactive">Pendiente</span>' : '-');
+                    ? `<span class="badge-status badge-active">${isEn ? 'Signed' : 'Firmado'}</span>` 
+                    : (item.certificate ? `<span class="badge-status badge-inactive">${isEn ? 'Pending' : 'Pendiente'}</span>` : '-');
                 
                 const directorSignedBadge = item.certificate && item.certificate.directorSigned 
-                    ? '<span class="badge-status badge-active">Firmado</span>' 
-                    : (item.certificate ? '<span class="badge-status badge-inactive">Pendiente</span>' : '-');
+                    ? `<span class="badge-status badge-active">${isEn ? 'Signed' : 'Firmado'}</span>` 
+                    : (item.certificate ? `<span class="badge-status badge-inactive">${isEn ? 'Pending' : 'Pendiente'}</span>` : '-');
 
                 row.innerHTML = `
                     <td>${item.student.code}</td>
                     <td><strong>${item.student.firstName} ${item.student.lastName}</strong></td>
                     <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
                     <td>${item.course.name}</td>
-                    <td>${item.group.modality === 'regular' ? 'Curso regular' : 'Examen'}</td>
+                    <td>${item.group.modality === 'regular' ? (isEn ? 'Regular course' : 'Curso regular') : (isEn ? 'Exam' : 'Examen')}</td>
                     <td>${docTypeLabel}</td>
                     <td>${item.average > 0 ? item.average.toFixed(1) : '-'}</td>
                     <td>${item.group.modality === 'exam' ? '100%' : item.attPct + '%'}</td>
@@ -5297,7 +5457,7 @@ class SAIIApp {
                     <td><strong>${item.student.firstName} ${item.student.lastName}</strong></td>
                     <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
                     <td>${item.course.name}</td>
-                    <td>${item.group.modality === 'regular' ? 'Curso regular' : 'Examen'}</td>
+                    <td>${item.group.modality === 'regular' ? (isEn ? 'Regular course' : 'Curso regular') : (isEn ? 'Exam' : 'Examen')}</td>
                     <td>${docTypeLabel}</td>
                     <td>${item.average > 0 ? item.average.toFixed(1) : '-'}</td>
                     <td>${item.group.modality === 'exam' ? '100%' : item.attPct + '%'}</td>
@@ -5318,13 +5478,19 @@ class SAIIApp {
         const tbody = document.getElementById('certificatesTableBody');
         if (!tbody) return;
         tbody.innerHTML = '';
+        const isEn = DataManager.systemLanguage === 'en';
 
         if (rows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">No hay documentos pendientes de su firma.</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">${isEn ? 'No documents pending your signature.' : 'No hay documentos pendientes de su firma.'}</td></tr>`;
             return;
         }
 
-        const typeLabels = {
+        const typeLabels = isEn ? {
+            'pregrado': 'Undergraduate',
+            'egresado': 'Graduate',
+            'posgrado': 'Postgraduate',
+            'externo': 'External'
+        } : {
             'pregrado': 'Pregrado',
             'egresado': 'Egresado',
             'posgrado': 'Posgrado',
@@ -5338,25 +5504,25 @@ class SAIIApp {
             row.setAttribute('data-student-id', item.student.id);
             row.setAttribute('data-group-id', item.group.id);
 
-            const docTypeLabel = item.type === 'constancia' ? 'Constancia' : 'Certificado';
+            const docTypeLabel = item.type === 'constancia' ? (isEn ? 'Proof of Study' : 'Constancia') : (isEn ? 'Certificate' : 'Certificado');
             
             const statusBadge = item.status === 'Pendiente'
-                ? '<span class="badge-status badge-pending-generation">Pendiente</span>'
-                : '<span class="badge-status badge-pending">Por firmar</span>';
+                ? `<span class="badge-status badge-pending-generation">${isEn ? 'Pending' : 'Pendiente'}</span>`
+                : `<span class="badge-status badge-pending">${isEn ? 'To be signed' : 'Por firmar'}</span>`;
             
-            const deanSignedBadge = '<span class="badge-status badge-inactive">Pendiente</span>'; // red/orange pending
+            const deanSignedBadge = `<span class="badge-status badge-inactive">${isEn ? 'Pending' : 'Pendiente'}</span>`; // red/orange pending
             
             const directorSignedBadge = item.certificate.directorSigned 
-                ? '<span class="badge-status badge-active">Firmado</span>' 
-                : '<span class="badge-status badge-inactive">Pendiente</span>';
+                ? `<span class="badge-status badge-active">${isEn ? 'Signed' : 'Firmado'}</span>` 
+                : `<span class="badge-status badge-inactive">${isEn ? 'Pending' : 'Pendiente'}</span>`;
 
             const issueDate = item.certificate.issueDate ? new Date(item.certificate.issueDate).toLocaleDateString() : '-';
 
             const actionBtn = `
                 <div class="action-icons">
-                    <button class="icon-btn icon-view" onclick="app.viewCertificate('${item.certificate.id}')" title="Ver Documento">&#128269;</button>
-                    <button class="icon-btn icon-add" onclick="app.signDocument('${item.certificate.id}', 'dean')" title="Firmar Documento" style="color: var(--color-primary); font-weight: bold;">&#10003;</button>
-                    <button class="icon-btn icon-edit" onclick="app.openCertObservationModal('${item.certificate.id}')" title="Ayuda / Observación">&#128172;</button>
+                    <button class="icon-btn icon-view" onclick="app.viewCertificate('${item.certificate.id}')" title="${isEn ? 'View Document' : 'Ver Documento'}">&#128269;</button>
+                    <button class="icon-btn icon-add" onclick="app.signDocument('${item.certificate.id}', 'dean')" title="${isEn ? 'Sign Document' : 'Firmar Documento'}" style="color: var(--color-primary); font-weight: bold;">&#10003;</button>
+                    <button class="icon-btn icon-edit" onclick="app.openCertObservationModal('${item.certificate.id}')" title="${isEn ? 'Help / Observation' : 'Ayuda / Observación'}">&#128172;</button>
                 </div>
             `;
 
@@ -5368,7 +5534,7 @@ class SAIIApp {
                 <td><strong>${item.student.firstName} ${item.student.lastName}</strong></td>
                 <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
                 <td>${item.course.name}</td>
-                <td>${item.group.modality === 'regular' ? 'Curso regular' : 'Examen'}</td>
+                <td>${item.group.modality === 'regular' ? (isEn ? 'Regular course' : 'Curso regular') : (isEn ? 'Exam' : 'Examen')}</td>
                 <td>${docTypeLabel}</td>
                 <td>${statusBadge}</td>
                 <td>${deanSignedBadge}</td>
@@ -6258,6 +6424,7 @@ class SAIIApp {
         const tableBody = document.getElementById('reportResultsTableBody');
         if (!tableHead || !tableBody) return;
 
+        const isEn = DataManager.systemLanguage === 'en';
         tableHead.innerHTML = '';
         tableBody.innerHTML = '';
 
@@ -6386,7 +6553,7 @@ class SAIIApp {
                     <td><strong>${r.group.courseName}</strong></td>
                     <td>${r.group.code}</td>
                     <td>${r.group.teacherName}</td>
-                    <td><span class="badge-status ${r.group.modality === 'regular' ? 'badge-active' : 'badge-pending'}">${r.group.modality === 'regular' ? 'REGULAR' : 'EXAMEN'}</span></td>
+                    <td><span class="badge-status ${r.group.modality === 'regular' ? 'badge-active' : 'badge-pending'}">${r.group.modality === 'regular' ? 'REGULAR' : (isEn ? 'EXAM' : 'EXAMEN')}</span></td>
                     <td>${r.enrolledCount}</td>
                     <td><span style="color: #4caf50; font-weight: bold;">${r.approved}</span></td>
                     <td><span style="color: #f44336; font-weight: bold;">${r.disapproved}</span></td>
@@ -6404,7 +6571,12 @@ class SAIIApp {
 
         } else {
             // Detailed View (by Student)
-            const typeLabels = {
+            const typeLabels = isEn ? {
+                'pregrado': 'Undergraduate',
+                'egresado': 'Graduate',
+                'posgrado': 'Postgraduate',
+                'externo': 'External'
+            } : {
                 'pregrado': 'Pregrado',
                 'egresado': 'Egresado',
                 'posgrado': 'Posgrado',
@@ -6496,7 +6668,7 @@ class SAIIApp {
                         <td>${r.course.name}</td>
                         <td>${r.group.code}</td>
                         <td><strong>${r.average > 0 ? r.average.toFixed(1) : '-'}</strong></td>
-                        <td><span class="badge-status ${r.isApproved ? 'badge-active' : 'badge-inactive'}">${r.isApproved ? 'APROBADO' : 'DESAPROBADO'}</span></td>
+                        <td><span class="badge-status ${r.isApproved ? 'badge-active' : 'badge-inactive'}">${r.isApproved ? (isEn ? 'APPROVED' : 'APROBADO') : (isEn ? 'DISAPPROVED' : 'DESAPROBADO')}</span></td>
                     `;
                     tableBody.appendChild(row);
                 });
@@ -6567,7 +6739,7 @@ class SAIIApp {
                         <td>${r.group.courseName}</td>
                         <td>${r.group.code}</td>
                         <td><strong>${r.attPct}%</strong></td>
-                        <td><span class="badge-status ${r.isSatisfactory ? 'badge-active' : 'badge-inactive'}">${r.isSatisfactory ? 'SATISFACTORIO' : 'EN RIESGO'}</span></td>
+                        <td><span class="badge-status ${r.isSatisfactory ? 'badge-active' : 'badge-inactive'}">${r.isSatisfactory ? (isEn ? 'SATISFACTORY' : 'SATISFACTORIO') : (isEn ? 'AT RISK' : 'EN RIESGO')}</span></td>
                     `;
                     tableBody.appendChild(row);
                 });
@@ -6627,7 +6799,12 @@ class SAIIApp {
                     totalAttDays += 100;
                     totalPresentDays += attPct;
 
-                    const statusLabel = {
+                    const statusLabel = isEn ? {
+                        toBeSigned: 'TO BE SIGNED',
+                        pending: 'PENDING',
+                        generated: 'GENERATED',
+                        annulled: 'ANNULLED'
+                    }[r.cert.status] || r.cert.status.toUpperCase() : {
                         toBeSigned: 'POR FIRMAR',
                         pending: 'PENDIENTE',
                         generated: 'GENERADO',
@@ -6641,7 +6818,7 @@ class SAIIApp {
                         annulled: 'badge-inactive'
                     }[r.cert.status] || 'badge-pending';
 
-                    const typeLabel = typeLabels[r.student.studentType] || 'Pregrado';
+                    const typeLabel = typeLabels[r.student.studentType] || (isEn ? 'Undergraduate' : 'Pregrado');
                     const typeClass = `badge-${r.student.studentType || 'pregrado'}`;
 
                     const row = document.createElement('tr');
@@ -6650,7 +6827,7 @@ class SAIIApp {
                         <td>${r.student.code}</td>
                         <td><span class="badge-status ${typeClass}">${typeLabel}</span></td>
                         <td>${r.group.courseName}</td>
-                        <td>${r.cert.type.toUpperCase()}</td>
+                        <td>${isEn ? (r.cert.type === 'constancia' ? 'PROOF OF STUDY' : 'CERTIFICATE') : r.cert.type.toUpperCase()}</td>
                         <td><strong>${r.cert.code || '-'}</strong></td>
                         <td>${r.cert.issueDate}</td>
                         <td><span class="badge-status ${statusBadgeClass}">${statusLabel}</span></td>
@@ -6695,7 +6872,12 @@ class SAIIApp {
 
                 totalSt = results.length;
                 
-                const typeLabels = {
+                const typeLabels = isEn ? {
+                    'pregrado': 'Undergraduate',
+                    'egresado': 'Graduate',
+                    'posgrado': 'Postgraduate',
+                    'externo': 'External'
+                } : {
                     'pregrado': 'Pregrado',
                     'egresado': 'Egresado',
                     'posgrado': 'Posgrado',
@@ -6732,7 +6914,7 @@ class SAIIApp {
                         <td>${r.group.courseName}</td>
                         <td>${r.group.code}</td>
                         <td>${r.enr.enrollmentDate}</td>
-                        <td><span class="badge-status ${r.group.modality === 'regular' ? 'badge-active' : 'badge-pending'}">${r.group.modality === 'regular' ? 'REGULAR' : 'EXAMEN'}</span></td>
+                        <td><span class="badge-status ${r.group.modality === 'regular' ? 'badge-active' : 'badge-pending'}">${r.group.modality === 'regular' ? 'REGULAR' : (isEn ? 'EXAM' : 'EXAMEN')}</span></td>
                     `;
                     tableBody.appendChild(row);
                 });
@@ -6740,7 +6922,7 @@ class SAIIApp {
         }
 
         if (totalSt === 0) {
-            tableBody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">No se encontraron resultados para la consulta actual.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:2rem; color:var(--color-text-secondary);">${isEn ? 'No results found for the current query.' : 'No se encontraron resultados para la consulta actual.'}</td></tr>`;
         }
 
         if (document.getElementById('reportTotalStudents')) {
@@ -7498,12 +7680,13 @@ class SAIIApp {
             const backups = await DataManager.getBackups();
             const tbody = document.getElementById('backupsTableBody');
             tbody.innerHTML = '';
+            const isEn = DataManager.systemLanguage === 'en';
 
             if (backups.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="8" style="text-align: center; color: var(--color-text-secondary); padding: var(--spacing-xl) 0;">
-                            No se han generado copias de seguridad aún.
+                            ${isEn ? 'No backups have been generated yet.' : 'No se han generado copias de seguridad aún.'}
                         </td>
                     </tr>
                 `;
@@ -7514,31 +7697,31 @@ class SAIIApp {
                 const tr = document.createElement('tr');
                 
                 // Tipo de Ejecución badge
-                const typeText = bk.type === 'automatic' ? 'Automático' : 'Manual';
+                const typeText = bk.type === 'automatic' ? (isEn ? 'Automatic' : 'Automático') : 'Manual';
                 const typeClass = bk.type === 'automatic' ? 'badge-inprogress' : 'badge-finished';
                 
                 // Estado badge
                 let statusClass = 'badge-pending';
-                let statusText = 'Pendiente';
+                let statusText = isEn ? 'Pending' : 'Pendiente';
                 if (bk.status === 'success') {
                     statusClass = 'badge-active';
-                    statusText = 'Exitoso';
+                    statusText = isEn ? 'Success' : 'Exitoso';
                 } else if (bk.status === 'failed') {
                     statusClass = 'badge-rejected';
-                    statusText = 'Fallido';
+                    statusText = isEn ? 'Failed' : 'Fallido';
                 } else if (bk.status === 'inactive') {
                     statusClass = 'badge-inactive';
-                    statusText = 'Inactivo';
+                    statusText = isEn ? 'Inactive' : 'Inactivo';
                 }
 
                 // Cantidad de tablas (Solo mostrar conteo en la tabla)
                 const tablesList = bk.tables_included || '';
                 let tablesCountText = '';
                 if (!tablesList) {
-                    tablesCountText = 'Todas';
+                    tablesCountText = isEn ? 'All' : 'Todas';
                 } else {
                     const count = tablesList.split(',').filter(Boolean).length;
-                    tablesCountText = `${count} ${count === 1 ? 'tabla' : 'tablas'}`;
+                    tablesCountText = `${count} ${count === 1 ? (isEn ? 'table' : 'tabla') : (isEn ? 'tables' : 'tablas')}`;
                 }
 
                 // Formato en mayúsculas (SQL)
@@ -7554,16 +7737,16 @@ class SAIIApp {
                     <td><span class="badge-status ${statusClass}">${statusText}</span></td>
                     <td>
                         <div class="action-icons" style="justify-content: flex-end;">
-                            <button class="icon-btn icon-view" onclick="app.showBackupDetail(${bk.id})" title="Ver detalle de tablas">
+                            <button class="icon-btn icon-view" onclick="app.showBackupDetail(${bk.id})" title="${isEn ? 'View table details' : 'Ver detalle de tablas'}">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                             </button>
                             ${bk.status === 'success' ? `
-                                <button class="icon-btn icon-download" onclick="app.downloadBackup(${bk.id})" title="Descargar copia SQL">
+                                <button class="icon-btn icon-download" onclick="app.downloadBackup(${bk.id})" title="${isEn ? 'Download SQL copy' : 'Descargar copia SQL'}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                                 </button>
                             ` : ''}
                             ${bk.status !== 'inactive' ? `
-                                <button class="icon-btn icon-delete" onclick="app.deleteBackup(${bk.id})" title="Desactivar respaldo">
+                                <button class="icon-btn icon-delete" onclick="app.deleteBackup(${bk.id})" title="${isEn ? 'Deactivate backup' : 'Desactivar respaldo'}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                                 </button>
                             ` : ''}
@@ -7574,7 +7757,7 @@ class SAIIApp {
             });
         } catch (error) {
             console.error("Error al cargar copias de seguridad:", error);
-            this.showToast("Error al cargar historial de backups", "error");
+            this.showToast(DataManager.systemLanguage === 'en' ? "Error loading backup history" : "Error al cargar historial de backups", "error");
         }
     }
 
@@ -7583,6 +7766,7 @@ class SAIIApp {
             const backups = await DataManager.getBackups();
             const bk = backups.find(b => b.id === id);
             if (!bk) return;
+            const isEn = DataManager.systemLanguage === 'en';
 
             document.getElementById('detailBackupCode').textContent = bk.backup_code;
             document.getElementById('detailBackupDate').textContent = bk.created_at;
@@ -7597,28 +7781,28 @@ class SAIIApp {
             const execSpan = document.getElementById('detailBackupExecution');
             const isAuto = bk.type === 'automatic';
             execSpan.className = `badge-status ${isAuto ? 'badge-inprogress' : 'badge-finished'}`;
-            execSpan.textContent = isAuto ? 'Automático' : 'Manual';
+            execSpan.textContent = isAuto ? (isEn ? 'Automatic' : 'Automático') : 'Manual';
 
             // Estado
             const statusSpan = document.getElementById('detailBackupStatus');
             let statusClass = 'badge-pending';
-            let statusText = 'Pendiente';
+            let statusText = isEn ? 'Pending' : 'Pendiente';
             if (bk.status === 'success') {
                 statusClass = 'badge-active';
-                statusText = 'Exitoso';
+                statusText = isEn ? 'Success' : 'Exitoso';
             } else if (bk.status === 'failed') {
                 statusClass = 'badge-rejected';
-                statusText = 'Fallido';
+                statusText = isEn ? 'Failed' : 'Fallido';
             } else if (bk.status === 'inactive') {
                 statusClass = 'badge-inactive';
-                statusText = 'Inactivo';
+                statusText = isEn ? 'Inactive' : 'Inactivo';
             }
             statusSpan.className = `badge-status ${statusClass}`;
             statusSpan.textContent = statusText;
 
             // Lista de tablas
             const tablesDiv = document.getElementById('detailBackupTables');
-            const tablesList = bk.tables_included || 'Todas';
+            const tablesList = bk.tables_included || (isEn ? 'All' : 'Todas');
             tablesDiv.innerHTML = tablesList.split(',').map(t => `<div style="padding: 2px 0;">• ${t}</div>`).join('');
 
             // Mostrar modal
@@ -7626,28 +7810,31 @@ class SAIIApp {
             document.getElementById('backupDetailModal').style.display = 'block';
         } catch (error) {
             console.error("Error al mostrar detalle del backup:", error);
-            this.showToast("Error al obtener detalles del respaldo", "error");
+            this.showToast(DataManager.systemLanguage === 'en' ? "Error loading backup details" : "Error al obtener detalles del respaldo", "error");
         }
     }
 
     async runManualBackup() {
+        const isEn = DataManager.systemLanguage === 'en';
         try {
             const data = await DataManager.getBackupSettings();
             const tables = data.tables || [];
 
-            const confirmMsg = `¿Desea generar una copia de seguridad SQL completa en este momento? (${tables.length} tablas)`;
+            const confirmMsg = isEn 
+                ? `Do you want to generate a full SQL backup now? (${tables.length} tables)`
+                : `¿Desea generar una copia de seguridad SQL completa en este momento? (${tables.length} tablas)`;
             if (confirm(confirmMsg)) {
-                this.showToast('Iniciando respaldo de base de datos...', 'info');
+                this.showToast(isEn ? 'Starting database backup...' : 'Iniciando respaldo de base de datos...', 'info');
                 await DataManager.createBackup({
                     tables: tables,
                     format: 'sql'
                 });
-                this.showToast('Copia de seguridad SQL generada exitosamente.', 'success');
+                this.showToast(isEn ? 'SQL database backup generated successfully.' : 'Copia de seguridad SQL generada exitosamente.', 'success');
                 this.loadBackups();
             }
         } catch (error) {
             console.error("Error al generar backup manual:", error);
-            this.showToast("Fallo al generar respaldo: " + error.message, "error");
+            this.showToast((isEn ? "Failed to generate backup: " : "Fallo al generar respaldo: ") + error.message, "error");
         }
     }
 
@@ -7687,18 +7874,19 @@ class SAIIApp {
                 const frequency = document.getElementById('backupFrequency').value;
                 const checkedCheckboxes = document.querySelectorAll('input[name="backup_tables"]:checked');
                 const selectedTables = Array.from(checkedCheckboxes).map(cb => cb.value);
+                const isEn = DataManager.systemLanguage === 'en';
 
                 try {
                     await DataManager.saveBackupSettings({
                         frequency: frequency,
                         tables: selectedTables
                     });
-                    this.showToast('Configuración de respaldos guardada exitosamente.', 'success');
+                    this.showToast(isEn ? 'Backup settings saved successfully.' : 'Configuración de respaldos guardada exitosamente.', 'success');
                     this.closeModal();
                     this.loadBackups();
                 } catch (err) {
                     console.error("Error saving backup settings:", err);
-                    this.showToast("Error al guardar configuraciones: " + err.message, "error");
+                    this.showToast((isEn ? "Error saving settings: " : "Error al guardar configuraciones: ") + err.message, "error");
                 }
             };
 
@@ -7733,14 +7921,18 @@ class SAIIApp {
     }
 
     async deleteBackup(id) {
-        if (confirm('¿Está seguro de que desea eliminar permanentemente esta copia de seguridad? Esta acción no se puede deshacer.')) {
+        const isEn = DataManager.systemLanguage === 'en';
+        const confirmMsg = isEn 
+            ? 'Are you sure you want to permanently delete this backup? This action cannot be undone.'
+            : '¿Está seguro de que desea eliminar permanentemente esta copia de seguridad? Esta acción no se puede deshacer.';
+        if (confirm(confirmMsg)) {
             try {
                 await DataManager.deleteBackup(id);
-                this.showToast('Copia de seguridad eliminada.', 'success');
+                this.showToast(isEn ? 'Backup deleted successfully.' : 'Copia de seguridad eliminada.', 'success');
                 this.loadBackups();
             } catch (error) {
                 console.error("Error al eliminar copia de seguridad:", error);
-                this.showToast("Error al eliminar el respaldo", "error");
+                this.showToast(isEn ? "Error deleting backup" : "Error al eliminar el respaldo", "error");
             }
         }
     }
