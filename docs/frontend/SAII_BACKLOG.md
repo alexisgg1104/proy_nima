@@ -906,6 +906,31 @@ El agente debe actualizar esta sección al terminar cada fase.
   - Abrir previsualización de certificado en modal y pulsar "Expandir" (pantalla completa); verificar que el diploma se escala proporcionalmente cubriendo el ancho, sin cortarse a la izquierda y permitiendo scroll vertical. Redimensionar ventana del navegador y corroborar el auto-escalado dinámico en tiempo real.
 - Pendientes o riesgos: ninguno.
 
+#### Fase 7 Ajustes Finales — Traducción a Inglés Completa (i18n de Certificados, Reportes y Copias de Seguridad)
+
+- Fecha: 2026-07-10
+- Rama: `alexis/fase-7-mejoras-responsivas`
+- Commit o mensaje sugerido: `feat: completar traducciones a ingles de certificados, reportes detallados y modulo de backup`
+- Estado final: **Completada**.
+- Archivos modificados:
+  - `public/js/app.js`
+- Funciones creadas o modificadas:
+  - En `public/js/app.js`:
+    - `loadCertificates()` (modificada: renderiza dinámicamente en inglés los badges de estado, tipo de alumno, modalidad, acciones y motivos de no elegibilidad)
+    - `renderDeanCertificatesTable()` (modificada: renderiza dinámicamente en inglés los badges de estado, firmas, modalidad y tooltips de acciones)
+    - `filterReportResults()` (modificada: declara la variable `isEn` al inicio y aplica traducción condicional para los badges de modalidad en resumen, estados de calificaciones/asistencia en detalle, tipos de documento en certificados, y mensaje de consulta sin resultados)
+    - Diccionario `transMap` (modificado: añadidas claves de traducción para cabeceras de tablas de certificados y backups, estados, frecuencias, etiquetas de detalle, y confirmaciones)
+    - `runManualBackup()`, `openBackupSettingsModal()`, `deleteBackup()` (modificadas: alertas y mensajes toast de confirmación y estado totalmente traducidos al inglés según idioma del sistema)
+- Cambios principales:
+  - **i18n de Certificados**: Implementada la traducción total en inglés para los botones de acción ("Emitir Documento", "Generar Certificados Pendientes"), los nombres de tipos de documentos ("Proof of Study", "Certificate"), y las columnas de firma, estados ("Generated", "To be signed", "Pending", "Annulled", "Eligible", "Not eligible") y motivos.
+  - **i18n de Reportes**: Traducidos los badges y textos en las filas de las tablas detalladas de notas ("APPROVED", "DISAPPROVED"), asistencia ("SATISFACTORY", "AT RISK"), certificados ("TO BE SIGNED", "PENDING", "GENERATED", "ANNULLED") y modalidad ("REGULAR", "EXAM") así como el aviso de sin resultados.
+  - **i18n de Backups**: Traducida por completo la interfaz del módulo de copias de seguridad (títulos, botones, cabeceras de tabla, modales de configuración y detalle) y sus interacciones de confirmación y avisos toast de éxito/error.
+- Pruebas realizadas:
+  - Cambiar el idioma del sistema a inglés en Configuración y verificar que el módulo de Certificados traduce dinámicamente todos los estados de los alumnos y botones de firma en cascada.
+  - Cargar el panel de Reportes detallado y verificar la correcta traducción de los estados de aprobados/desaprobados, asistencia y constancias.
+  - Abrir el módulo de Copias de seguridad (Backups) y constatar que tanto la tabla, los modales (Configurar/Detalle) y los mensajes toast y alerts se muestran completamente en inglés.
+- Pendientes o riesgos: ninguno.
+
 ---
 
 ## Regla final del backlog
