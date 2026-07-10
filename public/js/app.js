@@ -1290,9 +1290,12 @@ class SAIIApp {
             // Custom translation requests
             'Emitir': 'Issue',
             ' Documento': ' Document',
+            'Documento': 'Document',
             '⚙️ Generar': '⚙️ Generate',
             ' Certificados': ' Certificates',
+            'Certificados': 'Certificates',
             ' Pendientes': ' Pending',
+            'Pendientes': 'Pending',
             'Constancia': 'Proof of Study',
             'Certificado': 'Certificate',
             'CONSTANCIA': 'PROOF OF STUDY',
@@ -1677,9 +1680,12 @@ class SAIIApp {
             // Custom translation requests reverse
             'Issue': 'Emitir',
             ' Document': ' Document',
+            'Document': 'Documento',
             '⚙️ Generate': '⚙️ Generar',
             ' Certificates': ' Certificados',
+            'Certificates': 'Certificados',
             ' Pending': ' Pendientes',
+            'Pending': 'Pendientes',
             'Proof of Study': 'Constancia',
             'Certificate': 'Certificado',
             'PROOF OF STUDY': 'CONSTANCIA',
@@ -1750,21 +1756,19 @@ class SAIIApp {
         // Recurse and translate DOM text nodes under appContainer
         const translatableSelectors = 'h1, h2, h3, h4, th, label, p, button, option, .kpi-label, .kpi-value, .nav-section-title, .nav-label, a.nav-item, td, span, .breadcrumb-item';
         document.querySelectorAll(translatableSelectors).forEach(el => {
-            const txt = el.childNodes.length > 0 ? Array.from(el.childNodes)
-                .filter(n => n.nodeType === Node.TEXT_NODE)
-                .map(n => n.textContent.trim())
-                .join(' ') : el.textContent.trim();
-            
-            if (txt && transMap[txt]) {
-                const textNodes = Array.from(el.childNodes).filter(n => n.nodeType === Node.TEXT_NODE);
-                if (textNodes.length > 0) {
-                    textNodes.forEach(node => {
-                        if (node.textContent.trim() === txt) {
-                            node.textContent = node.textContent.replace(txt, transMap[txt]);
+            if (el.childNodes.length > 0) {
+                Array.from(el.childNodes).forEach(node => {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const trimmed = node.textContent.trim();
+                        if (trimmed && transMap[trimmed]) {
+                            node.textContent = node.textContent.replace(trimmed, transMap[trimmed]);
                         }
-                    });
-                } else {
-                    el.textContent = transMap[txt];
+                    }
+                });
+            } else {
+                const trimmed = el.textContent.trim();
+                if (trimmed && transMap[trimmed]) {
+                    el.textContent = transMap[trimmed];
                 }
             }
         });
