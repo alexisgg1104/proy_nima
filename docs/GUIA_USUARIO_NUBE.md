@@ -18,13 +18,14 @@ El sistema está disponible las 24 horas desde cualquier dispositivo con conexi�
 
 Al ingresar al sistema se muestra la pantalla de inicio de sesión. Selecciona el rol correspondiente e ingresa las credenciales:
 
-| Rol | Usuario | Contraseña | Acceso a módulos |
-|-----|---------|------------|-----------------|
-| **Administrador / Director** | `admin` | `123` | Todos los módulos completos |
-| **Secretaria Académica** | `secretaria` | `123` | Alumnos, Matrículas, Certificados, Reportes |
-| **Docente / Instructor** | `docente01` | `123` | Asistencia, Notas, Reportes |
-| **Coordinador Académico** | `coordinador` | `123` | Cursos, Grupos, Alumnos, Reportes |
-| **Decano** | `decano` | `123` | Certificados |
+| Rol | Usuario | Contraseña | Nombre de Referencia | Acceso a módulos |
+|-----|---------|------------|----------------------|-----------------|
+| **Administrador / Director** | `admin` | `admin123` | DR. JONATHAN DAVID NIMA RAMOS | Todos los módulos completos |
+| **Secretaria Académica** | `secretaria` | `secretaria123` | Juan María Secretaria | Alumnos, Matrículas, Certificados, Reportes |
+| **Docente / Instructor** | `roberto.silva` | `docente123` | Roberto Silva Acosta | Asistencia, Notas, Reportes |
+| **Docente / Instructor** | `lucia.espinoza` | `docente123` | Lucía Espinoza Torres | Asistencia, Notas, Reportes |
+| **Coordinador Académico** | `coordinador` | `coordinador123` | Carlos Coordinador Académico | Cursos, Grupos, Alumnos, Reportes |
+| **Decano** | `decano` | `decano123` | Dr. Francisco Javier Cruz Vilchez | Certificados |
 
 > [!IMPORTANT]
 > **Para uso real en producción**, el administrador debe cambiar las contraseñas por defecto desde el módulo **Administración → Usuarios** inmediatamente después del primer acceso.

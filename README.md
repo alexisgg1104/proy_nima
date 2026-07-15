@@ -166,13 +166,14 @@ http://127.0.0.1:3000/index.html
 
 **Credenciales de prueba:**
 
-| Rol | Usuario | Contraseña |
-|-----|---------|------------|
-| Administrador | `admin` | `123` |
-| Secretaria | `secretaria` | `123` |
-| Docente | `docente01` | `123` |
-| Coordinador | `coordinador` | `123` |
-| Decano | `decano` | `123` |
+| Rol | Usuario | Contraseña | Nombre de Referencia |
+|-----|---------|------------|----------------------|
+| Administrador | `admin` | `admin123` | DR. JONATHAN DAVID NIMA RAMOS |
+| Secretaria | `secretaria` | `secretaria123` | Juan María Secretaria |
+| Docente | `roberto.silva` | `docente123` | Roberto Silva Acosta |
+| Docente | `lucia.espinoza` | `docente123` | Lucía Espinoza Torres |
+| Coordinador | `coordinador` | `coordinador123` | Carlos Coordinador Académico |
+| Decano | `decano` | `decano123` | Dr. Francisco Javier Cruz Vilchez |
 
 ---
 
